@@ -96,6 +96,7 @@ function ProfileStack() {
       <Stack.Screen name="Reviews" component={ReviewsScreen} />
       <Stack.Screen name="Wallet" component={WalletScreen} />
       <Stack.Screen name="Notifications" component={NotificationsScreen} />
+      <Stack.Screen name="VehicleDetails" component={VehicleDetailsScreen} />
     </Stack.Navigator>
   );
 }
@@ -168,6 +169,15 @@ function MainTabs() {
           ),
         }}
       />
+      <Tab.Screen 
+        name="Profile" 
+        component={ProfileStack}
+        options={{
+          tabBarIcon: ({ color, size }) => (
+            <ProfileIcon color={color} size={size} />
+          ),
+        }}
+      />
     </Tab.Navigator>
   );
 }
@@ -218,6 +228,15 @@ const ChatIcon = ({ color, size }: { color: string; size: number }) => (
   />
 );
 
+const ProfileIcon = ({ color, size }: { color: string; size: number }) => (
+  <IconButton 
+    icon="account-outline" 
+    size={size} 
+    iconColor={color} 
+    style={{ margin: 0 }}
+  />
+);
+
 // Main App Navigator
 const AppNavigator = () => {
   const { isAuthenticated, roleSelected, profileSetupComplete } = useAuth();
@@ -245,23 +264,6 @@ const AppNavigator = () => {
           // Main App
           <>
             <Stack.Screen name="MainTabs" component={MainTabs} />
-            
-            {/* Global Modal Screens */}
-            <Stack.Screen 
-              name="WalletModal" 
-              component={WalletScreen} 
-              options={{ presentation: 'modal' }}
-            />
-            <Stack.Screen 
-              name="NotificationsModal" 
-              component={NotificationsScreen} 
-              options={{ presentation: 'modal' }}
-            />
-            <Stack.Screen 
-              name="ProfileModal" 
-              component={ProfileStack} 
-              options={{ presentation: 'modal' }}
-            />
             
             {/* Ride Flow Screens - Accessible from any tab */}
             <Stack.Screen name="DuringRide" component={DuringRideScreen} />

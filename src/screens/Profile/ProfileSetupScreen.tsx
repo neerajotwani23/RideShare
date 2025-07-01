@@ -50,6 +50,17 @@ const ProfileSetupScreen = ({ navigation, route }: any) => {
     }
   };
 
+  const handleBackPress = () => {
+    // Check if we can go back safely
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+    } else {
+      // If no previous screen, this means we're in initial setup flow
+      // but RoleSelection might not be available, so navigate to login
+      navigation.navigate('Login');
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -57,7 +68,7 @@ const ProfileSetupScreen = ({ navigation, route }: any) => {
           icon="arrow-left"
           size={24}
           iconColor="#000000"
-          onPress={() => navigation.goBack()}
+          onPress={handleBackPress}
           style={styles.backButton}
         />
         <Text style={styles.headerTitle}>Profile Setup</Text>

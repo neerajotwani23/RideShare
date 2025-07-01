@@ -23,13 +23,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     window = UIWindow(frame: UIScreen.main.bounds)
 
-    factory.startReactNative(
-      withModuleName: "TestApp",
-      in: window,
-      launchOptions: launchOptions
+    return RCTAppDelegate.shared.application(
+      application,
+      didFinishLaunchingWithOptions: launchOptions,
+      withModuleName: "RideShare",
+      withInitialProperties: nil
     )
-
-    return true
   }
 }
 

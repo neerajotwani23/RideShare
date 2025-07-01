@@ -145,7 +145,7 @@ const SignupScreen = ({ navigation }: any) => {
         <View style={styles.logoSection}>
           <TouchableOpacity 
             style={styles.backButton}
-            onPress={() => navigation.goBack()}
+            onPress={() => navigation.navigate('Login')}
           >
             <IconButton
               icon="arrow-left"

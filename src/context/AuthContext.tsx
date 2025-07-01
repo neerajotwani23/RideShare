@@ -16,10 +16,10 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [roleSelected, setRoleSelected] = useState(false);
-  const [profileSetupComplete, setProfileSetupComplete] = useState(false);
-  const [currentRole, setCurrentRole] = useState<'driver' | 'passenger' | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false); // Set to false for login flow
+  const [roleSelected, setRoleSelected] = useState(true); // Set to true for easier testing
+  const [profileSetupComplete, setProfileSetupComplete] = useState(true); // Set to true for easier testing
+  const [currentRole, setCurrentRole] = useState<'driver' | 'passenger' | null>('driver'); // Default role for testing
   const [user, setUser] = useState(null);
 
   const login = (userData?: any) => {

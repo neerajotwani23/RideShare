@@ -24,7 +24,7 @@ const HomeScreen = ({ navigation }: any) => {
     { 
       title: 'Wallet', 
       icon: 'wallet-outline',
-      onPress: () => navigation.navigate('ProfileModal')
+      onPress: () => navigation.navigate('Profile')
     },
   ];
 
@@ -37,7 +37,7 @@ const HomeScreen = ({ navigation }: any) => {
               <Text style={styles.greeting}>Good Morning!</Text>
               <Text style={styles.subtitle}>Where are you going today?</Text>
             </View>
-            <TouchableOpacity onPress={() => navigation.navigate('ProfileModal')}>
+            <TouchableOpacity onPress={() => navigation.navigate('Profile')}>
               <Avatar.Icon 
                 size={40} 
                 icon="account" 

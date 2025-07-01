@@ -110,6 +110,16 @@ const VehicleDetailsScreen = ({ navigation }: any) => {
     }
   };
 
+  const handleBackPress = () => {
+    // Check if we can go back (there's a previous screen in the stack)
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+    } else {
+      // If no previous screen, navigate to the main tab that contains profile
+      navigation.navigate('MainTabs', { screen: 'Profile' });
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -117,7 +127,7 @@ const VehicleDetailsScreen = ({ navigation }: any) => {
           icon="arrow-left"
           size={24}
           iconColor="#000000"
-          onPress={() => navigation.goBack()}
+          onPress={handleBackPress}
           style={styles.backButton}
         />
         <Text style={styles.headerTitle}>Vehicle Details</Text>

@@ -13,7 +13,12 @@ const RateRideScreen = ({ navigation, route }: any) => {
 
   const handleSubmitReview = () => {
     console.log('Review submitted:', { rating, review });
-    navigation.goBack();
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+    } else {
+      // Navigate to My Rides if no previous screen
+      navigation.navigate('My Rides');
+    }
   };
 
   const renderStars = () => {

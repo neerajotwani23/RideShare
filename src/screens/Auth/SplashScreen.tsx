@@ -5,17 +5,28 @@ import { useAuth } from '../../context/AuthContext';
 const { width: screenWidth } = Dimensions.get('window');
 
 const SplashScreen = ({ navigation }: any) => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, roleSelected, profileSetupComplete } = useAuth();
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      // For now, let's navigate directly to Login to test
-      // Later we can add proper authentication state management
-      navigation.replace('Login');
+      // Simulate session check - navigate based on authentication state
+      if (isAuthenticated && roleSelected && profileSetupComplete) {
+        // User has a valid session and completed setup - go to main app
+        navigation.replace('MainTabs');
+      } else if (isAuthenticated && roleSelected && !profileSetupComplete) {
+        // User logged in and selected role but didn't complete profile setup
+        navigation.replace('ProfileSetup');
+      } else if (isAuthenticated && !roleSelected) {
+        // User logged in but didn't select role
+        navigation.replace('RoleSelection');
+      } else {
+        // No valid session - go to login
+        navigation.replace('Login');
+      }
     }, 2500);
 
     return () => clearTimeout(timer);
-  }, [navigation]);
+  }, [navigation, isAuthenticated, roleSelected, profileSetupComplete]);
 
   return (
     <View style={styles.container}>
