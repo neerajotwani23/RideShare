@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, ScrollView, SafeAreaView, TouchableOpacity, Animated } from 'react-native';
 import { Text, Button, Avatar, Card, Divider } from 'react-native-paper';
+import Icon from '../../components/Icon';
 import { useAuth } from '../../context/AuthContext';
 
 const mockUser = {
@@ -69,16 +70,19 @@ const ProfileScreen = ({ navigation }: any) => {
           <Card.Content>
             <View style={styles.statsRow}>
               <View style={styles.statItem}>
+                <Icon name="car" size={24} color="#007AFF" style={styles.statIcon} />
                 <Text style={styles.statNumber}>{user.rides}</Text>
                 <Text style={styles.statLabel}>Total Rides</Text>
               </View>
               <Divider style={styles.statDivider} />
               <View style={styles.statItem}>
+                <Icon name="star" size={24} color="#FFD700" style={styles.statIcon} />
                 <Text style={styles.statNumber}>{user.rating}</Text>
                 <Text style={styles.statLabel}>Rating</Text>
               </View>
               <Divider style={styles.statDivider} />
               <View style={styles.statItem}>
+                <Icon name="message-text" size={24} color="#34C759" style={styles.statIcon} />
                 <Text style={styles.statNumber}>15</Text>
                 <Text style={styles.statLabel}>Reviews</Text>
               </View>
@@ -141,76 +145,94 @@ const ProfileScreen = ({ navigation }: any) => {
         </View>
 
         <View style={styles.menuItems}>
-          <Button 
-            mode="contained-tonal" 
+          <TouchableOpacity 
             style={styles.menuButton}
-            contentStyle={styles.menuButtonContent}
             onPress={() => navigation && navigation.navigate('EditProfile')}
-            icon="account-edit"
           >
-            Edit Profile
-          </Button>
+            <View style={styles.menuButtonContent}>
+              <Icon name="account-edit" size={24} color="#007AFF" />
+              <Text style={styles.menuButtonText}>Edit Profile</Text>
+              <Icon name="chevron-right" size={24} color="#C7C7CC" />
+            </View>
+          </TouchableOpacity>
 
-          <Button 
-            mode="contained-tonal" 
+          <TouchableOpacity 
             style={styles.menuButton}
-            contentStyle={styles.menuButtonContent}
             onPress={() => navigation && navigation.navigate('Reviews')}
-            icon="star"
           >
-            My Reviews
-          </Button>
+            <View style={styles.menuButtonContent}>
+              <Icon name="star" size={24} color="#FFD700" />
+              <Text style={styles.menuButtonText}>My Reviews</Text>
+              <Icon name="chevron-right" size={24} color="#C7C7CC" />
+            </View>
+          </TouchableOpacity>
 
           {currentRole === 'driver' && (
-            <Button 
-              mode="contained-tonal" 
+            <TouchableOpacity 
               style={styles.menuButton}
-              contentStyle={styles.menuButtonContent}
               onPress={() => navigation && navigation.navigate('VehicleDetails')}
-              icon="car"
             >
-              Vehicle Details
-            </Button>
+              <View style={styles.menuButtonContent}>
+                <Icon name="car" size={24} color="#34C759" />
+                <Text style={styles.menuButtonText}>Vehicle Details</Text>
+                <Icon name="chevron-right" size={24} color="#C7C7CC" />
+              </View>
+            </TouchableOpacity>
           )}
 
-          <Button 
-            mode="contained-tonal" 
+          <TouchableOpacity 
             style={styles.menuButton}
-            contentStyle={styles.menuButtonContent}
             onPress={() => navigation && navigation.navigate('Wallet')}
-            icon="wallet"
           >
-            Wallet
-          </Button>
+            <View style={styles.menuButtonContent}>
+              <Icon name="wallet" size={24} color="#FF9500" />
+              <Text style={styles.menuButtonText}>Wallet</Text>
+              <Icon name="chevron-right" size={24} color="#C7C7CC" />
+            </View>
+          </TouchableOpacity>
 
-          <Button 
-            mode="contained-tonal" 
+          <TouchableOpacity 
             style={styles.menuButton}
-            contentStyle={styles.menuButtonContent}
             onPress={() => navigation && navigation.navigate('Notifications')}
-            icon="bell"
           >
-            Notifications
-          </Button>
+            <View style={styles.menuButtonContent}>
+              <Icon name="bell" size={24} color="#FF3B30" />
+              <Text style={styles.menuButtonText}>Notifications</Text>
+              <Icon name="chevron-right" size={24} color="#C7C7CC" />
+            </View>
+          </TouchableOpacity>
 
-          <Button 
-            mode="contained-tonal" 
+          <TouchableOpacity 
             style={styles.menuButton}
-            contentStyle={styles.menuButtonContent}
-            icon="help-circle"
+            onPress={() => {/* Handle help */}}
           >
-            Help & Support
-          </Button>
+            <View style={styles.menuButtonContent}>
+              <Icon name="help-circle" size={24} color="#5856D6" />
+              <Text style={styles.menuButtonText}>Help & Support</Text>
+              <Icon name="chevron-right" size={24} color="#C7C7CC" />
+            </View>
+          </TouchableOpacity>
 
-          <Button 
-            mode="contained-tonal" 
-            style={[styles.menuButton, styles.logoutButton]}
-            contentStyle={styles.menuButtonContent}
-            onPress={handleLogout}
-            icon="logout"
+          <TouchableOpacity 
+            style={styles.menuButton}
+            onPress={() => {/* Handle settings */}}
           >
-            Logout
-          </Button>
+            <View style={styles.menuButtonContent}>
+              <Icon name="cog" size={24} color="#8E8E93" />
+              <Text style={styles.menuButtonText}>Settings</Text>
+              <Icon name="chevron-right" size={24} color="#C7C7CC" />
+            </View>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={styles.menuButton}
+            onPress={handleLogout}
+          >
+            <View style={styles.menuButtonContent}>
+              <Icon name="logout" size={24} color="#FF3B30" />
+              <Text style={[styles.menuButtonText, styles.logoutText]}>Logout</Text>
+            </View>
+          </TouchableOpacity>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -262,6 +284,9 @@ const styles = StyleSheet.create({
     height: 40,
     width: 1,
   },
+  statIcon: {
+    marginBottom: 4,
+  },
   statNumber: {
     fontSize: 24,
     fontFamily: 'Montserrat-Bold',
@@ -299,9 +324,14 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     justifyContent: 'flex-start',
   },
-  logoutButton: {
-    backgroundColor: '#FF3B30',
-    marginTop: 16,
+  menuButtonText: {
+    fontSize: 16,
+    fontFamily: 'Montserrat-Regular',
+    color: '#666666',
+    marginLeft: 12,
+  },
+  logoutText: {
+    color: '#FF3B30',
   },
   roleSwitchSection: {
     marginBottom: 24,

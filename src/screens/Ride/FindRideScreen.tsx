@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, ScrollView, SafeAreaView, Platform, TouchableOpacity } from 'react-native';
 import { Text, TextInput, Button, Card, Chip, Divider, SegmentedButtons } from 'react-native-paper';
+import Icon from '../../components/Icon';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
 const mockResults = [
@@ -90,23 +91,27 @@ const FindRideScreen = ({ navigation }: any) => {
 
         <Card style={styles.searchCard}>
           <Card.Content style={styles.searchContent}>
-            <TextInput
-              label="From"
-              value={source}
-              onChangeText={setSource}
-              style={styles.input}
-              mode="outlined"
-              left={<TextInput.Icon icon="map-marker" />}
-            />
+            <View style={styles.inputContainer}>
+              <Icon name="map-marker" size={24} color="#007AFF" style={styles.inputIcon} />
+              <TextInput
+                label="From"
+                value={source}
+                onChangeText={setSource}
+                style={styles.input}
+                mode="outlined"
+              />
+            </View>
 
-            <TextInput
-              label="To"
-              value={destination}
-              onChangeText={setDestination}
-              style={styles.input}
-              mode="outlined"
-              left={<TextInput.Icon icon="map-marker-outline" />}
-            />
+            <View style={styles.inputContainer}>
+              <Icon name="map-marker-check" size={24} color="#34C759" style={styles.inputIcon} />
+              <TextInput
+                label="To"
+                value={destination}
+                onChangeText={setDestination}
+                style={styles.input}
+                mode="outlined"
+              />
+            </View>
 
             <Text style={styles.sectionTitle}>When do you need a ride?</Text>
             <SegmentedButtons
@@ -131,13 +136,17 @@ const FindRideScreen = ({ navigation }: any) => {
               <Card style={styles.nowCard}>
                 <Card.Content>
                   <View style={styles.nowContent}>
+                    <Icon name="clock-fast" size={32} color="#007AFF" style={styles.nowIcon} />
                     <Text style={styles.nowTitle}>Looking for Immediate Rides</Text>
                     <Text style={styles.nowSubtitle}>
                       We'll show you rides that are available right now
                     </Text>
-                    <Text style={styles.currentTime}>
-                      Current time: {formatTime(new Date())}
-                    </Text>
+                    <View style={styles.currentTimeContainer}>
+                      <Icon name="clock-outline" size={16} color="#666666" />
+                      <Text style={styles.currentTime}>
+                        Current time: {formatTime(new Date())}
+                      </Text>
+                    </View>
                   </View>
                 </Card.Content>
               </Card>
@@ -153,6 +162,7 @@ const FindRideScreen = ({ navigation }: any) => {
                     onPress={() => setShowDatePicker(true)}
                   >
                     <View style={styles.dateTimeContent}>
+                      <Icon name="calendar" size={20} color="#007AFF" />
                       <Text style={styles.dateTimeLabel}>Date</Text>
                       <Text style={styles.dateTimeValue}>{formatDate(date)}</Text>
                     </View>
@@ -163,6 +173,7 @@ const FindRideScreen = ({ navigation }: any) => {
                     onPress={() => setShowTimePicker(true)}
                   >
                     <View style={styles.dateTimeContent}>
+                      <Icon name="clock-outline" size={20} color="#007AFF" />
                       <Text style={styles.dateTimeLabel}>Time</Text>
                       <Text style={styles.dateTimeValue}>{formatTime(time)}</Text>
                     </View>
@@ -197,50 +208,60 @@ const FindRideScreen = ({ navigation }: any) => {
                 <Card.Content style={styles.cardContent}>
                   <View style={styles.rideHeader}>
                     <View style={styles.driverInfo}>
-                      <Text style={styles.driverName}>{ride.driver}</Text>
-                      <View style={styles.ratingContainer}>
-                        <Text style={styles.rating}>★ {ride.rating}</Text>
-                        <Text style={styles.carInfo}>• {ride.car}</Text>
+                      <View style={styles.driverNameRow}>
+                        <Icon name="account" size={20} color="#007AFF" />
+                        <Text style={styles.driverName}>{ride.driver}</Text>
+                      </View>
+                      <View style={styles.ratingRow}>
+                        <Icon name="star" size={16} color="#FFD700" />
+                        <Text style={styles.rating}>{ride.rating}</Text>
                       </View>
                     </View>
-                    <Text style={styles.fareText}>Rs. {ride.fare}</Text>
+                    <View style={styles.fareContainer}>
+                      <Icon name="currency-inr" size={16} color="#007AFF" />
+                      <Text style={styles.fare}>{ride.fare}</Text>
+                    </View>
                   </View>
 
                   <Divider style={styles.divider} />
 
                   <View style={styles.routeInfo}>
-                    <Text style={styles.routeText}>{ride.from} → {ride.to}</Text>
-                    <Text style={styles.timeText}>Departure: {ride.departureTime}</Text>
+                    <View style={styles.routeRow}>
+                      <Icon name="map-marker" size={16} color="#007AFF" />
+                      <Text style={styles.routeText}>{ride.from}</Text>
+                    </View>
+                    <View style={styles.routeRow}>
+                      <Icon name="map-marker-check" size={16} color="#34C759" />
+                      <Text style={styles.routeText}>{ride.to}</Text>
+                    </View>
                   </View>
 
                   <View style={styles.rideDetails}>
-                    <View style={styles.seatsContainer}>
-                      <Text style={styles.seatsText}>
-                        {ride.availableSeats} seats available
-                      </Text>
+                    <View style={styles.detailRow}>
+                      <Icon name="clock-outline" size={16} color="#666666" />
+                      <Text style={styles.detailText}>{ride.departureTime}</Text>
                     </View>
-                    
-                    <View style={styles.preferencesContainer}>
-                      {ride.preferences.map((pref, index) => (
-                        <Chip 
-                          key={index}
-                          style={styles.preferenceChip}
-                          textStyle={styles.preferenceText}
-                        >
-                          {pref}
-                        </Chip>
-                      ))}
+                    <View style={styles.detailRow}>
+                      <Icon name="car-seat" size={16} color="#666666" />
+                      <Text style={styles.detailText}>{ride.availableSeats} seats available</Text>
+                    </View>
+                    <View style={styles.detailRow}>
+                      <Icon name="car" size={16} color="#666666" />
+                      <Text style={styles.detailText}>{ride.car}</Text>
                     </View>
                   </View>
 
-                  <Button 
-                    mode="contained"
-                    style={styles.bookButton}
-                    contentStyle={styles.bookButtonContent}
-                    onPress={() => navigation.navigate('RideDetails', { rideId: ride.id })}
-                  >
-                    Book Now
-                  </Button>
+                  <View style={styles.preferences}>
+                    {ride.preferences.map((pref, index) => (
+                      <Chip 
+                        key={index} 
+                        style={styles.preferenceChip}
+                        textStyle={styles.preferenceText}
+                      >
+                        {pref}
+                      </Chip>
+                    ))}
+                  </View>
                 </Card.Content>
               </Card>
             ))}
@@ -253,7 +274,6 @@ const FindRideScreen = ({ navigation }: any) => {
             mode="date"
             display="default"
             onChange={onDateChange}
-            minimumDate={new Date()}
           />
         )}
 
@@ -301,8 +321,16 @@ const styles = StyleSheet.create({
   searchContent: {
     padding: 16,
   },
-  input: {
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: 16,
+  },
+  inputIcon: {
+    marginRight: 8,
+  },
+  input: {
+    flex: 1,
     backgroundColor: '#FFFFFF',
   },
   sectionTitle: {
@@ -323,6 +351,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 8,
   },
+  nowIcon: {
+    marginBottom: 8,
+  },
   nowTitle: {
     fontSize: 16,
     fontFamily: 'Montserrat-SemiBold',
@@ -335,6 +366,10 @@ const styles = StyleSheet.create({
     color: '#666666',
     textAlign: 'center',
     marginBottom: 8,
+  },
+  currentTimeContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   currentTime: {
     fontSize: 14,
@@ -413,13 +448,17 @@ const styles = StyleSheet.create({
   driverInfo: {
     flex: 1,
   },
+  driverNameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   driverName: {
     fontSize: 18,
     fontFamily: 'Montserrat-SemiBold',
     color: '#000000',
-    marginBottom: 4,
+    marginLeft: 4,
   },
-  ratingContainer: {
+  ratingRow: {
     flexDirection: 'row',
     alignItems: 'center',
   },
@@ -428,13 +467,11 @@ const styles = StyleSheet.create({
     fontFamily: 'Montserrat-Medium',
     color: '#FF9500',
   },
-  carInfo: {
-    fontSize: 14,
-    fontFamily: 'Montserrat-Regular',
-    color: '#666666',
-    marginLeft: 4,
+  fareContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
-  fareText: {
+  fare: {
     fontSize: 20,
     fontFamily: 'Montserrat-Bold',
     color: '#007AFF',
@@ -445,29 +482,30 @@ const styles = StyleSheet.create({
   routeInfo: {
     marginBottom: 12,
   },
+  routeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   routeText: {
     fontSize: 16,
     fontFamily: 'Montserrat-SemiBold',
     color: '#000000',
-    marginBottom: 4,
-  },
-  timeText: {
-    fontSize: 14,
-    fontFamily: 'Montserrat-Regular',
-    color: '#666666',
+    marginLeft: 4,
   },
   rideDetails: {
     marginBottom: 16,
   },
-  seatsContainer: {
-    marginBottom: 8,
+  detailRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
   },
-  seatsText: {
+  detailText: {
     fontSize: 14,
-    fontFamily: 'Montserrat-Medium',
-    color: '#34C759',
+    fontFamily: 'Montserrat-Regular',
+    color: '#666666',
   },
-  preferencesContainer: {
+  preferences: {
     flexDirection: 'row',
     flexWrap: 'wrap',
   },
@@ -480,12 +518,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontFamily: 'Montserrat-Regular',
     color: '#666666',
-  },
-  bookButton: {
-    borderRadius: 8,
-  },
-  bookButtonContent: {
-    paddingVertical: 4,
   },
 });
 

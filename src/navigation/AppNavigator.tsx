@@ -2,7 +2,7 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { IconButton } from 'react-native-paper';
+import Icon from '../components/Icon';
 
 // Auth Screens
 import SplashScreen from '../screens/Auth/SplashScreen';
@@ -182,59 +182,29 @@ function MainTabs() {
   );
 }
 
-// Simple Icon Components (using React Native Paper IconButton)
+// Icon Components (using centralized Icon component)
 const HomeIcon = ({ color, size }: { color: string; size: number }) => (
-  <IconButton 
-    icon="home-outline" 
-    size={size} 
-    iconColor={color} 
-    style={{ margin: 0 }}
-  />
+  <Icon name="home-outline" size={size} color={color} />
 );
 
 const SearchIcon = ({ color, size }: { color: string; size: number }) => (
-  <IconButton 
-    icon="magnify" 
-    size={size} 
-    iconColor={color} 
-    style={{ margin: 0 }}
-  />
+  <Icon name="magnify" size={size} color={color} />
 );
 
 const PlusIcon = ({ color, size }: { color: string; size: number }) => (
-  <IconButton 
-    icon="plus-circle-outline" 
-    size={size} 
-    iconColor={color} 
-    style={{ margin: 0 }}
-  />
+  <Icon name="plus-circle-outline" size={size} color={color} />
 );
 
 const RidesIcon = ({ color, size }: { color: string; size: number }) => (
-  <IconButton 
-    icon="car-outline" 
-    size={size} 
-    iconColor={color} 
-    style={{ margin: 0 }}
-  />
+  <Icon name="car-outline" size={size} color={color} />
 );
 
 const ChatIcon = ({ color, size }: { color: string; size: number }) => (
-  <IconButton 
-    icon="chat-outline" 
-    size={size} 
-    iconColor={color} 
-    style={{ margin: 0 }}
-  />
+  <Icon name="chat-outline" size={size} color={color} />
 );
 
 const ProfileIcon = ({ color, size }: { color: string; size: number }) => (
-  <IconButton 
-    icon="account-outline" 
-    size={size} 
-    iconColor={color} 
-    style={{ margin: 0 }}
-  />
+  <Icon name="account-outline" size={size} color={color} />
 );
 
 // Main App Navigator

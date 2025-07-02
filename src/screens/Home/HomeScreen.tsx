@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, StyleSheet, ScrollView, SafeAreaView, TouchableOpacity } from 'react-native';
-import { Text, Button, Card, Searchbar, FAB, IconButton, Avatar } from 'react-native-paper';
+import { Text, Button, Card, Searchbar, FAB, Avatar } from 'react-native-paper';
+import Icon from '../../components/Icon';
 
 const HomeScreen = ({ navigation }: any) => {
   const [searchQuery, setSearchQuery] = React.useState('');
@@ -59,6 +60,7 @@ const HomeScreen = ({ navigation }: any) => {
 
         <Card style={styles.mapCard}>
           <Card.Content style={styles.mapContent}>
+            <Icon name="map-marker" size={48} color="#666666" style={styles.mapIcon} />
             <Text style={styles.mapPlaceholder}>Map Integration</Text>
             <Text style={styles.mapSubtext}>Interactive map will be displayed here</Text>
           </Card.Content>
@@ -74,10 +76,10 @@ const HomeScreen = ({ navigation }: any) => {
                 onPress={action.onPress}
               >
                 <View style={styles.actionIconContainer}>
-                  <IconButton
-                    icon={action.icon}
+                  <Icon
+                    name={action.icon}
                     size={24}
-                    iconColor="#007AFF"
+                    color="#007AFF"
                     style={styles.actionIcon}
                   />
                 </View>
@@ -93,31 +95,73 @@ const HomeScreen = ({ navigation }: any) => {
             <Card style={styles.rideCard}>
               <Card.Content style={styles.rideCardContent}>
                 <View style={styles.rideHeader}>
-                  <Text style={styles.rideFrom}>Downtown</Text>
-                  <Text style={styles.rideTo}>Business District</Text>
+                  <View style={styles.locationContainer}>
+                    <Icon name="map-marker" size={16} color="#007AFF" />
+                    <Text style={styles.rideFrom}>Downtown</Text>
+                  </View>
+                  <View style={styles.locationContainer}>
+                    <Icon name="map-marker-check" size={16} color="#34C759" />
+                    <Text style={styles.rideTo}>Business District</Text>
+                  </View>
                 </View>
-                <Text style={styles.rideTime}>8:30 AM</Text>
-                <Text style={styles.ridePrice}>Rs. 150</Text>
+                <View style={styles.rideDetails}>
+                  <View style={styles.rideDetail}>
+                    <Icon name="clock-outline" size={16} color="#666666" />
+                    <Text style={styles.rideTime}>8:30 AM</Text>
+                  </View>
+                  <View style={styles.rideDetail}>
+                    <Icon name="currency-inr" size={16} color="#666666" />
+                    <Text style={styles.ridePrice}>Rs. 150</Text>
+                  </View>
+                </View>
               </Card.Content>
             </Card>
             <Card style={styles.rideCard}>
               <Card.Content style={styles.rideCardContent}>
                 <View style={styles.rideHeader}>
-                  <Text style={styles.rideFrom}>University</Text>
-                  <Text style={styles.rideTo}>Mall</Text>
+                  <View style={styles.locationContainer}>
+                    <Icon name="map-marker" size={16} color="#007AFF" />
+                    <Text style={styles.rideFrom}>University</Text>
+                  </View>
+                  <View style={styles.locationContainer}>
+                    <Icon name="map-marker-check" size={16} color="#34C759" />
+                    <Text style={styles.rideTo}>Mall</Text>
+                  </View>
                 </View>
-                <Text style={styles.rideTime}>2:00 PM</Text>
-                <Text style={styles.ridePrice}>Rs. 200</Text>
+                <View style={styles.rideDetails}>
+                  <View style={styles.rideDetail}>
+                    <Icon name="clock-outline" size={16} color="#666666" />
+                    <Text style={styles.rideTime}>2:00 PM</Text>
+                  </View>
+                  <View style={styles.rideDetail}>
+                    <Icon name="currency-inr" size={16} color="#666666" />
+                    <Text style={styles.ridePrice}>Rs. 200</Text>
+                  </View>
+                </View>
               </Card.Content>
             </Card>
             <Card style={styles.rideCard}>
               <Card.Content style={styles.rideCardContent}>
                 <View style={styles.rideHeader}>
-                  <Text style={styles.rideFrom}>Airport</Text>
-                  <Text style={styles.rideTo}>City Center</Text>
+                  <View style={styles.locationContainer}>
+                    <Icon name="map-marker" size={16} color="#007AFF" />
+                    <Text style={styles.rideFrom}>Airport</Text>
+                  </View>
+                  <View style={styles.locationContainer}>
+                    <Icon name="map-marker-check" size={16} color="#34C759" />
+                    <Text style={styles.rideTo}>City Center</Text>
+                  </View>
                 </View>
-                <Text style={styles.rideTime}>6:15 PM</Text>
-                <Text style={styles.ridePrice}>Rs. 500</Text>
+                <View style={styles.rideDetails}>
+                  <View style={styles.rideDetail}>
+                    <Icon name="clock-outline" size={16} color="#666666" />
+                    <Text style={styles.rideTime}>6:15 PM</Text>
+                  </View>
+                  <View style={styles.rideDetail}>
+                    <Icon name="currency-inr" size={16} color="#666666" />
+                    <Text style={styles.ridePrice}>Rs. 500</Text>
+                  </View>
+                </View>
               </Card.Content>
             </Card>
           </ScrollView>
@@ -176,6 +220,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#F2F2F7',
+  },
+  mapIcon: {
+    marginBottom: 16,
   },
   mapPlaceholder: {
     fontSize: 18,
@@ -254,26 +301,43 @@ const styles = StyleSheet.create({
   rideHeader: {
     marginBottom: 8,
   },
+  locationContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
   rideFrom: {
     fontSize: 14,
     fontFamily: 'Montserrat-SemiBold',
     color: '#000000',
+    marginLeft: 4,
   },
   rideTo: {
     fontSize: 14,
     fontFamily: 'Montserrat-SemiBold',
     color: '#000000',
+    marginLeft: 4,
   },
   rideTime: {
     fontSize: 12,
     fontFamily: 'Montserrat-Regular',
     color: '#666666',
-    marginBottom: 4,
+    marginLeft: 4,
   },
   ridePrice: {
     fontSize: 14,
     fontFamily: 'Montserrat-Bold',
     color: '#007AFF',
+    marginLeft: 4,
+  },
+  rideDetails: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  rideDetail: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
 });
 
