@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, ScrollView, SafeAreaView, Platform, TouchableOpacity } from 'react-native';
 import { Text, TextInput, Button, Switch, HelperText, Card, SegmentedButtons } from 'react-native-paper';
+import Icon from '../../components/Icon';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
 const PostRideScreen = () => {
@@ -77,29 +78,34 @@ const PostRideScreen = () => {
 
         <Card style={styles.mapCard}>
           <Card.Content style={styles.mapContent}>
+            <Icon name="map-marker-path" size={48} color="#666666" style={styles.mapIcon} />
             <Text style={styles.mapPlaceholder}>Select Route on Map</Text>
             <Text style={styles.mapSubtext}>Tap to choose pickup and drop-off locations</Text>
           </Card.Content>
         </Card>
 
         <View style={styles.form}>
-          <TextInput
-            label="From (Pickup Location)"
-            value={source}
-            onChangeText={setSource}
-            style={styles.input}
-            mode="outlined"
-            left={<TextInput.Icon icon="map-marker" />}
-          />
+          <View style={styles.inputContainer}>
+            <Icon name="map-marker" size={24} color="#007AFF" style={styles.inputIcon} />
+            <TextInput
+              label="From (Pickup Location)"
+              value={source}
+              onChangeText={setSource}
+              style={styles.input}
+              mode="outlined"
+            />
+          </View>
 
-          <TextInput
-            label="To (Drop-off Location)"
-            value={destination}
-            onChangeText={setDestination}
-            style={styles.input}
-            mode="outlined"
-            left={<TextInput.Icon icon="map-marker-outline" />}
-          />
+          <View style={styles.inputContainer}>
+            <Icon name="map-marker-check" size={24} color="#34C759" style={styles.inputIcon} />
+            <TextInput
+              label="To (Drop-off Location)"
+              value={destination}
+              onChangeText={setDestination}
+              style={styles.input}
+              mode="outlined"
+            />
+          </View>
 
           <Text style={styles.sectionTitle}>When do you want to travel?</Text>
           <SegmentedButtons
@@ -124,13 +130,17 @@ const PostRideScreen = () => {
             <Card style={styles.nowCard}>
               <Card.Content>
                 <View style={styles.nowContent}>
+                  <Icon name="clock-fast" size={32} color="#007AFF" style={styles.nowIcon} />
                   <Text style={styles.nowTitle}>Leaving Now</Text>
                   <Text style={styles.nowSubtitle}>
                     Your ride will be available immediately for passengers to book
                   </Text>
-                  <Text style={styles.currentTime}>
-                    Current time: {formatTime(new Date())}
-                  </Text>
+                  <View style={styles.currentTimeContainer}>
+                    <Icon name="clock-outline" size={16} color="#666666" />
+                    <Text style={styles.currentTime}>
+                      Current time: {formatTime(new Date())}
+                    </Text>
+                  </View>
                 </View>
               </Card.Content>
             </Card>
@@ -146,6 +156,7 @@ const PostRideScreen = () => {
                   onPress={() => setShowDatePicker(true)}
                 >
                   <View style={styles.dateTimeContent}>
+                    <Icon name="calendar" size={20} color="#007AFF" />
                     <Text style={styles.dateTimeLabel}>Date</Text>
                     <Text style={styles.dateTimeValue}>{formatDate(date)}</Text>
                   </View>
@@ -156,6 +167,7 @@ const PostRideScreen = () => {
                   onPress={() => setShowTimePicker(true)}
                 >
                   <View style={styles.dateTimeContent}>
+                    <Icon name="clock-outline" size={20} color="#007AFF" />
                     <Text style={styles.dateTimeLabel}>Time</Text>
                     <Text style={styles.dateTimeValue}>{formatTime(time)}</Text>
                   </View>
@@ -165,49 +177,67 @@ const PostRideScreen = () => {
           )}
 
           <View style={styles.timeRow}>
-            <TextInput
-              label="Available Seats"
-              value={seats}
-              onChangeText={setSeats}
-              keyboardType="numeric"
-              style={[styles.input, styles.halfInput]}
-              mode="outlined"
-              left={<TextInput.Icon icon="account-multiple" />}
-            />
-            <TextInput
-              label="Fare per Seat (Rs.)"
-              value={fare}
-              onChangeText={setFare}
-              keyboardType="numeric"
-              style={[styles.input, styles.halfInput]}
-              mode="outlined"
-              left={<TextInput.Icon icon="currency-usd" />}
-            />
+            <View style={[styles.inputContainer, styles.halfInput]}>
+              <Icon name="account-multiple" size={24} color="#007AFF" style={styles.inputIcon} />
+              <TextInput
+                label="Available Seats"
+                value={seats}
+                onChangeText={setSeats}
+                keyboardType="numeric"
+                style={styles.input}
+                mode="outlined"
+              />
+            </View>
+            <View style={[styles.inputContainer, styles.halfInput]}>
+              <Icon name="currency-inr" size={24} color="#007AFF" style={styles.inputIcon} />
+              <TextInput
+                label="Fare per Seat (Rs.)"
+                value={fare}
+                onChangeText={setFare}
+                keyboardType="numeric"
+                style={styles.input}
+                mode="outlined"
+              />
+            </View>
           </View>
 
           <Text style={styles.preferencesTitle}>Ride Preferences</Text>
           <View style={styles.preferenceItem}>
-            <Text style={styles.preferenceText}>Air Conditioning</Text>
+            <View style={styles.preferenceContent}>
+              <Icon name="snowflake" size={20} color="#007AFF" />
+              <Text style={styles.preferenceText}>Air Conditioning</Text>
+            </View>
             <Switch value={ac} onValueChange={setAc} />
           </View>
           <View style={styles.preferenceItem}>
-            <Text style={styles.preferenceText}>Music Allowed</Text>
+            <View style={styles.preferenceContent}>
+              <Icon name="music" size={20} color="#FF9500" />
+              <Text style={styles.preferenceText}>Music Allowed</Text>
+            </View>
             <Switch value={music} onValueChange={setMusic} />
           </View>
           <View style={styles.preferenceItem}>
-            <Text style={styles.preferenceText}>No Smoking</Text>
+            <View style={styles.preferenceContent}>
+              <Icon name="smoking-off" size={20} color="#34C759" />
+              <Text style={styles.preferenceText}>No Smoking</Text>
+            </View>
             <Switch value={!smoking} onValueChange={(value) => setSmoking(!value)} />
           </View>
 
-          {error ? <HelperText type="error" visible>{error}</HelperText> : null}
+          {error ? (
+            <HelperText type="error" visible={!!error}>
+              {error}
+            </HelperText>
+          ) : null}
 
           <Button 
             mode="contained" 
-            onPress={handlePost} 
+            onPress={handlePost}
             style={styles.postButton}
             contentStyle={styles.buttonContent}
+            icon="car-plus"
           >
-            {rideType === 'now' ? 'Post Ride Now' : 'Schedule Ride'}
+            Post Ride
           </Button>
         </View>
 
@@ -217,7 +247,6 @@ const PostRideScreen = () => {
             mode="date"
             display="default"
             onChange={onDateChange}
-            minimumDate={new Date()}
           />
         )}
 
@@ -268,6 +297,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#F2F2F7',
   },
+  mapIcon: {
+    marginBottom: 16,
+  },
   mapPlaceholder: {
     fontSize: 16,
     fontFamily: 'Montserrat-SemiBold',
@@ -282,8 +314,16 @@ const styles = StyleSheet.create({
   form: {
     width: '100%',
   },
-  input: {
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: 16,
+  },
+  inputIcon: {
+    marginRight: 8,
+  },
+  input: {
+    flex: 1,
     backgroundColor: '#FFFFFF',
   },
   sectionTitle: {
@@ -304,6 +344,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 8,
   },
+  nowIcon: {
+    marginBottom: 8,
+  },
   nowTitle: {
     fontSize: 16,
     fontFamily: 'Montserrat-SemiBold',
@@ -316,6 +359,10 @@ const styles = StyleSheet.create({
     color: '#666666',
     textAlign: 'center',
     marginBottom: 8,
+  },
+  currentTimeContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   currentTime: {
     fontSize: 14,
@@ -375,10 +422,15 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     paddingHorizontal: 4,
   },
+  preferenceContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   preferenceText: {
     fontSize: 16,
     fontFamily: 'Montserrat-Regular',
     color: '#000000',
+    marginLeft: 8,
   },
   postButton: {
     marginTop: 24,
