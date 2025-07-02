@@ -9,7 +9,7 @@ const HomeScreen = ({ navigation }: any) => {
   const quickActions = [
     { 
       title: 'Post Ride', 
-      icon: 'car-plus',
+      icon: 'car',
       onPress: () => navigation.navigate('Post Ride')
     },
     { 
@@ -241,7 +241,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 20,
-    fontFamily: 'Montserrat-SemiBold',
+    fontFamily: 'Montserrat-Bold',
     color: '#000000',
     marginBottom: 16,
   },
