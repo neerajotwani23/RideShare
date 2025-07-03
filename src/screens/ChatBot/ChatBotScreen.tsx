@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, SafeAreaView, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, StyleSheet, ScrollView, SafeAreaView, KeyboardAvoidingView, Platform, Image } from 'react-native';
 import { Text, TextInput, IconButton, Card } from 'react-native-paper';
 import { TouchableOpacity } from 'react-native';
+import { COLORS } from '../../constants/colors';
 
 interface Message {
   id: number;
   text: string;
   isUser: boolean;
   timestamp: Date;
+  image?: string;
 }
 
 const ChatBotScreen = () => {
@@ -36,7 +38,7 @@ const ChatBotScreen = () => {
       setTimeout(() => {
         const botResponse: Message = {
           id: messages.length + 2,
-          text: "I understand you need help. Let me assist you with that!",
+          text: "Thanks for your message! I'm here to help with any ride-related questions.",
           isUser: false,
           timestamp: new Date(),
         };
@@ -51,11 +53,17 @@ const ChatBotScreen = () => {
     setInputText(suggestion);
   };
 
+  const quickQuestions = [
+    "Where are you?",
+    "I'm running late",
+    "Change pickup location",
+    "Cancel ride"
+  ];
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>RideShare Assistant</Text>
-        <Text style={styles.subtitle}>Ask me anything about your rides!</Text>
       </View>
 
       <KeyboardAvoidingView 
@@ -65,6 +73,7 @@ const ChatBotScreen = () => {
         <ScrollView 
           style={styles.messagesContainer}
           contentContainerStyle={styles.messagesContent}
+          showsVerticalScrollIndicator={false}
         >
           {messages.map((message) => (
             <View
@@ -74,60 +83,104 @@ const ChatBotScreen = () => {
                 message.isUser ? styles.userMessageWrapper : styles.botMessageWrapper,
               ]}
             >
-              <Card style={[
-                styles.messageCard,
+              {!message.isUser && (
+                <View style={styles.avatarContainer}>
+                  <View style={[styles.avatar, styles.botAvatar]}>
+                    <Text style={styles.avatarText}>R</Text>
+                  </View>
+                </View>
+              )}
+              <View style={[
+                styles.messageBubble,
                 message.isUser ? styles.userMessage : styles.botMessage,
               ]}>
-                <Card.Content style={styles.messageContent}>
+                {message.image ? (
+                  <View>
+                    <Image source={{ uri: message.image }} style={styles.messageImage} />
+                    <Text style={[
+                      styles.messageText,
+                      message.isUser ? styles.userMessageText : styles.botMessageText,
+                    ]}>
+                      {message.text}
+                    </Text>
+                  </View>
+                ) : (
                   <Text style={[
                     styles.messageText,
                     message.isUser ? styles.userMessageText : styles.botMessageText,
                   ]}>
                     {message.text}
                   </Text>
-                </Card.Content>
-              </Card>
+                )}
+              </View>
+              {message.isUser && (
+                <View style={styles.avatarContainer}>
+                  <View style={[styles.avatar, styles.userAvatar]}>
+                    <Text style={styles.avatarText}>Y</Text>
+                  </View>
+                </View>
+              )}
             </View>
           ))}
         </ScrollView>
 
+        {/* Quick Questions */}
+        <View style={styles.quickQuestionsContainer}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.quickQuestionsScroll}>
+            {quickQuestions.map((question, index) => (
+              <TouchableOpacity 
+                key={index} 
+                style={styles.quickQuestionChip}
+                onPress={() => handleSuggestion(question)}
+              >
+                <Text style={styles.quickQuestionText}>{question}</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+
+        {/* Input Container */}
         <View style={styles.inputContainer}>
-          <TextInput
-            style={styles.textInput}
-            value={inputText}
-            onChangeText={setInputText}
-            placeholder="Type your message..."
-            multiline
-            mode="outlined"
-            left={<TextInput.Icon icon="message-text" />}
-          />
-          <IconButton
-            icon="send"
-            size={24}
-            iconColor="#007AFF"
-            style={styles.sendButton}
-            onPress={sendMessage}
-          />
+          <TouchableOpacity style={styles.micButton}>
+            <IconButton
+              icon="microphone"
+              size={26}
+              iconColor={COLORS.textSecondary}
+              style={styles.micIconButton}
+            />
+          </TouchableOpacity>
+          <View style={styles.inputWrapper}>
+            <TextInput
+              style={styles.textInput}
+              value={inputText}
+              onChangeText={setInputText}
+              placeholder="Start typing..."
+              multiline
+              placeholderTextColor={COLORS.textSecondary}
+              underlineColor="transparent"
+              activeUnderlineColor="transparent"
+              outlineColor="transparent"
+              activeOutlineColor="transparent"
+              mode="flat"
+              contentStyle={styles.inputContent}
+            />
+          </View>
+          <TouchableOpacity style={styles.sendButton} onPress={sendMessage}>
+            <IconButton
+              icon="send"
+              size={20}
+              iconColor={COLORS.primary}
+            />
+          </TouchableOpacity>
+        </View>
+
+        {/* AI Warning */}
+        <View style={styles.aiWarningContainer}>
+          <Text style={styles.aiWarningText}>
+             AI-generated responses. Information may not always be accurate.
+          </Text>
         </View>
       </KeyboardAvoidingView>
-
-      <View style={styles.suggestionsContainer}>
-        <Text style={styles.suggestionsTitle}>Quick Questions</Text>
-        <View style={styles.suggestions}>
-          <TouchableOpacity style={styles.suggestionChip} onPress={() => handleSuggestion("How do I post a ride?")}>
-            <Text style={styles.suggestionText}>How do I post a ride?</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.suggestionChip} onPress={() => handleSuggestion("How to find rides?")}>
-            <Text style={styles.suggestionText}>How to find rides?</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.suggestionChip} onPress={() => handleSuggestion("How does payment work?")}>
-            <Text style={styles.suggestionText}>How does payment work?</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.suggestionChip} onPress={() => handleSuggestion("How to rate a ride?")}>
-            <Text style={styles.suggestionText}>How to rate a ride?</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
     </SafeAreaView>
   );
 };
@@ -135,24 +188,20 @@ const ChatBotScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.lightGray,
   },
   header: {
-    padding: 24,
-    paddingBottom: 16,
+    padding: 16,
+    paddingVertical: 20,
+    backgroundColor: COLORS.primary,
     borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
+    borderBottomColor: COLORS.border,
+    alignItems: 'center',
   },
   title: {
-    fontSize: 24,
-    fontFamily: 'Montserrat-Bold',
-    color: '#000000',
-    marginBottom: 4,
-  },
-  subtitle: {
-    fontSize: 16,
-    fontFamily: 'Montserrat-Regular',
-    color: '#666666',
+    fontSize: 18,
+    fontFamily: 'Montserrat-SemiBold',
+    color: COLORS.secondary,
   },
   chatContainer: {
     flex: 1,
@@ -162,84 +211,144 @@ const styles = StyleSheet.create({
   },
   messagesContent: {
     padding: 16,
+    paddingBottom: 8,
   },
   messageWrapper: {
-    marginBottom: 12,
-  },
-  userMessageWrapper: {
+    flexDirection: 'row',
+    marginBottom: 16,
     alignItems: 'flex-end',
   },
-  botMessageWrapper: {
-    alignItems: 'flex-start',
+  userMessageWrapper: {
+    justifyContent: 'flex-end',
   },
-  messageCard: {
-    maxWidth: '80%',
-    borderRadius: 16,
-    elevation: 2,
+  botMessageWrapper: {
+    justifyContent: 'flex-start',
+  },
+  messageBubble: {
+    maxWidth: '75%',
+    borderRadius: 18,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    marginHorizontal: 8,
   },
   userMessage: {
     backgroundColor: '#007AFF',
   },
   botMessage: {
-    backgroundColor: '#F2F2F7',
-  },
-  messageContent: {
-    padding: 12,
+    backgroundColor: '#E5E5EA',
   },
   messageText: {
     fontSize: 16,
     fontFamily: 'Montserrat-Regular',
-    lineHeight: 22,
+    lineHeight: 20,
   },
   userMessageText: {
-    color: '#FFFFFF',
+    color: COLORS.primary,
   },
   botMessageText: {
-    color: '#000000',
+    color: COLORS.secondary,
+  },
+  messageImage: {
+    width: 200,
+    height: 150,
+    borderRadius: 12,
+    marginBottom: 8,
+  },
+  avatarContainer: {
+    width: 30,
+    height: 30,
+  },
+  avatar: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  userAvatar: {
+    backgroundColor: '#007AFF',
+  },
+  botAvatar: {
+    backgroundColor: COLORS.textSecondary,
+  },
+  avatarText: {
+    color: COLORS.primary,
+    fontSize: 12,
+    fontFamily: 'Montserrat-SemiBold',
+  },
+  quickQuestionsContainer: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  quickQuestionsScroll: {
+    flexGrow: 0,
+  },
+  quickQuestionChip: {
+    backgroundColor: COLORS.textSecondary,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    marginRight: 8,
+  },
+  aiWarningContainer: {
+    paddingHorizontal: 16,
+    paddingVertical: 4,
+    backgroundColor: COLORS.primary,
+  },
+  aiWarningText: {
+    fontSize: 11,
+    fontFamily: 'Montserrat-Regular',
+    color: COLORS.textSecondary,
+    textAlign: 'center',
+  },
+  quickQuestionText: {
+    color: COLORS.primary,
+    fontSize: 14,
+    fontFamily: 'Montserrat-Medium',
   },
   inputContainer: {
-    padding: 16,
-    borderTopWidth: 1,
-    borderTopColor: '#F0F0F0',
-    backgroundColor: '#FFFFFF',
     flexDirection: 'row',
+    padding: 16,
+    backgroundColor: COLORS.primary,
+    alignItems: 'center',
+  },
+  inputWrapper: {
+    flex: 1,
+    flexDirection: 'row',
+    backgroundColor: '#D3D3D3',
+    borderRadius: 20,
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    marginRight: 12,
+    height: 40,
     alignItems: 'center',
   },
   textInput: {
-    backgroundColor: '#FFFFFF',
-    maxHeight: 100,
     flex: 1,
-  },
-  sendButton: {
-    marginLeft: 8,
-  },
-  suggestionsContainer: {
-    padding: 16,
-    borderTopWidth: 1,
-    borderTopColor: '#F0F0F0',
-  },
-  suggestionsTitle: {
-    fontSize: 18,
-    fontFamily: 'Montserrat-Bold',
-    color: '#000000',
-    marginBottom: 8,
-  },
-  suggestions: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-  },
-  suggestionChip: {
-    padding: 8,
-    borderWidth: 1,
-    borderColor: '#F0F0F0',
-    borderRadius: 16,
-    marginRight: 8,
-    marginBottom: 8,
-  },
-  suggestionText: {
+    backgroundColor: 'transparent',
     fontSize: 16,
     fontFamily: 'Montserrat-Regular',
-    color: '#000000',
+    maxHeight: 100,
+    paddingVertical: 0,
+  },
+  inputContent: {
+    paddingHorizontal: 0,
+    paddingVertical: 0,
+  },
+  micButton: {
+    marginRight: 8,
+  },
+  micIconButton: {
+    margin: 0,
+    padding: 0,
+  },
+  sendButton: {
+    backgroundColor: COLORS.secondary,
+    borderRadius: 20,
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 

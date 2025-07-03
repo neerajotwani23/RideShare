@@ -2,6 +2,7 @@ import React from 'react';
 import { View, StyleSheet, ScrollView, SafeAreaView, TouchableOpacity } from 'react-native';
 import { Text, Button, Card, Searchbar, FAB, Avatar } from 'react-native-paper';
 import Icon from '../../components/Icon';
+import { COLORS } from '../../constants/colors';
 
 const HomeScreen = ({ navigation }: any) => {
   const [searchQuery, setSearchQuery] = React.useState('');
@@ -54,13 +55,13 @@ const HomeScreen = ({ navigation }: any) => {
             onChangeText={setSearchQuery}
             value={searchQuery}
             style={styles.searchBar}
-            iconColor="#666666"
+            iconColor={COLORS.textSecondary}
           />
         </View>
 
         <Card style={styles.mapCard}>
           <Card.Content style={styles.mapContent}>
-            <Icon name="map-marker" size={48} color="#666666" style={styles.mapIcon} />
+            <Icon name="map-marker" size={48} color={COLORS.textSecondary} style={styles.mapIcon} />
             <Text style={styles.mapPlaceholder}>Map Integration</Text>
             <Text style={styles.mapSubtext}>Interactive map will be displayed here</Text>
           </Card.Content>
@@ -79,7 +80,7 @@ const HomeScreen = ({ navigation }: any) => {
                   <Icon
                     name={action.icon}
                     size={24}
-                    color="#007AFF"
+                    color={COLORS.accent}
                     style={styles.actionIcon}
                   />
                 </View>
@@ -96,21 +97,21 @@ const HomeScreen = ({ navigation }: any) => {
               <Card.Content style={styles.rideCardContent}>
                 <View style={styles.rideHeader}>
                   <View style={styles.locationContainer}>
-                    <Icon name="map-marker" size={16} color="#007AFF" />
+                    <Icon name="map-marker" size={16} color={COLORS.accent} />
                     <Text style={styles.rideFrom}>Downtown</Text>
                   </View>
                   <View style={styles.locationContainer}>
-                    <Icon name="map-marker-check" size={16} color="#34C759" />
+                    <Icon name="map-marker-check" size={16} color={COLORS.success} />
                     <Text style={styles.rideTo}>Business District</Text>
                   </View>
                 </View>
                 <View style={styles.rideDetails}>
                   <View style={styles.rideDetail}>
-                    <Icon name="clock-outline" size={16} color="#666666" />
+                    <Icon name="clock-outline" size={16} color={COLORS.textSecondary} />
                     <Text style={styles.rideTime}>8:30 AM</Text>
                   </View>
                   <View style={styles.rideDetail}>
-                    <Icon name="currency-inr" size={16} color="#666666" />
+                    <Icon name="currency-inr" size={16} color={COLORS.textSecondary} />
                     <Text style={styles.ridePrice}>Rs. 150</Text>
                   </View>
                 </View>
@@ -120,21 +121,21 @@ const HomeScreen = ({ navigation }: any) => {
               <Card.Content style={styles.rideCardContent}>
                 <View style={styles.rideHeader}>
                   <View style={styles.locationContainer}>
-                    <Icon name="map-marker" size={16} color="#007AFF" />
+                    <Icon name="map-marker" size={16} color={COLORS.accent} />
                     <Text style={styles.rideFrom}>University</Text>
                   </View>
                   <View style={styles.locationContainer}>
-                    <Icon name="map-marker-check" size={16} color="#34C759" />
+                    <Icon name="map-marker-check" size={16} color={COLORS.success} />
                     <Text style={styles.rideTo}>Mall</Text>
                   </View>
                 </View>
                 <View style={styles.rideDetails}>
                   <View style={styles.rideDetail}>
-                    <Icon name="clock-outline" size={16} color="#666666" />
+                    <Icon name="clock-outline" size={16} color={COLORS.textSecondary} />
                     <Text style={styles.rideTime}>2:00 PM</Text>
                   </View>
                   <View style={styles.rideDetail}>
-                    <Icon name="currency-inr" size={16} color="#666666" />
+                    <Icon name="currency-inr" size={16} color={COLORS.textSecondary} />
                     <Text style={styles.ridePrice}>Rs. 200</Text>
                   </View>
                 </View>
@@ -144,21 +145,21 @@ const HomeScreen = ({ navigation }: any) => {
               <Card.Content style={styles.rideCardContent}>
                 <View style={styles.rideHeader}>
                   <View style={styles.locationContainer}>
-                    <Icon name="map-marker" size={16} color="#007AFF" />
+                    <Icon name="map-marker" size={16} color={COLORS.accent} />
                     <Text style={styles.rideFrom}>Airport</Text>
                   </View>
                   <View style={styles.locationContainer}>
-                    <Icon name="map-marker-check" size={16} color="#34C759" />
+                    <Icon name="map-marker-check" size={16} color={COLORS.success} />
                     <Text style={styles.rideTo}>City Center</Text>
                   </View>
                 </View>
                 <View style={styles.rideDetails}>
                   <View style={styles.rideDetail}>
-                    <Icon name="clock-outline" size={16} color="#666666" />
+                    <Icon name="clock-outline" size={16} color={COLORS.textSecondary} />
                     <Text style={styles.rideTime}>6:15 PM</Text>
                   </View>
                   <View style={styles.rideDetail}>
-                    <Icon name="currency-inr" size={16} color="#666666" />
+                    <Icon name="currency-inr" size={16} color={COLORS.textSecondary} />
                     <Text style={styles.ridePrice}>Rs. 500</Text>
                   </View>
                 </View>
@@ -174,7 +175,7 @@ const HomeScreen = ({ navigation }: any) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.primary,
   },
   scrollView: {
     flex: 1,
@@ -191,49 +192,53 @@ const styles = StyleSheet.create({
   greeting: {
     fontSize: 24,
     fontFamily: 'Montserrat-Bold',
-    color: '#000000',
+    color: COLORS.secondary,
     marginBottom: 4,
   },
   subtitle: {
     fontSize: 16,
     fontFamily: 'Montserrat-Regular',
-    color: '#666666',
+    color: COLORS.textSecondary,
   },
   profileAvatar: {
-    backgroundColor: '#007AFF',
+    backgroundColor: COLORS.accent,
   },
   searchContainer: {
     paddingHorizontal: 24,
     marginBottom: 16,
   },
   searchBar: {
-    backgroundColor: '#F2F2F7',
+    backgroundColor: COLORS.primary,
     borderRadius: 12,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
   mapCard: {
     marginHorizontal: 24,
     marginBottom: 24,
     borderRadius: 12,
+    backgroundColor: COLORS.primary,
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
   mapContent: {
-    height: 200,
-    justifyContent: 'center',
+    padding: 24,
     alignItems: 'center',
-    backgroundColor: '#F2F2F7',
   },
   mapIcon: {
-    marginBottom: 16,
+    marginBottom: 12,
   },
   mapPlaceholder: {
     fontSize: 18,
     fontFamily: 'Montserrat-SemiBold',
-    color: '#666666',
+    color: COLORS.secondary,
     marginBottom: 4,
   },
   mapSubtext: {
     fontSize: 14,
     fontFamily: 'Montserrat-Regular',
-    color: '#999999',
+    color: COLORS.textSecondary,
   },
   quickActions: {
     paddingHorizontal: 24,
@@ -242,7 +247,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 20,
     fontFamily: 'Montserrat-Bold',
-    color: '#000000',
+    color: COLORS.secondary,
     marginBottom: 16,
   },
   actionGrid: {
@@ -252,38 +257,31 @@ const styles = StyleSheet.create({
   },
   actionCard: {
     width: '48%',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.primary,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
     borderWidth: 1,
-    borderColor: '#F0F0F0',
+    borderColor: COLORS.border,
+    elevation: 2,
   },
   actionIconContainer: {
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: '#F8F9FA',
+    backgroundColor: COLORS.lightGray,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 8,
   },
   actionIcon: {
-    margin: 0,
+    // Icon styling handled by Icon component
   },
   actionText: {
     fontSize: 14,
     fontFamily: 'Montserrat-Medium',
-    color: '#000000',
+    color: COLORS.secondary,
     textAlign: 'center',
   },
   suggestedRides: {
@@ -291,15 +289,18 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   rideCard: {
-    width: 160,
+    width: 200,
     marginRight: 12,
     borderRadius: 12,
+    backgroundColor: COLORS.primary,
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
   rideCardContent: {
-    padding: 12,
+    padding: 16,
   },
   rideHeader: {
-    marginBottom: 8,
+    marginBottom: 12,
   },
   locationContainer: {
     flexDirection: 'row',
@@ -308,36 +309,35 @@ const styles = StyleSheet.create({
   },
   rideFrom: {
     fontSize: 14,
-    fontFamily: 'Montserrat-SemiBold',
-    color: '#000000',
+    fontFamily: 'Montserrat-Medium',
+    color: COLORS.secondary,
     marginLeft: 4,
   },
   rideTo: {
     fontSize: 14,
-    fontFamily: 'Montserrat-SemiBold',
-    color: '#000000',
-    marginLeft: 4,
-  },
-  rideTime: {
-    fontSize: 12,
-    fontFamily: 'Montserrat-Regular',
-    color: '#666666',
-    marginLeft: 4,
-  },
-  ridePrice: {
-    fontSize: 14,
-    fontFamily: 'Montserrat-Bold',
-    color: '#007AFF',
+    fontFamily: 'Montserrat-Medium',
+    color: COLORS.secondary,
     marginLeft: 4,
   },
   rideDetails: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
   },
   rideDetail: {
     flexDirection: 'row',
     alignItems: 'center',
+  },
+  rideTime: {
+    fontSize: 12,
+    fontFamily: 'Montserrat-Regular',
+    color: COLORS.textSecondary,
+    marginLeft: 4,
+  },
+  ridePrice: {
+    fontSize: 12,
+    fontFamily: 'Montserrat-Medium',
+    color: COLORS.secondary,
+    marginLeft: 4,
   },
 });
 

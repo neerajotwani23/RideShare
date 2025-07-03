@@ -13,9 +13,6 @@ import VehicleDetailsScreen from '../screens/Auth/VehicleDetailsScreen';
 
 // Profile Screens
 import ProfileSetupScreen from '../screens/Profile/ProfileSetupScreen';
-import ProfileScreen from '../screens/Profile/ProfileScreen';
-import EditProfileScreen from '../screens/Profile/EditProfileScreen';
-import ReviewsScreen from '../screens/Profile/ReviewsScreen';
 
 // Main App Screens
 import HomeScreen from '../screens/Home/HomeScreen';
@@ -29,6 +26,9 @@ import BookingDetailsScreen from '../screens/Booking/BookingDetailsScreen';
 import ChatBotScreen from '../screens/ChatBot/ChatBotScreen';
 import NotificationsScreen from '../screens/Notifications/NotificationsScreen';
 import WalletScreen from '../screens/Wallet/WalletScreen';
+import SuggestedRidesScreen from '../screens/Ride/SuggestedRidesScreen';
+
+import ProfileStack from './ProfileStackNavigator';
 
 import { useAuth } from '../context/AuthContext';
 
@@ -87,25 +87,11 @@ function MyRidesStack() {
   );
 }
 
-// Profile Stack Navigator
-function ProfileStack() {
+// Passenger Tab Navigator
+function PassengerTabs() {
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="ProfileMain" component={ProfileScreen} />
-      <Stack.Screen name="EditProfile" component={EditProfileScreen} />
-      <Stack.Screen name="Reviews" component={ReviewsScreen} />
-      <Stack.Screen name="Wallet" component={WalletScreen} />
-      <Stack.Screen name="Notifications" component={NotificationsScreen} />
-      <Stack.Screen name="VehicleDetails" component={VehicleDetailsScreen} />
-    </Stack.Navigator>
-  );
-}
-
-// Bottom Tab Navigator
-function MainTabs() {
-  return (
-    <Tab.Navigator 
-      initialRouteName="Home"
+    <Tab.Navigator
+      initialRouteName="Find Ride"
       screenOptions={{
         tabBarStyle: {
           backgroundColor: '#FFFFFF',
@@ -124,58 +110,101 @@ function MainTabs() {
         headerShown: false,
       }}
     >
-      <Tab.Screen 
-        name="Home" 
-        component={HomeStack}
+      <Tab.Screen
+        name="Find Ride"
+        component={FindRideScreen}
         options={{
-          tabBarIcon: ({ color, size }) => (
-            <HomeIcon color={color} size={size} />
-          ),
+          tabBarIcon: ({ color, size }) => <SearchIcon color={color} size={size} />,
         }}
       />
-      <Tab.Screen 
-        name="Find Ride" 
-        component={FindRideStack}
+      <Tab.Screen
+        name="My Rides"
+        component={MyRidesScreen}
         options={{
-          tabBarIcon: ({ color, size }) => (
-            <SearchIcon color={color} size={size} />
-          ),
+          tabBarIcon: ({ color, size }) => <RidesIcon color={color} size={size} />,
         }}
       />
-      <Tab.Screen 
-        name="Post Ride" 
-        component={PostRideStack}
+      <Tab.Screen
+        name="Wallet"
+        component={WalletScreen}
         options={{
-          tabBarIcon: ({ color, size }) => (
-            <PlusIcon color={color} size={size} />
-          ),
+          tabBarIcon: ({ color, size }) => <WalletIcon color={color} size={size} />,
         }}
       />
-      <Tab.Screen 
-        name="My Rides" 
-        component={MyRidesStack}
-        options={{
-          tabBarIcon: ({ color, size }) => (
-            <RidesIcon color={color} size={size} />
-          ),
-        }}
-      />
-      <Tab.Screen 
-        name="Chat" 
+      <Tab.Screen
+        name="Chat"
         component={ChatBotScreen}
         options={{
-          tabBarIcon: ({ color, size }) => (
-            <ChatIcon color={color} size={size} />
-          ),
+          tabBarIcon: ({ color, size }) => <ChatIcon color={color} size={size} />,
         }}
       />
-      <Tab.Screen 
-        name="Profile" 
+      <Tab.Screen
+        name="Profile"
         component={ProfileStack}
         options={{
-          tabBarIcon: ({ color, size }) => (
-            <ProfileIcon color={color} size={size} />
-          ),
+          tabBarIcon: ({ color, size }) => <ProfileIcon color={color} size={size} />,
+        }}
+      />
+    </Tab.Navigator>
+  );
+}
+
+// Driver Tab Navigator
+function DriverTabs() {
+  return (
+    <Tab.Navigator
+      initialRouteName="Post Ride"
+      screenOptions={{
+        tabBarStyle: {
+          backgroundColor: '#FFFFFF',
+          borderTopWidth: 1,
+          borderTopColor: '#E5E5EA',
+          paddingTop: 8,
+          paddingBottom: 8,
+          height: 60,
+        },
+        tabBarActiveTintColor: '#007AFF',
+        tabBarInactiveTintColor: '#8E8E93',
+        tabBarLabelStyle: {
+          fontFamily: 'Montserrat-Medium',
+          fontSize: 12,
+        },
+        headerShown: false,
+      }}
+    >
+      <Tab.Screen
+        name="Post Ride"
+        component={PostRideScreen}
+        options={{
+          tabBarIcon: ({ color, size }) => <PlusIcon color={color} size={size} />,
+        }}
+      />
+      <Tab.Screen
+        name="My Rides"
+        component={MyRidesScreen}
+        options={{
+          tabBarIcon: ({ color, size }) => <RidesIcon color={color} size={size} />,
+        }}
+      />
+      <Tab.Screen
+        name="Wallet"
+        component={WalletScreen}
+        options={{
+          tabBarIcon: ({ color, size }) => <WalletIcon color={color} size={size} />,
+        }}
+      />
+      <Tab.Screen
+        name="Chat"
+        component={ChatBotScreen}
+        options={{
+          tabBarIcon: ({ color, size }) => <ChatIcon color={color} size={size} />,
+        }}
+      />
+      <Tab.Screen
+        name="Profile"
+        component={ProfileStack}
+        options={{
+          tabBarIcon: ({ color, size }) => <ProfileIcon color={color} size={size} />,
         }}
       />
     </Tab.Navigator>
@@ -207,9 +236,13 @@ const ProfileIcon = ({ color, size }: { color: string; size: number }) => (
   <Icon name="account-outline" size={size} color={color} />
 );
 
+const WalletIcon = ({ color, size }: { color: string; size: number }) => (
+  <Icon name="wallet" size={size} color={color} />
+);
+
 // Main App Navigator
 const AppNavigator = () => {
-  const { isAuthenticated, roleSelected, profileSetupComplete } = useAuth();
+  const { isAuthenticated, roleSelected, profileSetupComplete, currentRole } = useAuth();
 
   return (
     <NavigationContainer>
@@ -233,8 +266,12 @@ const AppNavigator = () => {
         ) : (
           // Main App
           <>
-            <Stack.Screen name="MainTabs" component={MainTabs} />
-            
+            {currentRole === 'passenger' ? (
+              <Stack.Screen name="PassengerTabs" component={PassengerTabs} />
+            ) : (
+              <Stack.Screen name="DriverTabs" component={DriverTabs} />
+            )}
+            <Stack.Screen name="SuggestedRides" component={SuggestedRidesScreen} />
             {/* Ride Flow Screens - Accessible from any tab */}
             <Stack.Screen name="DuringRide" component={DuringRideScreen} />
             <Stack.Screen name="RateRide" component={RateRideScreen} />

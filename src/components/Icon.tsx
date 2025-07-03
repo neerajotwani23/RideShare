@@ -1,5 +1,9 @@
 import React from 'react';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import FontAwesome from 'react-native-vector-icons/FontAwesome';
+import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 
 // You can add more icon families here if needed
 // import FontAwesome6 from 'react-native-vector-icons/FontAwesome6';
@@ -10,7 +14,7 @@ interface IconProps {
   size?: number;
   color?: string;
   style?: any;
-  family?: 'material' | 'fontawesome6' | 'evilicons'; // For future expansion
+  family?: 'material' | 'material-community' | 'ionicons' | 'fontawesome' | 'fontawesome5';
 }
 
 const Icon: React.FC<IconProps> = ({ 
@@ -18,15 +22,49 @@ const Icon: React.FC<IconProps> = ({
   size = 24, 
   color = '#000000', 
   style,
-  family = 'material' // Default to MaterialCommunityIcons
+  family = 'material-community' // Default to MaterialCommunityIcons
 }) => {
-  // For now, we only use MaterialCommunityIcons
-  // In the future, you can expand this to support multiple icon families
   switch (family) {
     case 'material':
+      return (
+        <MaterialIcons 
+          name={name} 
+          size={size} 
+          color={color} 
+          style={style}
+        />
+      );
+    case 'material-community':
     default:
       return (
         <MaterialCommunityIcons 
+          name={name} 
+          size={size} 
+          color={color} 
+          style={style}
+        />
+      );
+    case 'ionicons':
+      return (
+        <Ionicons 
+          name={name} 
+          size={size} 
+          color={color} 
+          style={style}
+        />
+      );
+    case 'fontawesome':
+      return (
+        <FontAwesome 
+          name={name} 
+          size={size} 
+          color={color} 
+          style={style}
+        />
+      );
+    case 'fontawesome5':
+      return (
+        <FontAwesome5 
           name={name} 
           size={size} 
           color={color} 

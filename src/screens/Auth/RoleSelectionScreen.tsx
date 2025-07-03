@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, SafeAreaView, TouchableOpacity } from 'react-native';
-import { Text, Button, IconButton } from 'react-native-paper';
+import { View, StyleSheet, SafeAreaView } from 'react-native';
+import { Text, Button } from 'react-native-paper';
 import { useAuth } from '../../context/AuthContext';
 
 const RoleSelectionScreen = ({ navigation }: any) => {
@@ -14,25 +14,11 @@ const RoleSelectionScreen = ({ navigation }: any) => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <View style={styles.headerLeft} />
-        <View style={styles.headerCenter} />
-        <IconButton
-          icon="help-circle-outline"
-          size={24}
-          iconColor="#666666"
-          style={styles.helpButton}
-        />
-      </View>
-
-      <View style={styles.content}>
-        <View style={styles.titleSection}>
-          <Text style={styles.title}>Join as a driver or passenger</Text>
-          <Text style={styles.subtitle}>Choose your role to get started</Text>
-        </View>
-
-        <View style={styles.buttonSection}>
+    <SafeAreaView style={styles.background}>
+      <View style={styles.centeredContainer}>
+        <View style={styles.card}>
+          <Text style={styles.title}>Choose Your Role</Text>
+          <Text style={styles.subtitle}>Select how you want to use the app</Text>
           <Button
             mode="contained"
             onPress={() => handleRoleSelection('driver')}
@@ -42,7 +28,6 @@ const RoleSelectionScreen = ({ navigation }: any) => {
           >
             Driver
           </Button>
-
           <Button
             mode="outlined"
             onPress={() => handleRoleSelection('passenger')}
@@ -53,14 +38,8 @@ const RoleSelectionScreen = ({ navigation }: any) => {
             Passenger
           </Button>
         </View>
-      </View>
-
-      <View style={styles.footer}>
         <Text style={styles.termsText}>
-          By continuing, you agree to our{' '}
-          <Text style={styles.termsLink}>Terms of Service</Text>
-          {' '}and{' '}
-          <Text style={styles.termsLink}>Privacy Policy</Text>
+          By continuing, you agree to our <Text style={styles.termsLink}>Terms of Service</Text> and <Text style={styles.termsLink}>Privacy Policy</Text>
         </Text>
       </View>
     </SafeAreaView>
@@ -68,95 +47,81 @@ const RoleSelectionScreen = ({ navigation }: any) => {
 };
 
 const styles = StyleSheet.create({
-  container: {
+  background: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#F6F8FB',
   },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    height: 56,
-  },
-  headerLeft: {
-    width: 40,
-  },
-  headerCenter: {
+  centeredContainer: {
     flex: 1,
-  },
-  helpButton: {
-    margin: 0,
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: 24,
     justifyContent: 'center',
-  },
-  titleSection: {
     alignItems: 'center',
-    marginBottom: 80,
+    padding: 16,
+  },
+  card: {
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    width: '100%',
+    maxWidth: 400,
+    padding: 32,
+    alignItems: 'center',
+    marginBottom: 32,
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
   },
   title: {
-    fontSize: 24,
-    fontFamily: 'Montserrat-Bold',
-    color: '#000000',
+    fontSize: 28,
+    fontFamily: 'Montserrat-Black',
+    fontWeight: '900',
+    color: '#111827',
     textAlign: 'center',
     marginBottom: 8,
-    lineHeight: 32,
   },
   subtitle: {
     fontSize: 16,
     fontFamily: 'Montserrat-Regular',
-    color: '#666666',
+    color: '#7B8794',
     textAlign: 'center',
-  },
-  buttonSection: {
-    width: '100%',
+    marginBottom: 32,
   },
   driverButton: {
-    borderRadius: 25,
-    backgroundColor: '#007AFF',
+    borderRadius: 18,
+    backgroundColor: '#111111',
     marginBottom: 16,
-    elevation: 0,
-    shadowOpacity: 0,
+    width: '100%',
   },
   passengerButton: {
-    borderRadius: 25,
-    borderColor: '#E0E0E0',
-    borderWidth: 1,
-    backgroundColor: '#FFFFFF',
+    borderRadius: 18,
+    borderColor: '#E5E7EB',
+    backgroundColor: '#fff',
+    width: '100%',
   },
   buttonContent: {
-    paddingVertical: 16,
+    paddingVertical: 14,
   },
   buttonLabel: {
-    fontSize: 16,
-    fontFamily: 'Montserrat-SemiBold',
-    color: '#FFFFFF',
+    fontFamily: 'Montserrat-Bold',
+    fontSize: 18,
+    color: '#fff',
   },
   passengerButtonLabel: {
-    fontSize: 16,
-    fontFamily: 'Montserrat-SemiBold',
-    color: '#000000',
-  },
-  footer: {
-    paddingHorizontal: 24,
-    paddingBottom: 32,
-    paddingTop: 16,
+    fontFamily: 'Montserrat-Bold',
+    fontSize: 18,
+    color: '#222F3E',
   },
   termsText: {
-    fontSize: 12,
+    fontSize: 13,
     fontFamily: 'Montserrat-Regular',
-    color: '#666666',
+    color: '#7B8794',
     textAlign: 'center',
-    lineHeight: 18,
+    marginTop: 8,
+    marginBottom: 12,
   },
   termsLink: {
-    fontSize: 12,
-    fontFamily: 'Montserrat-Regular',
-    color: '#007AFF',
+    color: '#2563EB',
+    fontFamily: 'Montserrat-Bold',
   },
 });
 
