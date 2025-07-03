@@ -17,7 +17,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false); // Set to false for login flow
-  const [roleSelected, setRoleSelected] = useState(true); // Set to true for easier testing
+  const [roleSelected, setRoleSelected] = useState(false); // Set to false so role selection shows after login
   const [profileSetupComplete, setProfileSetupComplete] = useState(true); // Set to true for easier testing
   const [currentRole, setCurrentRole] = useState<'driver' | 'passenger' | null>('driver'); // Default role for testing
   const [user, setUser] = useState(null);

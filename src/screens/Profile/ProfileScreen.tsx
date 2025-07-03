@@ -1,7 +1,18 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, ScrollView, SafeAreaView, TouchableOpacity, Animated } from 'react-native';
 import { Text, Button, Avatar, Card, Divider } from 'react-native-paper';
-import Icon from '../../components/Icon';
+import { COLORS } from '../../constants/colors';
+import { 
+  UserIcon, 
+  CarIcon, 
+  StarIcon, 
+  EditIcon, 
+  SettingsIcon, 
+  HelpIcon, 
+  LogoutIcon, 
+  ArrowLeftIcon,
+  UserEditIcon
+} from '../../components/icons';
 import { useAuth } from '../../context/AuthContext';
 
 const mockUser = {
@@ -39,29 +50,31 @@ const ProfileScreen = ({ navigation }: any) => {
 
   const switchTranslateX = animatedValue.interpolate({
     inputRange: [0, 1],
-    outputRange: [3, 90], // Move from left (3px) to right (63px)
+    outputRange: [3, 90], // Move from left (3px) to right (90px)
   });
 
   const passengerTextColor = animatedValue.interpolate({
     inputRange: [0, 1],
-    outputRange: ['#FFFFFF', '#666666'],
+    outputRange: [COLORS.primary, COLORS.textSecondary],
   });
 
   const driverTextColor = animatedValue.interpolate({
     inputRange: [0, 1],
-    outputRange: ['#666666', '#FFFFFF'],
+    outputRange: [COLORS.textSecondary, COLORS.primary],
   });
 
   const switchBackgroundColor = animatedValue.interpolate({
     inputRange: [0, 1],
-    outputRange: ['#34C759', '#007AFF'],
+    outputRange: ['#007AFF', '#007AFF'],
   });
 
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
-          <Avatar.Icon size={100} icon="account" style={styles.avatar} />
+          <View style={styles.avatarContainer}>
+            <UserIcon size={60} color={COLORS.primary} />
+          </View>
           <Text style={styles.name}>{user.name}</Text>
           <Text style={styles.email}>{user.email}</Text>
         </View>
@@ -70,19 +83,19 @@ const ProfileScreen = ({ navigation }: any) => {
           <Card.Content>
             <View style={styles.statsRow}>
               <View style={styles.statItem}>
-                <Icon name="car" size={24} color="#007AFF" style={styles.statIcon} />
+                <CarIcon size={24} color={COLORS.secondary} />
                 <Text style={styles.statNumber}>{user.rides}</Text>
                 <Text style={styles.statLabel}>Total Rides</Text>
               </View>
               <Divider style={styles.statDivider} />
               <View style={styles.statItem}>
-                <Icon name="star" size={24} color="#FFD700" style={styles.statIcon} />
+                <StarIcon size={24} color={COLORS.secondary} />
                 <Text style={styles.statNumber}>{user.rating}</Text>
                 <Text style={styles.statLabel}>Rating</Text>
               </View>
               <Divider style={styles.statDivider} />
               <View style={styles.statItem}>
-                <Icon name="message-text" size={24} color="#34C759" style={styles.statIcon} />
+                <EditIcon size={24} color={COLORS.secondary} />
                 <Text style={styles.statNumber}>15</Text>
                 <Text style={styles.statLabel}>Reviews</Text>
               </View>
@@ -150,9 +163,9 @@ const ProfileScreen = ({ navigation }: any) => {
             onPress={() => navigation && navigation.navigate('EditProfile')}
           >
             <View style={styles.menuButtonContent}>
-              <Icon name="account-edit" size={24} color="#007AFF" />
+              <UserEditIcon size={24} color={COLORS.secondary} />
               <Text style={styles.menuButtonText}>Edit Profile</Text>
-              <Icon name="chevron-right" size={24} color="#C7C7CC" />
+              <ArrowLeftIcon size={20} color={COLORS.textSecondary} style={styles.chevronIcon} />
             </View>
           </TouchableOpacity>
 
@@ -161,9 +174,9 @@ const ProfileScreen = ({ navigation }: any) => {
             onPress={() => navigation && navigation.navigate('Reviews')}
           >
             <View style={styles.menuButtonContent}>
-              <Icon name="star" size={24} color="#FFD700" />
+              <StarIcon size={24} color={COLORS.secondary} />
               <Text style={styles.menuButtonText}>My Reviews</Text>
-              <Icon name="chevron-right" size={24} color="#C7C7CC" />
+              <ArrowLeftIcon size={20} color={COLORS.textSecondary} style={styles.chevronIcon} />
             </View>
           </TouchableOpacity>
 
@@ -173,43 +186,21 @@ const ProfileScreen = ({ navigation }: any) => {
               onPress={() => navigation && navigation.navigate('VehicleDetails')}
             >
               <View style={styles.menuButtonContent}>
-                <Icon name="car" size={24} color="#34C759" />
+                <CarIcon size={24} color={COLORS.secondary} />
                 <Text style={styles.menuButtonText}>Vehicle Details</Text>
-                <Icon name="chevron-right" size={24} color="#C7C7CC" />
+                <ArrowLeftIcon size={20} color={COLORS.textSecondary} style={styles.chevronIcon} />
               </View>
             </TouchableOpacity>
           )}
 
           <TouchableOpacity 
             style={styles.menuButton}
-            onPress={() => navigation && navigation.navigate('Wallet')}
-          >
-            <View style={styles.menuButtonContent}>
-              <Icon name="wallet" size={24} color="#FF9500" />
-              <Text style={styles.menuButtonText}>Wallet</Text>
-              <Icon name="chevron-right" size={24} color="#C7C7CC" />
-            </View>
-          </TouchableOpacity>
-
-          <TouchableOpacity 
-            style={styles.menuButton}
-            onPress={() => navigation && navigation.navigate('Notifications')}
-          >
-            <View style={styles.menuButtonContent}>
-              <Icon name="bell" size={24} color="#FF3B30" />
-              <Text style={styles.menuButtonText}>Notifications</Text>
-              <Icon name="chevron-right" size={24} color="#C7C7CC" />
-            </View>
-          </TouchableOpacity>
-
-          <TouchableOpacity 
-            style={styles.menuButton}
             onPress={() => {/* Handle help */}}
           >
             <View style={styles.menuButtonContent}>
-              <Icon name="help-circle" size={24} color="#5856D6" />
+              <HelpIcon size={24} color={COLORS.secondary} />
               <Text style={styles.menuButtonText}>Help & Support</Text>
-              <Icon name="chevron-right" size={24} color="#C7C7CC" />
+              <ArrowLeftIcon size={20} color={COLORS.textSecondary} style={styles.chevronIcon} />
             </View>
           </TouchableOpacity>
 
@@ -218,9 +209,9 @@ const ProfileScreen = ({ navigation }: any) => {
             onPress={() => {/* Handle settings */}}
           >
             <View style={styles.menuButtonContent}>
-              <Icon name="cog" size={24} color="#8E8E93" />
+              <SettingsIcon size={24} color={COLORS.secondary} />
               <Text style={styles.menuButtonText}>Settings</Text>
-              <Icon name="chevron-right" size={24} color="#C7C7CC" />
+              <ArrowLeftIcon size={20} color={COLORS.textSecondary} style={styles.chevronIcon} />
             </View>
           </TouchableOpacity>
 
@@ -229,7 +220,7 @@ const ProfileScreen = ({ navigation }: any) => {
             onPress={handleLogout}
           >
             <View style={styles.menuButtonContent}>
-              <Icon name="logout" size={24} color="#FF3B30" />
+              <LogoutIcon size={24} color={COLORS.error} />
               <Text style={[styles.menuButtonText, styles.logoutText]}>Logout</Text>
             </View>
           </TouchableOpacity>
@@ -242,7 +233,7 @@ const ProfileScreen = ({ navigation }: any) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.primary,
   },
   scrollContent: {
     flexGrow: 1,
@@ -252,24 +243,38 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 24,
   },
-  avatar: {
+  avatarContainer: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
     backgroundColor: '#007AFF',
+    justifyContent: 'center',
+    alignItems: 'center',
     marginBottom: 16,
   },
   name: {
     fontSize: 24,
     fontFamily: 'Montserrat-Bold',
-    color: '#000000',
+    color: COLORS.secondary,
     marginBottom: 4,
   },
   email: {
     fontSize: 16,
     fontFamily: 'Montserrat-Regular',
-    color: '#666666',
+    color: COLORS.textSecondary,
   },
   statsCard: {
     marginBottom: 24,
     borderRadius: 12,
+    backgroundColor: COLORS.primary,
+    elevation: 2,
+    shadowColor: COLORS.secondary,
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
   },
   statsRow: {
     flexDirection: 'row',
@@ -283,20 +288,19 @@ const styles = StyleSheet.create({
   statDivider: {
     height: 40,
     width: 1,
-  },
-  statIcon: {
-    marginBottom: 4,
+    backgroundColor: COLORS.border,
   },
   statNumber: {
     fontSize: 24,
     fontFamily: 'Montserrat-Bold',
-    color: '#007AFF',
+    color: COLORS.secondary,
     marginBottom: 4,
+    marginTop: 8,
   },
   statLabel: {
     fontSize: 14,
     fontFamily: 'Montserrat-Regular',
-    color: '#666666',
+    color: COLORS.textSecondary,
   },
   section: {
     marginBottom: 24,
@@ -304,34 +308,44 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontFamily: 'Montserrat-SemiBold',
-    color: '#000000',
+    color: COLORS.secondary,
     marginBottom: 12,
   },
   bioText: {
     fontSize: 16,
     fontFamily: 'Montserrat-Regular',
-    color: '#666666',
+    color: COLORS.textSecondary,
     lineHeight: 24,
   },
   menuItems: {
     flex: 1,
   },
   menuButton: {
-    marginBottom: 12,
+    marginBottom: 8,
     borderRadius: 12,
+    backgroundColor: COLORS.primary,
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
   menuButtonContent: {
-    paddingVertical: 8,
-    justifyContent: 'flex-start',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
   menuButtonText: {
     fontSize: 16,
     fontFamily: 'Montserrat-Regular',
-    color: '#666666',
+    color: COLORS.secondary,
     marginLeft: 12,
+    flex: 1,
+  },
+  chevronIcon: {
+    transform: [{ rotate: '180deg' }],
   },
   logoutText: {
-    color: '#FF3B30',
+    color: COLORS.error,
   },
   roleSwitchSection: {
     marginBottom: 24,
@@ -365,7 +379,6 @@ const styles = StyleSheet.create({
     textAlign: 'right',
     lineHeight: 40,
     paddingLeft: 50,
-    
   },
   roleSwitchTextRight: {
     position: 'absolute',
@@ -376,15 +389,15 @@ const styles = StyleSheet.create({
     fontFamily: 'Montserrat-SemiBold',
     textAlign: 'left',
     lineHeight: 40,
-    paddingLeft:35,
+    paddingLeft: 35,
   },
   roleSwitchThumb: {
     position: 'absolute',
     width: 34,
     height: 34,
     borderRadius: 17,
-    backgroundColor: '#FFFFFF',
-    shadowColor: '#000000',
+    backgroundColor: COLORS.primary,
+    shadowColor: COLORS.secondary,
     shadowOffset: {
       width: 0,
       height: 2,
@@ -398,7 +411,7 @@ const styles = StyleSheet.create({
   roleSwitchDescription: {
     fontSize: 14,
     fontFamily: 'Montserrat-Regular',
-    color: '#666666',
+    color: COLORS.textSecondary,
     textAlign: 'center',
     marginTop: 8,
   },

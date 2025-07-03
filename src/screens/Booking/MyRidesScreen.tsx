@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { View, ScrollView, StyleSheet, SafeAreaView, Alert } from 'react-native';
 import { Text, Button, Card, SegmentedButtons, Chip, IconButton } from 'react-native-paper';
+import { LocationIcon, LocationCheckIcon, ClockIcon, UserIcon, UsersIcon } from '../../components/icons';
+import { COLORS } from '../../constants/colors';
 
 const mockUpcoming = [
   { 
@@ -115,12 +117,12 @@ const MyRidesScreen = ({ navigation }: any) => {
 
   const getStatusChipColor = (status: string) => {
     switch (status) {
-      case 'Confirmed': return '#34C759';
-      case 'Active': return '#007AFF';
+      case 'Confirmed': return COLORS.success;
+      case 'Active': return COLORS.accent;
       case 'Pending': return '#FF9500';
-      case 'Completed': return '#34C759';
-      case 'Cancelled': return '#FF3B30';
-      default: return '#666666';
+      case 'Completed': return COLORS.success;
+      case 'Cancelled': return COLORS.error;
+      default: return COLORS.textSecondary;
     }
   };
 
@@ -129,7 +131,7 @@ const MyRidesScreen = ({ navigation }: any) => {
   };
 
   const getRideTypeColor = (type: string) => {
-    return type === 'scheduled' ? '#007AFF' : '#34C759';
+    return type === 'scheduled' ? COLORS.accent : COLORS.success;
   };
 
   return (
@@ -143,8 +145,30 @@ const MyRidesScreen = ({ navigation }: any) => {
         value={tab}
         onValueChange={setTab}
         buttons={[
-          { label: 'Upcoming', value: 'upcoming' },
-          { label: 'Past', value: 'past' },
+          { 
+            label: 'Upcoming', 
+            value: 'upcoming',
+            style: { 
+              backgroundColor: tab === 'upcoming' ? COLORS.secondary : COLORS.lightGray,
+              borderRadius: 8 
+            },
+            labelStyle: { 
+              color: tab === 'upcoming' ? COLORS.primary : COLORS.secondary,
+              fontFamily: 'Montserrat-Bold' 
+            }
+          },
+          { 
+            label: 'Past', 
+            value: 'past',
+            style: { 
+              backgroundColor: tab === 'past' ? COLORS.secondary : COLORS.lightGray,
+              borderRadius: 8 
+            },
+            labelStyle: { 
+              color: tab === 'past' ? COLORS.primary : COLORS.secondary,
+              fontFamily: 'Montserrat-Bold' 
+            }
+          },
         ]}
         style={styles.segmentedButtons}
       />
@@ -165,9 +189,27 @@ const MyRidesScreen = ({ navigation }: any) => {
             >
               <Card.Content style={styles.cardContent}>
                 <View style={styles.rideHeader}>
-                  <View style={styles.routeInfo}>
-                    <View style={styles.routeRow}>
-                      <Text style={styles.routeText}>📍 {ride.from} → 🏢 {ride.to}</Text>
+                  <View style={{ flex: 1 }}>
+                    <View style={{ flexDirection: 'column', alignItems: 'flex-start', marginBottom: 4 }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 2 }}>
+                        <LocationIcon size={18} color={COLORS.textSecondary} style={{ marginRight: 4 }} />
+                        <Text style={styles.routeText}>{ride.from}</Text>
+                      </View>
+                      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <LocationCheckIcon size={18} color={COLORS.textSecondary} style={{ marginRight: 4 }} />
+                        <Text style={styles.routeText}>{ride.to}</Text>
+                      </View>
+                    </View>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 2 }}>
+                      <ClockIcon size={14} color={COLORS.textSecondary} style={{ marginRight: 4 }} />
+                      <Text style={styles.dateTimeText}>{ride.date} at {ride.time}</Text>
+                    </View>
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                      <UserIcon size={14} color={COLORS.textSecondary} style={{ marginRight: 4 }} />
+                      <Text style={styles.driverText}>Driver: {ride.driver}</Text>
+                    </View>
+                  </View>
+                  <View style={{ justifyContent: 'flex-start', alignItems: 'center', marginHorizontal: 8 }}>
                       <Chip 
                         icon={getRideTypeIcon(ride.type)}
                         style={[styles.typeChip, { backgroundColor: getRideTypeColor(ride.type) + '20' }]}
@@ -176,10 +218,6 @@ const MyRidesScreen = ({ navigation }: any) => {
                         {ride.type === 'scheduled' ? 'Scheduled' : 'Immediate'}
                       </Chip>
                     </View>
-                    <Text style={styles.dateTimeText}>⏰ {ride.date} at {ride.time}</Text>
-                    <Text style={styles.driverText}>👤 Driver: {ride.driver}</Text>
-                  </View>
-                  
                   <View style={styles.headerRight}>
                     <Chip 
                       style={[styles.statusChip, { backgroundColor: getStatusChipColor(ride.status) }]}
@@ -187,21 +225,22 @@ const MyRidesScreen = ({ navigation }: any) => {
                     >
                       {ride.status}
                     </Chip>
-                    
                     {ride.canCancel && tab === 'upcoming' && (
-                      <IconButton
-                        icon="close-circle"
-                        iconColor="#FF3B30"
-                        size={24}
+                      <Button
+                        mode="text"
                         onPress={() => handleCancelRide(ride.id, `${ride.from} to ${ride.to}`)}
-                        style={styles.cancelButton}
-                      />
+                        labelStyle={{ color: COLORS.error, fontFamily: 'Montserrat-Bold', fontSize: 14 }}
+                        style={{ marginTop: 4 }}
+                      >
+                        Cancel
+                      </Button>
                     )}
                   </View>
                 </View>
                 
                 <View style={styles.rideDetails}>
                   <View style={styles.detailItem}>
+                    <UsersIcon size={16} color={COLORS.textSecondary} style={{ marginBottom: 2 }} />
                     <Text style={styles.detailLabel}>Seats</Text>
                     <Text style={styles.detailValue}>{ride.seats}</Text>
                   </View>
@@ -220,11 +259,6 @@ const MyRidesScreen = ({ navigation }: any) => {
                     You can cancel this scheduled ride up to 1 hour before departure
                   </Text>
                 )}
-
-                <View style={styles.rideFooter}>
-                  <Text style={styles.seatsText}>👥 {ride.seats} seat{ride.seats > 1 ? 's' : ''}</Text>
-                  <Text style={styles.fareText}>💰 Rs. {ride.fare}</Text>
-                </View>
               </Card.Content>
             </Card>
           ))
@@ -237,25 +271,30 @@ const MyRidesScreen = ({ navigation }: any) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.primary,
   },
   header: {
     padding: 24,
     paddingBottom: 16,
+    backgroundColor: COLORS.primary,
   },
   title: {
     fontSize: 24,
     fontFamily: 'Montserrat-Bold',
-    color: '#000000',
+    color: COLORS.secondary,
   },
   subtitle: {
     fontSize: 16,
     fontFamily: 'Montserrat-Regular',
-    color: '#666666',
+    color: COLORS.textSecondary,
   },
   segmentedButtons: {
     marginHorizontal: 24,
     marginBottom: 16,
+    backgroundColor: COLORS.lightGray,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
   scrollView: {
     flex: 1,
@@ -273,13 +312,16 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 16,
     fontFamily: 'Montserrat-Regular',
-    color: '#666666',
+    color: COLORS.textSecondary,
     textAlign: 'center',
   },
   rideCard: {
     marginBottom: 16,
     borderRadius: 12,
     elevation: 2,
+    backgroundColor: COLORS.primary,
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
   cardContent: {
     padding: 16,
@@ -295,35 +337,35 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   routeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: 'column',
+    alignItems: 'flex-start',
     marginBottom: 4,
   },
   routeText: {
     fontSize: 18,
     fontFamily: 'Montserrat-SemiBold',
-    color: '#000000',
-    flex: 1,
+    color: COLORS.secondary,
   },
   typeChip: {
     alignSelf: 'flex-start',
     marginLeft: 8,
+    backgroundColor: COLORS.lightGray,
   },
   typeText: {
     fontSize: 10,
     fontFamily: 'Montserrat-Medium',
+    color: COLORS.secondary,
   },
   dateTimeText: {
     fontSize: 14,
     fontFamily: 'Montserrat-Regular',
-    color: '#666666',
+    color: COLORS.textSecondary,
     marginBottom: 2,
   },
   driverText: {
     fontSize: 12,
     fontFamily: 'Montserrat-Regular',
-    color: '#999999',
+    color: COLORS.darkGray,
   },
   headerRight: {
     alignItems: 'flex-end',
@@ -333,20 +375,16 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   statusText: {
-    color: '#FFFFFF',
+    color: COLORS.primary,
     fontSize: 12,
     fontFamily: 'Montserrat-Medium',
-  },
-  cancelButton: {
-    margin: 0,
-    marginTop: 4,
   },
   rideDetails: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: '#F0F0F0',
+    borderTopColor: COLORS.border,
   },
   detailItem: {
     alignItems: 'center',
@@ -354,38 +392,21 @@ const styles = StyleSheet.create({
   detailLabel: {
     fontSize: 12,
     fontFamily: 'Montserrat-Regular',
-    color: '#666666',
+    color: COLORS.textSecondary,
     marginBottom: 4,
   },
   detailValue: {
     fontSize: 16,
     fontFamily: 'Montserrat-SemiBold',
-    color: '#000000',
+    color: COLORS.secondary,
   },
   cancelNote: {
     fontSize: 11,
     fontFamily: 'Montserrat-Regular',
-    color: '#666666',
+    color: COLORS.textSecondary,
     fontStyle: 'italic',
     marginTop: 8,
     textAlign: 'center',
-  },
-  rideFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: '#F0F0F0',
-  },
-  seatsText: {
-    fontSize: 12,
-    fontFamily: 'Montserrat-Regular',
-    color: '#666666',
-  },
-  fareText: {
-    fontSize: 12,
-    fontFamily: 'Montserrat-SemiBold',
-    color: '#000000',
   },
 });
 

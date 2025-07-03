@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { View, ScrollView, StyleSheet, SafeAreaView, TouchableOpacity } from 'react-native';
 import { Text, Card, Button, TextInput } from 'react-native-paper';
-import Icon from '../../components/Icon';
+import { WalletIcon, CarIcon, RefreshIcon, CalendarIcon, AddIcon } from '../../components/icons';
+import { COLORS } from '../../constants/colors';
 
 const mockTransactions = [
   { id: 1, desc: 'Ride to Campus', amount: -200, type: 'ride', date: '2024-01-15' },
@@ -47,11 +48,11 @@ const WalletScreen = () => {
           <View style={styles.balanceHeader}>
             <Text style={styles.balanceLabel}>Current Balance</Text>
             <TouchableOpacity>
-              <Icon name="refresh" size={20} color="#FFFFFF" />
+              <RefreshIcon size={20} color={COLORS.primary} />
             </TouchableOpacity>
           </View>
           <View style={styles.balanceAmountContainer}>
-            <Icon name="currency-inr" size={32} color="#FFFFFF" style={styles.balanceIcon} />
+            <Text style={styles.balanceCurrency}>Rs.</Text>
             <Text style={styles.balanceAmount}>{balance.toLocaleString()}</Text>
           </View>
           <Text style={styles.balanceSubtext}>Available for rides</Text>
@@ -62,21 +63,21 @@ const WalletScreen = () => {
         <Card.Content>
           <Text style={styles.addMoneyTitle}>Add Money</Text>
           <View style={styles.inputContainer}>
-            <Icon name="currency-inr" size={24} color="#007AFF" style={styles.inputIcon} />
-            <TextInput
-              label="Amount (Rs.)"
-              value={addAmount}
-              onChangeText={setAddAmount}
-              keyboardType="numeric"
-              style={styles.input}
-              mode="outlined"
-            />
+            <Text style={styles.inputCurrency}>Rs.</Text>
+          <TextInput
+            label="Amount (Rs.)"
+            value={addAmount}
+            onChangeText={setAddAmount}
+            keyboardType="numeric"
+            style={styles.input}
+            mode="outlined"
+          />
           </View>
           <Button 
             mode="contained" 
             onPress={handleAdd} 
             style={styles.addButton}
-            icon="plus"
+            icon={() => <AddIcon size={18} color={COLORS.primary} />}
           >
             Add Money
           </Button>
@@ -89,7 +90,7 @@ const WalletScreen = () => {
           {mockTransactions.length === 0 ? (
             <Card style={styles.emptyCard}>
               <Card.Content style={styles.emptyContent}>
-                <Icon name="wallet-outline" size={48} color="#999999" style={styles.emptyIcon} />
+                <WalletIcon size={48} color={COLORS.textSecondary} style={styles.emptyIcon} />
                 <Text style={styles.emptyText}>No transactions yet</Text>
                 <Text style={styles.emptySubtext}>Your transaction history will appear here</Text>
               </Card.Content>
@@ -99,33 +100,23 @@ const WalletScreen = () => {
               <Card key={transaction.id} style={styles.transactionCard}>
                 <Card.Content style={styles.transactionContent}>
                   <View style={styles.transactionLeft}>
-                    <View style={[styles.transactionIconContainer, { backgroundColor: getTransactionColor(transaction.type, transaction.amount) + '20' }]}>
-                      <Icon 
-                        name={getTransactionIcon(transaction.type, transaction.amount)} 
-                        size={20} 
-                        color={getTransactionColor(transaction.type, transaction.amount)} 
-                      />
+                    <View style={[styles.transactionIconContainer, { backgroundColor: COLORS.lightGray }]}>
+                      {transaction.type === 'ride' && <CarIcon size={20} color={COLORS.textSecondary} />}
+                      {transaction.type === 'topup' && <AddIcon size={20} color={COLORS.secondary} />}
+                      {transaction.type === 'refund' && <RefreshIcon size={20} color={COLORS.textSecondary} />}
                     </View>
                     <View style={styles.transactionDetails}>
                       <Text style={styles.transactionDesc}>{transaction.desc}</Text>
                       <View style={styles.transactionDateContainer}>
-                        <Icon name="calendar" size={12} color="#999999" />
-                        <Text style={styles.transactionDate}>{transaction.date}</Text>
+                        <CalendarIcon size={12} color={COLORS.textSecondary} />
+                      <Text style={styles.transactionDate}>{transaction.date}</Text>
                       </View>
                     </View>
                   </View>
                   <View style={styles.transactionAmountContainer}>
-                    <Icon 
-                      name={transaction.amount > 0 ? "plus" : "minus"} 
-                      size={16} 
-                      color={transaction.amount > 0 ? '#34C759' : '#FF3B30'} 
-                    />
-                    <Text style={[
-                      styles.transactionAmount,
-                      { color: transaction.amount > 0 ? '#34C759' : '#FF3B30' }
-                    ]}>
-                      Rs. {Math.abs(transaction.amount)}
-                    </Text>
+                    <Text style={styles.transactionAmount}>
+                      {transaction.amount > 0 ? '+' : '-'} Rs. {Math.abs(transaction.amount)}
+                  </Text>
                   </View>
                 </Card.Content>
               </Card>
@@ -140,22 +131,25 @@ const WalletScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.primary,
   },
   header: {
     padding: 24,
     paddingBottom: 16,
+    backgroundColor: COLORS.primary,
   },
   title: {
     fontSize: 24,
     fontFamily: 'Montserrat-Bold',
-    color: '#000000',
+    color: COLORS.secondary,
   },
   balanceCard: {
     marginHorizontal: 24,
     marginBottom: 16,
     borderRadius: 16,
-    backgroundColor: '#007AFF',
+    backgroundColor: COLORS.primary,
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
   balanceContent: {
     padding: 24,
@@ -169,74 +163,94 @@ const styles = StyleSheet.create({
   balanceLabel: {
     fontSize: 16,
     fontFamily: 'Montserrat-Medium',
-    color: '#FFFFFF',
+    color: COLORS.textSecondary,
   },
   balanceAmountContainer: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  balanceIcon: {
-    marginRight: 8,
+  balanceCurrency: {
+    fontSize: 32,
+    fontFamily: 'Montserrat-Bold',
+    color: COLORS.secondary,
+    marginRight: 4,
   },
   balanceAmount: {
     fontSize: 32,
     fontFamily: 'Montserrat-Bold',
-    color: '#FFFFFF',
+    color: COLORS.secondary,
     marginBottom: 4,
   },
   balanceSubtext: {
     fontSize: 14,
     fontFamily: 'Montserrat-Regular',
-    color: '#B3D9FF',
+    color: COLORS.textSecondary,
   },
   addMoneyCard: {
     marginHorizontal: 24,
     marginBottom: 24,
     borderRadius: 12,
+    backgroundColor: COLORS.primary,
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
   addMoneyTitle: {
     fontSize: 18,
     fontFamily: 'Montserrat-SemiBold',
-    color: '#000000',
-    marginBottom: 16,
+    color: COLORS.secondary,
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 12,
   },
-  inputIcon: {
-    marginRight: 8,
+  inputCurrency: {
+    fontSize: 18,
+    fontFamily: 'Montserrat-Bold',
+    color: COLORS.textSecondary,
+    marginRight: 4,
+    alignSelf: 'center',
   },
   input: {
-    marginBottom: 16,
-    backgroundColor: '#FFFFFF',
+    flex: 1,
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.border,
   },
   addButton: {
-    borderRadius: 8,
+    borderRadius: 12,
+    backgroundColor: COLORS.secondary,
+    marginTop: 4,
+  },
+  addButtonLabel: {
+    color: COLORS.primary,
+    fontFamily: 'Montserrat-Bold',
+    fontSize: 16,
   },
   transactionsSection: {
-    flex: 1,
-    paddingHorizontal: 24,
+    marginHorizontal: 24,
+    marginBottom: 24,
   },
   sectionTitle: {
     fontSize: 18,
-    fontFamily: 'Montserrat-SemiBold',
-    color: '#000000',
-    marginBottom: 16,
+    fontFamily: 'Montserrat-Bold',
+    color: COLORS.secondary,
+    marginBottom: 12,
   },
   transactionsList: {
-    flex: 1,
+    // maxHeight: 220, // Remove this line to allow natural scrolling
   },
   transactionCard: {
-    marginBottom: 8,
-    borderRadius: 12,
+    marginBottom: 10,
+    borderRadius: 10,
+    backgroundColor: COLORS.primary,
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
   transactionContent: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 8,
+    justifyContent: 'space-between',
+    padding: 12,
   },
   transactionLeft: {
     flexDirection: 'row',
@@ -244,11 +258,13 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   transactionIconContainer: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     justifyContent: 'center',
     alignItems: 'center',
+    marginRight: 12,
+    backgroundColor: COLORS.lightGray,
   },
   transactionDetails: {
     flex: 1,
@@ -256,50 +272,56 @@ const styles = StyleSheet.create({
   transactionDesc: {
     fontSize: 16,
     fontFamily: 'Montserrat-Medium',
-    color: '#000000',
-    marginBottom: 2,
+    color: COLORS.secondary,
   },
   transactionDateContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginTop: 2,
   },
   transactionDate: {
     fontSize: 12,
     fontFamily: 'Montserrat-Regular',
-    color: '#666666',
+    color: COLORS.textSecondary,
     marginLeft: 4,
   },
   transactionAmountContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    minWidth: 80,
+    justifyContent: 'flex-end',
   },
   transactionAmount: {
     fontSize: 16,
     fontFamily: 'Montserrat-Bold',
+    color: COLORS.secondary,
     marginLeft: 4,
   },
   emptyCard: {
     borderRadius: 12,
-    marginTop: 32,
+    backgroundColor: COLORS.primary,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    alignItems: 'center',
+    marginTop: 24,
   },
   emptyContent: {
     alignItems: 'center',
-    paddingVertical: 32,
+    padding: 24,
   },
   emptyIcon: {
-    marginBottom: 16,
+    marginBottom: 12,
   },
   emptyText: {
-    fontSize: 18,
-    fontFamily: 'Montserrat-SemiBold',
-    color: '#000000',
-    marginBottom: 8,
+    fontSize: 16,
+    fontFamily: 'Montserrat-Bold',
+    color: COLORS.textSecondary,
+    marginBottom: 4,
   },
   emptySubtext: {
     fontSize: 14,
     fontFamily: 'Montserrat-Regular',
-    color: '#666666',
-    textAlign: 'center',
+    color: COLORS.disabled,
   },
 });
 

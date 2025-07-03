@@ -1,17 +1,24 @@
 import { MD3LightTheme as DefaultTheme } from 'react-native-paper';
+import { COLORS } from './colors';
 
 const theme = {
   ...DefaultTheme,
   colors: {
     ...DefaultTheme.colors,
-    primary: '#007AFF', // Primary blue from Figma
-    secondary: '#34C759', // Secondary green
-    background: '#FFFFFF',
-    surface: '#FFFFFF',
-    text: '#000000',
-    onSurface: '#000000',
-    outline: '#E5E5EA',
-    surfaceVariant: '#F2F2F7',
+    primary: COLORS.accent,        // Emerald Green (#00C853)
+    secondary: COLORS.success,     // Green (#4CAF50)
+    background: COLORS.primary,    // White (#FFFFFF)
+    surface: COLORS.primary,       // White (#FFFFFF)
+    text: COLORS.secondary,        // Black (#000000)
+    onSurface: COLORS.secondary,   // Black (#000000)
+    outline: COLORS.border,        // Light Gray (#E0E0E0)
+    surfaceVariant: COLORS.lightGray, // Light Gray (#F5F5F5)
+    error: COLORS.error,           // Red (#E53935)
+    disabled: COLORS.disabled,     // Cool Gray (#BDBDBD)
+    onPrimary: COLORS.primary,     // White text on primary
+    onSecondary: COLORS.primary,   // White text on secondary
+    onBackground: COLORS.secondary, // Black text on background
+    onSurfaceVariant: COLORS.textSecondary, // Dark Gray text on surface variant
   },
   fonts: {
     ...DefaultTheme.fonts,

@@ -1,15 +1,19 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, SafeAreaView, TouchableOpacity, Image, Dimensions } from 'react-native';
-import { Text, TextInput, Button, HelperText, Card, IconButton } from 'react-native-paper';
+import { View, StyleSheet, SafeAreaView, TouchableOpacity, Dimensions } from 'react-native';
+import { Text, TextInput, Button, HelperText, Card, Divider } from 'react-native-paper';
+import Icon from '../../components/Icon';
 import { useAuth } from '../../context/AuthContext';
+import { COLORS } from '../../constants/colors';
 
-const { width: screenWidth } = Dimensions.get('window');
+const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
 const LoginScreen = ({ navigation }: any) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const { login } = useAuth();
+  const [roleSelected, setRoleSelected] = useState(false);
+  const [profileSetupComplete, setProfileSetupComplete] = useState(false);
 
   const validate = () => {
     if (!email.match(/^[^@\s]+@[^@\s]+\.[^@\s]+$/)) {
@@ -36,51 +40,25 @@ const LoginScreen = ({ navigation }: any) => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {/* Logo Section */}
-        <View style={styles.logoSection}>
-          <TouchableOpacity 
-            style={styles.backButton}
-            onPress={() => navigation.navigate('Splash')}
-          >
-            <IconButton
-              icon="arrow-left"
-              size={24}
-              iconColor="#007AFF"
-              style={{ margin: 0 }}
-            />
-          </TouchableOpacity>
-          
-          <Image 
-            source={require('../../assets/images/logo-blue.png')} 
-            style={styles.logoImage}
-            resizeMode="contain"
-          />
-        </View>
-
-        {/* Welcome Section */}
-        <View style={styles.welcomeSection}>
+    <SafeAreaView style={styles.background}>
+      <View style={styles.centeredContainer}>
           <Text style={styles.welcomeTitle}>Welcome Back!</Text>
-          <Text style={styles.welcomeSubtitle}>Sign in to continue your rides</Text>
-        </View>
-
-        {/* Form Section */}
+        <Text style={styles.welcomeSubtitle}>Please sign in to continue.</Text>
         <Card style={styles.formCard}>
           <Card.Content style={styles.formContent}>
             <TextInput
-              label="Email"
+              label="Email Address"
               value={email}
               onChangeText={setEmail}
               keyboardType="email-address"
               autoCapitalize="none"
               style={styles.input}
               mode="outlined"
-              outlineColor="#E0E0E0"
-              activeOutlineColor="#007AFF"
+              outlineColor={COLORS.border}
+              activeOutlineColor={COLORS.accent}
               contentStyle={styles.inputContent}
+              left={<TextInput.Icon icon={() => <Icon name="email-outline" size={22} color={COLORS.textSecondary} />} />}
             />
-            
             <TextInput
               label="Password"
               value={password}
@@ -88,17 +66,15 @@ const LoginScreen = ({ navigation }: any) => {
               secureTextEntry
               style={styles.input}
               mode="outlined"
-              outlineColor="#E0E0E0"
-              activeOutlineColor="#007AFF"
+              outlineColor={COLORS.border}
+              activeOutlineColor={COLORS.accent}
               contentStyle={styles.inputContent}
+              left={<TextInput.Icon icon={() => <Icon name="lock-outline" size={22} color={COLORS.textSecondary} />} />}
             />
-
             <TouchableOpacity style={styles.forgotPassword}>
               <Text style={styles.forgotPasswordText}>Forgot password?</Text>
             </TouchableOpacity>
-
             {error ? <HelperText type="error" visible style={styles.errorText}>{error}</HelperText> : null}
-
             <Button 
               mode="contained" 
               onPress={handleLogin} 
@@ -108,169 +84,155 @@ const LoginScreen = ({ navigation }: any) => {
             >
               Log In
             </Button>
-
             <View style={styles.dividerContainer}>
-              <View style={styles.divider} />
-              <Text style={styles.dividerText}>Or</Text>
-              <View style={styles.divider} />
+              <Divider style={styles.divider} />
+              <Text style={styles.dividerText}>OR</Text>
+              <Divider style={styles.divider} />
             </View>
-
             <Button 
               mode="outlined" 
               onPress={handleGoogleSignIn}
               style={styles.googleButton}
               contentStyle={styles.buttonContent}
               labelStyle={styles.googleButtonLabel}
+              icon={() => (
+                <Icon name="google" size={20} color="#4285F4" style={{ marginRight: 8 }} />
+              )}
             >
               Continue with Google
             </Button>
           </Card.Content>
         </Card>
-
-        {/* Sign Up Section */}
         <View style={styles.signupSection}>
           <Text style={styles.signupText}>Don't have an account? </Text>
           <TouchableOpacity onPress={() => navigation && navigation.navigate('Signup')}>
             <Text style={styles.signupLink}>Sign up</Text>
           </TouchableOpacity>
         </View>
-      </ScrollView>
+      </View>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  background: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
+    backgroundColor: COLORS.lightGray,
   },
-  scrollContent: {
-    flexGrow: 1,
-    padding: 24,
-  },
-  logoSection: {
+  centeredContainer: {
+    flex: 1,
+    justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 0,
-    marginBottom: 8,
-    position: 'relative',
-  },
-  logoImage: {
-    width: screenWidth * 0.6,
-    height: screenWidth * 0.6,
-  },
-  welcomeSection: {
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  welcomeTitle: {
-    fontSize: 24,
-    fontFamily: 'Montserrat-Bold',
-    color: '#000000',
-    marginBottom: 8,
-  },
-  welcomeSubtitle: {
-    fontSize: 16,
-    fontFamily: 'Montserrat-Regular',
-    color: '#666666',
-    textAlign: 'center',
+    padding: 16,
   },
   formCard: {
-    borderRadius: 16,
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    backgroundColor: COLORS.primary,
+    width: '100%',
+    maxWidth: 400,
+    elevation: 8,
+    shadowColor: COLORS.secondary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
     marginBottom: 24,
   },
   formContent: {
-    padding: 24,
+    padding: 28,
+  },
+  welcomeTitle: {
+    fontSize: 32,
+    fontFamily: 'Montserrat-Black',
+    fontWeight: '900',
+    color: COLORS.secondary,
+    textAlign: 'center',
+    marginBottom: 4,
+  },
+  welcomeSubtitle: {
+    fontSize: 17,
+    fontFamily: 'Montserrat-Regular',
+    color: COLORS.textSecondary,
+    textAlign: 'center',
+    marginBottom: 24,
   },
   input: {
     marginBottom: 16,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.primary,
   },
   inputContent: {
     fontFamily: 'Montserrat-Regular',
+    fontSize: 16,
+    color: COLORS.secondary,
   },
   forgotPassword: {
     alignSelf: 'flex-end',
-    marginBottom: 24,
+    marginBottom: 12,
   },
   forgotPasswordText: {
-    fontSize: 14,
+    color: COLORS.accent,
     fontFamily: 'Montserrat-Medium',
-    color: '#007AFF',
+    fontSize: 15,
   },
   errorText: {
-    marginBottom: 16,
     fontFamily: 'Montserrat-Regular',
   },
   loginButton: {
-    marginBottom: 24,
-    borderRadius: 12,
-    backgroundColor: '#007AFF',
-    elevation: 2,
+    borderRadius: 18,
+    marginTop: 4,
+    marginBottom: 18,
+    backgroundColor: COLORS.secondary,
   },
   buttonContent: {
     paddingVertical: 12,
   },
   buttonLabel: {
-    fontSize: 16,
-    fontFamily: 'Montserrat-SemiBold',
-    color: '#FFFFFF',
+    fontFamily: 'Montserrat-Bold',
+    fontSize: 18,
+    color: COLORS.primary,
   },
   dividerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 24,
+    marginVertical: 8,
   },
   divider: {
     flex: 1,
     height: 1,
-    backgroundColor: '#E0E0E0',
+    backgroundColor: COLORS.border,
   },
   dividerText: {
-    fontSize: 14,
-    fontFamily: 'Montserrat-Regular',
-    color: '#666666',
-    marginHorizontal: 16,
+    marginHorizontal: 12,
+    color: COLORS.textSecondary,
+    fontFamily: 'Montserrat-Medium',
+    fontSize: 15,
   },
   googleButton: {
-    borderRadius: 12,
-    borderColor: '#E0E0E0',
-    borderWidth: 1,
-    backgroundColor: '#FFFFFF',
+    borderRadius: 18,
+    borderColor: COLORS.border,
+    backgroundColor: COLORS.primary,
+    marginTop: 4,
   },
   googleButtonLabel: {
-    fontSize: 16,
-    fontFamily: 'Montserrat-SemiBold',
-    color: '#000000',
+    color: COLORS.secondary,
+    fontFamily: 'Montserrat-Bold',
+    fontSize: 17,
   },
   signupSection: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    paddingVertical: 16,
+    marginTop: 8,
+    marginBottom: 12,
   },
   signupText: {
-    fontSize: 16,
     fontFamily: 'Montserrat-Regular',
-    color: '#666666',
+    color: COLORS.textSecondary,
+    fontSize: 16,
   },
   signupLink: {
-    fontSize: 16,
     fontFamily: 'Montserrat-Bold',
-    color: '#007AFF',
-  },
-  backButton: {
-    position: 'absolute',
-    left: -8,
-    top: -8,
+    color: COLORS.accent,
+    fontSize: 16,
   },
 });
 

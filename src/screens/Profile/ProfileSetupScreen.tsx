@@ -141,7 +141,7 @@ const ProfileSetupScreen = ({ navigation, route }: any) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#F6F8FB',
   },
   header: {
     flexDirection: 'row',
@@ -150,26 +150,37 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     height: 56,
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
   },
   backButton: {
     margin: 0,
   },
   headerTitle: {
-    fontSize: 18,
-    fontFamily: 'Montserrat-SemiBold',
-    color: '#000000',
+    fontSize: 22,
+    fontFamily: 'Montserrat-Black',
+    fontWeight: '900',
+    color: '#111827',
   },
   skipButton: {
     fontSize: 16,
     fontFamily: 'Montserrat-Medium',
-    color: '#007AFF',
+    color: '#2563EB',
     paddingHorizontal: 16,
     paddingVertical: 8,
   },
   content: {
     flex: 1,
-    paddingHorizontal: 24,
-    paddingTop: 32,
+    backgroundColor: '#fff',
+    margin: 24,
+    borderRadius: 20,
+    padding: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
+    elevation: 8,
   },
   profileSection: {
     alignItems: 'center',
@@ -214,16 +225,17 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     fontSize: 16,
     minHeight: 100,
+    borderRadius: 10,
   },
   inputContent: {
     fontFamily: 'Montserrat-Regular',
     fontSize: 16,
   },
   inputOutline: {
-    borderRadius: 8,
+    borderRadius: 10,
   },
   infoContainer: {
-    backgroundColor: '#F8F9FA',
+    backgroundColor: '#F6F8FB',
     padding: 20,
     borderRadius: 12,
     marginBottom: 32,
@@ -245,16 +257,16 @@ const styles = StyleSheet.create({
     paddingBottom: 32,
   },
   saveButton: {
-    borderRadius: 25,
-    backgroundColor: '#007AFF',
+    borderRadius: 18,
+    backgroundColor: '#111111',
   },
   buttonContent: {
-    paddingVertical: 16,
+    paddingVertical: 14,
   },
   buttonLabel: {
-    fontSize: 16,
-    fontFamily: 'Montserrat-SemiBold',
-    color: '#FFFFFF',
+    fontSize: 18,
+    fontFamily: 'Montserrat-Bold',
+    color: '#fff',
   },
 });
 
