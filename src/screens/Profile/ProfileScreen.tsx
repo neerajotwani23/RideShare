@@ -63,11 +63,6 @@ const ProfileScreen = ({ navigation }: any) => {
     outputRange: [COLORS.textSecondary, COLORS.primary],
   });
 
-  const switchBackgroundColor = animatedValue.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['#007AFF', '#007AFF'],
-  });
-
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
@@ -116,12 +111,7 @@ const ProfileScreen = ({ navigation }: any) => {
               onPress={handleRoleSwitch}
               activeOpacity={0.8}
             >
-              <Animated.View 
-                style={[
-                  styles.roleSwitchBackground,
-                  { backgroundColor: switchBackgroundColor }
-                ]}
-              >
+              <View style={styles.roleSwitchBackground}>
                 <View style={styles.roleSwitchTextContainer}>
                   <Animated.Text 
                     style={[
@@ -146,7 +136,7 @@ const ProfileScreen = ({ navigation }: any) => {
                     { transform: [{ translateX: switchTranslateX }] }
                   ]}
                 />
-              </Animated.View>
+              </View>
             </TouchableOpacity>
             <Text style={styles.roleSwitchDescription}>
               {currentRole === 'driver' 
@@ -247,7 +237,7 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: '#007AFF',
+    backgroundColor: COLORS.textSecondary,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 16,
@@ -361,6 +351,7 @@ const styles = StyleSheet.create({
     height: 40,
     borderRadius: 20,
     position: 'relative',
+    backgroundColor: COLORS.textSecondary,
   },
   roleSwitchTextContainer: {
     position: 'absolute',

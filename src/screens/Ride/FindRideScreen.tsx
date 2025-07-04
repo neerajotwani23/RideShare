@@ -44,13 +44,22 @@ const FindRideScreen = ({ navigation }: any) => {
   const [whereTo, setWhereTo] = useState('');
   const [rideType, setRideType] = useState<'now' | 'schedule'>('now');
   const [showTimePicker, setShowTimePicker] = useState(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const [scheduledTime, setScheduledTime] = useState<Date | null>(null);
+  const [scheduledDate, setScheduledDate] = useState<Date | null>(null);
   const [showResults, setShowResults] = useState(false);
 
   const handleTimeChange = (event: any, selectedTime?: Date) => {
     setShowTimePicker(Platform.OS === 'ios');
     if (selectedTime) {
       setScheduledTime(selectedTime);
+    }
+  };
+
+  const handleDateChange = (event: any, selectedDate?: Date) => {
+    setShowDatePicker(Platform.OS === 'ios');
+    if (selectedDate) {
+      setScheduledDate(selectedDate);
     }
   };
 
@@ -81,17 +90,30 @@ const FindRideScreen = ({ navigation }: any) => {
             </TouchableOpacity>
                     </View>
           {rideType === 'schedule' && (
-                  <TouchableOpacity 
-              style={styles.schedulePicker}
-                    onPress={() => setShowTimePicker(true)}
-                  >
-              <Icon name="clock-outline" size={20} color={COLORS.secondary} style={{ marginRight: 8 }} />
-              <Text style={styles.schedulePickerText}>
-                {scheduledTime
-                  ? scheduledTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })
-                  : 'Select time'}
-              </Text>
-            </TouchableOpacity>
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
+              <TouchableOpacity 
+                style={styles.schedulePicker}
+                onPress={() => setShowDatePicker(true)}
+              >
+                <Icon name="calendar" size={20} color={COLORS.secondary} style={{ marginRight: 8 }} />
+                <Text style={styles.schedulePickerText}>
+                  {scheduledDate
+                    ? scheduledDate.toLocaleDateString()
+                    : 'Select date'}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={[styles.schedulePicker, { marginLeft: 8 }]}
+                onPress={() => setShowTimePicker(true)}
+              >
+                <Icon name="clock-outline" size={20} color={COLORS.secondary} style={{ marginRight: 8 }} />
+                <Text style={styles.schedulePickerText}>
+                  {scheduledTime
+                    ? scheduledTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })
+                    : 'Select time'}
+                </Text>
+              </TouchableOpacity>
+            </View>
           )}
           <View style={styles.whereToRow}>
             <View style={styles.inputContainer}>
@@ -119,6 +141,14 @@ const FindRideScreen = ({ navigation }: any) => {
             ))}
                 </View>
               </View>
+        {showDatePicker && (
+          <DateTimePicker
+            value={scheduledDate || new Date()}
+            mode="date"
+            display={Platform.OS === 'android' ? 'spinner' : 'default'}
+            onChange={handleDateChange}
+          />
+        )}
         {showTimePicker && (
           <DateTimePicker
             value={scheduledTime || new Date()}

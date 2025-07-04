@@ -30,11 +30,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signup = (userData?: any) => {
     setIsAuthenticated(true);
     if (userData) setUser(userData);
+    setProfileSetupComplete(false);
   };
 
   const selectRole = (role: 'driver' | 'passenger') => {
     setRoleSelected(true);
     setCurrentRole(role);
+    setProfileSetupComplete(false);
   };
 
   const completeProfileSetup = () => {
