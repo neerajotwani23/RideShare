@@ -3,6 +3,7 @@ import { View, StyleSheet, ScrollView, SafeAreaView } from 'react-native';
 import { Text, Button, Card, Avatar, Chip, Divider } from 'react-native-paper';
 import Header from '../../components/Header';
 import { COLORS } from '../../constants/colors';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 const mockRideDetails = {
   id: 1,
@@ -48,7 +49,7 @@ const RideDetailsScreen = ({ navigation, route }: any) => {
       <Header
         title="Ride Details"
         showBack={true}
-        showChat={true}
+        showChat={false}
         onBack={() => navigation.goBack()}
         onChatPress={() => navigation.navigate('ChatBot')}
       />
@@ -169,6 +170,7 @@ const RideDetailsScreen = ({ navigation, route }: any) => {
                   <Text style={styles.passengerName}>{passenger.name}</Text>
                   <Text style={styles.passengerRating}>⭐ {passenger.rating}</Text>
                 </View>
+                <Icon name="phone" size={22} color={COLORS.secondary} style={{ marginLeft: 'auto' }} />
               </View>
             ))}
           </Card.Content>
@@ -218,160 +220,188 @@ const styles = StyleSheet.create({
   scrollContent: {
     padding: 16,
     paddingBottom: 32,
+    backgroundColor: COLORS.primary,
   },
   driverCard: {
     marginBottom: 16,
-    borderRadius: 12,
+    borderRadius: 16,
+    backgroundColor: COLORS.primary,
+    shadowColor: COLORS.secondary,
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 2,
   },
   cardContent: {
-    padding: 16,
+    flexDirection: 'column',
+    padding: 0,
   },
   driverHeader: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
   },
   avatar: {
-    backgroundColor: '#007AFF',
-    marginRight: 16,
+    backgroundColor: COLORS.secondary,
   },
   driverInfo: {
     flex: 1,
+    marginLeft: 16,
   },
   driverName: {
-    fontSize: 20,
+    fontSize: 18,
     fontFamily: 'Montserrat-Bold',
-    color: '#000000',
-    marginBottom: 4,
+    color: COLORS.secondary,
   },
   ratingContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 4,
+    marginTop: 2,
   },
   rating: {
     fontSize: 14,
-    fontFamily: 'Montserrat-Medium',
-    color: '#FF9500',
+    color: COLORS.textSecondary,
+    marginRight: 8,
   },
   carInfo: {
     fontSize: 14,
-    fontFamily: 'Montserrat-Regular',
-    color: '#666666',
-    marginLeft: 4,
+    color: COLORS.textSecondary,
   },
   carDetails: {
-    fontSize: 12,
-    fontFamily: 'Montserrat-Regular',
-    color: '#999999',
+    fontSize: 13,
+    color: COLORS.textSecondary,
+    marginTop: 2,
   },
   fareAmount: {
-    fontSize: 24,
+    fontSize: 22,
     fontFamily: 'Montserrat-Bold',
-    color: '#007AFF',
+    color: COLORS.secondary,
   },
   routeCard: {
     marginBottom: 16,
-    borderRadius: 12,
+    borderRadius: 16,
+    backgroundColor: COLORS.primary,
+    shadowColor: COLORS.secondary,
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 2,
   },
   cardTitle: {
     fontSize: 16,
     fontFamily: 'Montserrat-SemiBold',
-    color: '#000000',
+    color: COLORS.secondary,
     marginBottom: 8,
   },
   divider: {
-    marginBottom: 16,
+    marginVertical: 8,
+    backgroundColor: COLORS.border,
   },
   routeInfo: {
-    marginBottom: 16,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 8,
   },
   routeItem: {
-    paddingVertical: 8,
+    flex: 1,
+    alignItems: 'flex-start',
   },
   routeLabel: {
-    fontSize: 12,
-    fontFamily: 'Montserrat-Regular',
-    color: '#666666',
-    marginBottom: 4,
+    fontSize: 13,
+    color: COLORS.textSecondary,
   },
   routeValue: {
-    fontSize: 16,
+    fontSize: 15,
     fontFamily: 'Montserrat-SemiBold',
-    color: '#000000',
+    color: COLORS.secondary,
   },
   timeValue: {
-    fontSize: 14,
-    fontFamily: 'Montserrat-Regular',
-    color: '#007AFF',
+    fontSize: 13,
+    color: COLORS.accent,
+    marginTop: 2,
   },
   routeLine: {
-    height: 20,
-    width: 2,
-    backgroundColor: '#E5E5EA',
-    marginLeft: 8,
-    marginVertical: 4,
+    width: 1,
+    backgroundColor: COLORS.border,
+    marginHorizontal: 8,
   },
   tripDetails: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
+    justifyContent: 'space-between',
+    marginTop: 8,
   },
   tripItem: {
     alignItems: 'center',
+    flex: 1,
   },
   tripLabel: {
     fontSize: 12,
-    fontFamily: 'Montserrat-Regular',
-    color: '#666666',
-    marginBottom: 4,
+    color: COLORS.textSecondary,
   },
   tripValue: {
     fontSize: 14,
-    fontFamily: 'Montserrat-SemiBold',
-    color: '#000000',
+    color: COLORS.secondary,
+    fontFamily: 'Montserrat-Medium',
   },
   seatCard: {
     marginBottom: 16,
-    borderRadius: 12,
+    borderRadius: 16,
+    backgroundColor: COLORS.primary,
+    shadowColor: COLORS.secondary,
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 2,
   },
   seatInfo: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
+    justifyContent: 'space-between',
+    marginTop: 8,
   },
   seatItem: {
     alignItems: 'center',
+    flex: 1,
   },
   seatLabel: {
-    fontSize: 12,
-    fontFamily: 'Montserrat-Regular',
-    color: '#666666',
-    marginBottom: 4,
+    fontSize: 13,
+    color: COLORS.textSecondary,
   },
   seatValue: {
-    fontSize: 18,
+    fontSize: 16,
+    color: COLORS.secondary,
     fontFamily: 'Montserrat-Bold',
-    color: '#007AFF',
   },
   preferencesCard: {
     marginBottom: 16,
-    borderRadius: 12,
+    borderRadius: 16,
+    backgroundColor: COLORS.primary,
+    shadowColor: COLORS.secondary,
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 2,
   },
   preferencesContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
+    marginTop: 8,
   },
   preferenceChip: {
+    backgroundColor: COLORS.lightGray,
+    borderRadius: 16,
     marginRight: 8,
     marginBottom: 8,
-    backgroundColor: '#F2F2F7',
+    borderWidth: 0,
   },
   preferenceText: {
-    fontSize: 12,
-    fontFamily: 'Montserrat-Regular',
-    color: '#666666',
+    color: COLORS.textSecondary,
+    fontFamily: 'Montserrat-Medium',
+    fontSize: 13,
   },
   passengersCard: {
-    marginBottom: 24,
-    borderRadius: 12,
+    marginBottom: 16,
+    borderRadius: 16,
+    backgroundColor: COLORS.primary,
+    shadowColor: COLORS.secondary,
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 2,
   },
   passengerItem: {
     flexDirection: 'row',
@@ -382,34 +412,39 @@ const styles = StyleSheet.create({
     marginLeft: 12,
   },
   passengerName: {
-    fontSize: 16,
+    fontSize: 15,
+    color: COLORS.secondary,
     fontFamily: 'Montserrat-SemiBold',
-    color: '#000000',
   },
   passengerRating: {
-    fontSize: 14,
-    fontFamily: 'Montserrat-Regular',
-    color: '#FF9500',
+    fontSize: 13,
+    color: COLORS.textSecondary,
+    marginTop: 2,
   },
   actionButtons: {
     flexDirection: 'row',
-    gap: 12,
+    justifyContent: 'space-between',
+    marginTop: 16,
+    marginBottom: 24,
   },
   callButton: {
     flex: 1,
-    borderRadius: 12,
-    borderColor: '#007AFF',
+    marginRight: 8,
+    borderColor: COLORS.secondary,
+    borderWidth: 1,
+    backgroundColor: COLORS.primary,
   },
   bookButton: {
-    flex: 2,
+    flex: 1,
+    marginLeft: 8,
+    backgroundColor: COLORS.secondary,
     borderRadius: 12,
   },
   testButtons: {
-    marginTop: 16,
-    alignItems: 'center',
+    marginBottom: 24,
   },
   startRideButton: {
-    flex: 1,
+    backgroundColor: COLORS.accent,
     borderRadius: 12,
   },
 });

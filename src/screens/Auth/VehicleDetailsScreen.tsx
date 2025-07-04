@@ -340,7 +340,7 @@ const styles = StyleSheet.create({
     paddingBottom: 32,
   },
   infoContainer: {
-    backgroundColor: '#E3F2FD',
+    backgroundColor: COLORS.lightGray,
     padding: 20,
     borderRadius: 12,
     marginBottom: 32,
@@ -349,13 +349,13 @@ const styles = StyleSheet.create({
   infoTitle: {
     fontSize: 16,
     fontFamily: 'Montserrat-SemiBold',
-    color: '#1976D2',
+    color: COLORS.secondary,
     marginBottom: 8,
   },
   infoText: {
     fontSize: 14,
     fontFamily: 'Montserrat-Regular',
-    color: '#1976D2',
+    color: COLORS.textSecondary,
     lineHeight: 20,
   },
   inputContainer: {
@@ -394,7 +394,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontFamily: 'Montserrat-SemiBold',
-    color: '#000000',
+    color: COLORS.secondary,
     marginBottom: 20,
   },
   documentContainer: {
@@ -403,21 +403,21 @@ const styles = StyleSheet.create({
   documentLabel: {
     fontSize: 14,
     fontFamily: 'Montserrat-Medium',
-    color: '#000000',
+    color: COLORS.secondary,
     marginBottom: 8,
   },
   documentUpload: {
     borderWidth: 2,
-    borderColor: '#E0E0E0',
+    borderColor: COLORS.border,
     borderRadius: 12,
     borderStyle: 'dashed',
     minHeight: 120,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#FAFAFA',
+    backgroundColor: COLORS.primary,
   },
   documentError: {
-    borderColor: '#FF3B30',
+    borderColor: COLORS.error,
   },
   documentPlaceholder: {
     alignItems: 'center',
@@ -426,7 +426,7 @@ const styles = StyleSheet.create({
   documentText: {
     fontSize: 14,
     fontFamily: 'Montserrat-Regular',
-    color: '#666666',
+    color: COLORS.textSecondary,
     marginTop: 8,
   },
   documentPreview: {
@@ -449,11 +449,11 @@ const styles = StyleSheet.create({
     paddingBottom: 32,
     paddingTop: 16,
     borderTopWidth: 1,
-    borderTopColor: '#E0E0E0',
+    borderTopColor: COLORS.border,
   },
   saveButton: {
     borderRadius: 25,
-    backgroundColor: '#007AFF',
+    backgroundColor: COLORS.secondary,
   },
   buttonContent: {
     paddingVertical: 16,
@@ -461,7 +461,7 @@ const styles = StyleSheet.create({
   buttonLabel: {
     fontSize: 16,
     fontFamily: 'Montserrat-SemiBold',
-    color: '#FFFFFF',
+    color: COLORS.primary,
   },
 });
 

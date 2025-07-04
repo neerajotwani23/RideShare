@@ -3,6 +3,7 @@ import { View, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Image, Di
 import { Text, TextInput, Button, IconButton, Menu, Card } from 'react-native-paper';
 import { parsePhoneNumber, isValidPhoneNumber } from 'libphonenumber-js';
 import { useAuth } from '../../context/AuthContext';
+import { COLORS } from '../../constants/colors';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -25,6 +26,7 @@ const SignupScreen = ({ navigation }: any) => {
   const [phoneError, setPhoneError] = useState('');
   const [showCountryMenu, setShowCountryMenu] = useState(false);
   const [cnicError, setCnicError] = useState('');
+  const [formError, setFormError] = useState('');
 
   const { signup } = useAuth();
 
@@ -121,8 +123,11 @@ const SignupScreen = ({ navigation }: any) => {
 
   const handleSignup = () => {
     if (validateForm()) {
+      setFormError('');
       signup();
-      navigation.navigate('RoleSelection');
+      navigation.replace('RoleSelection');
+    } else {
+      setFormError('Please fill all fields correctly to create an account.');
     }
   };
 
@@ -150,16 +155,10 @@ const SignupScreen = ({ navigation }: any) => {
             <IconButton
               icon="arrow-left"
               size={24}
-              iconColor="#007AFF"
+              iconColor={COLORS.accent}
               style={{ margin: 0 }}
             />
           </TouchableOpacity>
-          
-          <Image 
-            source={require('../../assets/images/logo-blue.png')} 
-            style={styles.logoImage}
-            resizeMode="contain"
-          />
         </View>
 
         {/* Welcome Section */}
@@ -171,6 +170,9 @@ const SignupScreen = ({ navigation }: any) => {
         {/* Form Section */}
         <Card style={styles.formCard}>
           <Card.Content style={styles.formContent}>
+            {formError ? (
+              <Text style={styles.formError}>{formError}</Text>
+            ) : null}
             {/* Name Fields */}
             <View style={styles.row}>
               <View style={styles.halfInput}>
@@ -180,8 +182,8 @@ const SignupScreen = ({ navigation }: any) => {
                   onChangeText={setFirstName}
                   style={styles.input}
                   mode="outlined"
-                  outlineColor="#E0E0E0"
-                  activeOutlineColor="#007AFF"
+                  outlineColor={COLORS.border}
+                  activeOutlineColor={COLORS.secondary}
                   contentStyle={styles.inputContent}
                 />
               </View>
@@ -192,8 +194,8 @@ const SignupScreen = ({ navigation }: any) => {
                   onChangeText={setLastName}
                   style={styles.input}
                   mode="outlined"
-                  outlineColor="#E0E0E0"
-                  activeOutlineColor="#007AFF"
+                  outlineColor={COLORS.border}
+                  activeOutlineColor={COLORS.secondary}
                   contentStyle={styles.inputContent}
                 />
               </View>
@@ -208,8 +210,8 @@ const SignupScreen = ({ navigation }: any) => {
               autoCapitalize="none"
               style={styles.input}
               mode="outlined"
-              outlineColor="#E0E0E0"
-              activeOutlineColor="#007AFF"
+              outlineColor={COLORS.border}
+              activeOutlineColor={COLORS.secondary}
               contentStyle={styles.inputContent}
             />
 
@@ -224,7 +226,7 @@ const SignupScreen = ({ navigation }: any) => {
                     onPress={() => setShowCountryMenu(true)}
                   >
                     <Text style={styles.countryCode}>{selectedCountry.flag} {selectedCountry.callingCode}</Text>
-                    <IconButton icon="chevron-down" size={20} iconColor="#666666" style={styles.chevronIcon} />
+                    <IconButton icon="chevron-down" size={20} iconColor={COLORS.textSecondary} style={styles.chevronIcon} />
                   </TouchableOpacity>
                 }
               >
@@ -244,8 +246,8 @@ const SignupScreen = ({ navigation }: any) => {
                 keyboardType="phone-pad"
                 style={styles.phoneInput}
                 mode="outlined"
-                outlineColor="#E0E0E0"
-                activeOutlineColor="#007AFF"
+                outlineColor={COLORS.border}
+                activeOutlineColor={COLORS.secondary}
                 placeholder={getPhonePlaceholder(selectedCountry.code)}
                 error={!!phoneError}
                 contentStyle={styles.inputContent}
@@ -261,8 +263,8 @@ const SignupScreen = ({ navigation }: any) => {
               keyboardType="numeric"
               style={styles.input}
               mode="outlined"
-              outlineColor="#E0E0E0"
-              activeOutlineColor="#007AFF"
+              outlineColor={COLORS.border}
+              activeOutlineColor={COLORS.secondary}
               placeholder="42101-1234567-8"
               error={!!cnicError}
               contentStyle={styles.inputContent}
@@ -277,8 +279,8 @@ const SignupScreen = ({ navigation }: any) => {
               secureTextEntry={!showPassword}
               style={styles.input}
               mode="outlined"
-              outlineColor="#E0E0E0"
-              activeOutlineColor="#007AFF"
+              outlineColor={COLORS.border}
+              activeOutlineColor={COLORS.secondary}
               contentStyle={styles.inputContent}
               right={
                 <TextInput.Icon
@@ -296,8 +298,8 @@ const SignupScreen = ({ navigation }: any) => {
               secureTextEntry={!showConfirmPassword}
               style={styles.input}
               mode="outlined"
-              outlineColor="#E0E0E0"
-              activeOutlineColor="#007AFF"
+              outlineColor={COLORS.border}
+              activeOutlineColor={COLORS.secondary}
               contentStyle={styles.inputContent}
               right={
                 <TextInput.Icon
@@ -352,11 +354,12 @@ const SignupScreen = ({ navigation }: any) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
+    backgroundColor: COLORS.primary,
   },
   scrollContent: {
     flexGrow: 1,
     padding: 24,
+    backgroundColor: COLORS.primary,
   },
   logoSection: {
     alignItems: 'center',
@@ -378,139 +381,146 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   welcomeTitle: {
-    fontSize: 24,
-    fontFamily: 'Montserrat-Bold',
-    color: '#000000',
+    fontSize: 32,
+    fontFamily: 'Montserrat-Black',
+    color: COLORS.secondary,
     marginBottom: 8,
   },
   welcomeSubtitle: {
     fontSize: 16,
     fontFamily: 'Montserrat-Regular',
-    color: '#666666',
+    color: COLORS.textSecondary,
     textAlign: 'center',
+    marginBottom: 24,
   },
   formCard: {
     borderRadius: 16,
     elevation: 4,
-    shadowColor: '#000',
+    shadowColor: COLORS.secondary,
     shadowOffset: {
       width: 0,
       height: 2,
     },
     shadowOpacity: 0.1,
-    shadowRadius: 8,
-    backgroundColor: '#FFFFFF',
-    marginBottom: 24,
+    backgroundColor: COLORS.primary,
+    marginBottom: 16,
   },
   formContent: {
-    padding: 24,
+    paddingVertical: 16,
   },
   row: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    marginBottom: 12,
   },
   halfInput: {
-    width: '48%',
+    flex: 1,
+    marginRight: 8,
   },
   input: {
-    marginBottom: 16,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.primary,
+    color: COLORS.secondary,
+    marginBottom: 12,
   },
   inputContent: {
-    fontFamily: 'Montserrat-Regular',
+    color: COLORS.secondary,
   },
   phoneContainer: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    marginBottom: 16,
+    alignItems: 'center',
+    marginBottom: 12,
   },
   countrySelector: {
     flexDirection: 'row',
     alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 6,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
-    borderRadius: 4,
-    paddingHorizontal: 12,
-    paddingVertical: 16,
+    borderColor: COLORS.border,
+    borderRadius: 8,
     marginRight: 8,
-    minWidth: 100,
+    backgroundColor: COLORS.primary,
   },
   countryCode: {
     fontSize: 16,
-    fontFamily: 'Montserrat-Medium',
-    color: '#000000',
+    color: COLORS.secondary,
+    marginRight: 4,
   },
   chevronIcon: {
-    margin: 0,
-    marginLeft: 4,
+    marginLeft: 0,
   },
   phoneInput: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.primary,
+    color: COLORS.secondary,
   },
   errorText: {
-    fontSize: 12,
-    fontFamily: 'Montserrat-Regular',
-    color: '#FF3B30',
-    marginTop: -12,
+    color: COLORS.error,
+    fontSize: 13,
     marginBottom: 8,
   },
   signupButton: {
-    marginBottom: 24,
+    backgroundColor: COLORS.secondary,
     borderRadius: 12,
-    backgroundColor: '#007AFF',
-    elevation: 2,
+    marginTop: 8,
+    marginBottom: 8,
   },
   buttonContent: {
     paddingVertical: 12,
   },
   buttonLabel: {
+    color: COLORS.primary,
+    fontFamily: 'Montserrat-Bold',
     fontSize: 16,
-    fontFamily: 'Montserrat-SemiBold',
-    color: '#FFFFFF',
   },
   dividerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 24,
+    marginVertical: 16,
   },
   divider: {
     flex: 1,
     height: 1,
-    backgroundColor: '#E0E0E0',
+    backgroundColor: COLORS.border,
   },
   dividerText: {
+    marginHorizontal: 8,
+    color: COLORS.textSecondary,
     fontSize: 14,
-    fontFamily: 'Montserrat-Regular',
-    color: '#666666',
-    marginHorizontal: 16,
   },
   googleButton: {
-    borderRadius: 12,
-    borderColor: '#E0E0E0',
+    borderColor: COLORS.secondary,
     borderWidth: 1,
-    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    backgroundColor: COLORS.primary,
+    marginBottom: 8,
   },
   googleButtonLabel: {
+    color: COLORS.secondary,
+    fontFamily: 'Montserrat-Bold',
     fontSize: 16,
-    fontFamily: 'Montserrat-SemiBold',
-    color: '#000000',
   },
   signinSection: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    paddingVertical: 16,
+    marginTop: 12,
   },
   signinText: {
-    fontSize: 16,
-    fontFamily: 'Montserrat-Regular',
-    color: '#666666',
+    color: COLORS.textSecondary,
+    fontSize: 15,
   },
   signinLink: {
-    fontSize: 16,
+    color: COLORS.accent,
     fontFamily: 'Montserrat-Bold',
-    color: '#007AFF',
+    fontSize: 15,
+  },
+  formError: {
+    color: COLORS.error,
+    fontSize: 15,
+    marginBottom: 12,
+    textAlign: 'center',
+    fontFamily: 'Montserrat-Bold',
   },
 });
 
