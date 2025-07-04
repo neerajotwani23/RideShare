@@ -5,7 +5,6 @@ import { Text, Button, Card, Avatar, TextInput } from 'react-native-paper';
 const RateRideScreen = ({ navigation, route }: any) => {
   const [rating, setRating] = useState(0);
   const [review, setReview] = useState('');
-  const { rideData } = route.params || {};
 
   const handleStarPress = (starIndex: number) => {
     setRating(starIndex + 1);

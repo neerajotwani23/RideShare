@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, ScrollView, SafeAreaView, TouchableOpacity, Animated } from 'react-native';
-import { Text, Button, Avatar, Card, Divider } from 'react-native-paper';
+import { Text, Card, Divider } from 'react-native-paper';
 import { COLORS } from '../../constants/colors';
 import { 
   UserIcon, 

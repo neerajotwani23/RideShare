@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Image, Dimensions } from 'react-native';
 import { Text, TextInput, Button, IconButton, Menu, Card } from 'react-native-paper';
-import { parsePhoneNumber, isValidPhoneNumber } from 'libphonenumber-js';
+import { isValidPhoneNumber } from 'libphonenumber-js';
 import { useAuth } from '../../context/AuthContext';
 import { COLORS } from '../../constants/colors';
 

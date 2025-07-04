@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, ScrollView, SafeAreaView, Platform, TouchableOpacity, Dimensions } from 'react-native';
-import { Text, TextInput, Button, Switch, HelperText, Card, SegmentedButtons } from 'react-native-paper';
+import { Text, TextInput, Button, Switch, HelperText, Card } from 'react-native-paper';
 import Icon from '../../components/Icon';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { COLORS } from '../../constants/colors';

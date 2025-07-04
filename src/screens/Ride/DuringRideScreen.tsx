@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { View, StyleSheet, SafeAreaView } from 'react-native';
 import { Text, Button, Card, Avatar, IconButton } from 'react-native-paper';
 import { COLORS } from '../../constants/colors';

@@ -1,14 +1,12 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { View, StyleSheet, SafeAreaView } from 'react-native';
 import { Text, Button } from 'react-native-paper';
 import { useAuth } from '../../context/AuthContext';
 
-const RoleSelectionScreen = ({ navigation }: any) => {
-  const [selectedRole, setSelectedRole] = useState('');
+const RoleSelectionScreen = () => {
   const { selectRole } = useAuth();
 
   const handleRoleSelection = (role: string) => {
-    setSelectedRole(role);
     selectRole(role as 'driver' | 'passenger');
     // Navigation will be handled automatically by AuthContext state change
   };

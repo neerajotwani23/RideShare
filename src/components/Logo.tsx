@@ -5,14 +5,10 @@ const { width: screenWidth } = Dimensions.get('window');
 
 interface LogoProps {
   size?: 'small' | 'medium' | 'large';
-  color?: 'light' | 'dark';
-  showTagline?: boolean;
 }
 
 const Logo: React.FC<LogoProps> = ({ 
-  size = 'medium', 
-  color = 'light', 
-  showTagline = false 
+  size = 'medium' 
 }) => {
   const logoWidth = {
     small: screenWidth * 0.7,   // 70% of screen width
