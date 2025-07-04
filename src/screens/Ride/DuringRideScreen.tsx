@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, SafeAreaView } from 'react-native';
 import { Text, Button, Card, Avatar, IconButton } from 'react-native-paper';
+import { COLORS } from '../../constants/colors';
 
 const DuringRideScreen = ({ navigation, route }: any) => {
   const { rideData } = route.params || {};
@@ -52,27 +53,27 @@ const DuringRideScreen = ({ navigation, route }: any) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
+    backgroundColor: COLORS.primary,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.primary,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E5EA',
+    borderBottomColor: COLORS.border,
   },
   headerTitle: {
     fontSize: 18,
     fontFamily: 'Montserrat-SemiBold',
-    color: '#000000',
+    color: COLORS.secondary,
     flex: 1,
     textAlign: 'center',
   },
   mapContainer: {
     height: 250,
-    backgroundColor: '#E8F4FD',
+    backgroundColor: COLORS.lightGray,
     justifyContent: 'center',
     alignItems: 'center',
     margin: 16,
@@ -81,7 +82,7 @@ const styles = StyleSheet.create({
   mapPlaceholder: {
     fontSize: 24,
     fontFamily: 'Montserrat-SemiBold',
-    color: '#007AFF',
+    color: COLORS.accent,
     marginBottom: 8,
   },
   mapSubtext: {
@@ -108,7 +109,7 @@ const styles = StyleSheet.create({
   personName: {
     fontSize: 16,
     fontFamily: 'Montserrat-SemiBold',
-    color: '#000000',
+    color: COLORS.secondary,
     marginBottom: 4,
   },
   personRole: {
@@ -125,12 +126,12 @@ const styles = StyleSheet.create({
     margin: 16,
     marginTop: 24,
     borderRadius: 25,
-    backgroundColor: '#007AFF',
+    backgroundColor: COLORS.accent,
   },
   buttonLabel: {
     fontSize: 16,
     fontFamily: 'Montserrat-SemiBold',
-    color: '#FFFFFF',
+    color: COLORS.primary,
     paddingVertical: 8,
   },
 });

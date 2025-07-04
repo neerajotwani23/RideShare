@@ -2,6 +2,7 @@ import React from 'react';
 import { View, StyleSheet, ScrollView, SafeAreaView } from 'react-native';
 import { Text, Button, Card, Avatar, Chip, Divider } from 'react-native-paper';
 import Header from '../../components/Header';
+import { COLORS } from '../../constants/colors';
 
 const mockRideDetails = {
   id: 1,
@@ -212,7 +213,7 @@ const RideDetailsScreen = ({ navigation, route }: any) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.primary,
   },
   scrollContent: {
     padding: 16,

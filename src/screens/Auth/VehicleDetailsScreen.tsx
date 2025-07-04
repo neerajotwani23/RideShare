@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Alert, Image } from 'react-native';
 import { Text, TextInput, Button, IconButton } from 'react-native-paper';
 import { useAuth } from '../../context/AuthContext';
+import { COLORS } from '../../constants/colors';
 
 const VehicleDetailsScreen = ({ navigation }: any) => {
   const [vehicleMake, setVehicleMake] = useState('');
@@ -126,7 +127,7 @@ const VehicleDetailsScreen = ({ navigation }: any) => {
         <IconButton
           icon="arrow-left"
           size={24}
-          iconColor="#000000"
+          iconColor={COLORS.secondary}
           onPress={handleBackPress}
           style={styles.backButton}
         />
@@ -153,12 +154,12 @@ const VehicleDetailsScreen = ({ navigation }: any) => {
               }}
               style={[styles.textInput, errors.vehicleMake ? styles.inputError : null]}
               mode="outlined"
-              outlineColor={errors.vehicleMake ? "#FF3B30" : "#E0E0E0"}
-              activeOutlineColor={errors.vehicleMake ? "#FF3B30" : "#007AFF"}
+              outlineColor={errors.vehicleMake ? COLORS.error : COLORS.border}
+              activeOutlineColor={errors.vehicleMake ? COLORS.error : COLORS.accent}
               contentStyle={styles.inputContent}
               outlineStyle={styles.inputOutline}
               placeholder="e.g., Toyota, Honda, Suzuki"
-              placeholderTextColor="#999999"
+              placeholderTextColor={COLORS.textSecondary}
             />
             {errors.vehicleMake ? <Text style={styles.errorText}>{errors.vehicleMake}</Text> : null}
           </View>
@@ -173,12 +174,12 @@ const VehicleDetailsScreen = ({ navigation }: any) => {
               }}
               style={[styles.textInput, errors.vehicleModel ? styles.inputError : null]}
               mode="outlined"
-              outlineColor={errors.vehicleModel ? "#FF3B30" : "#E0E0E0"}
-              activeOutlineColor={errors.vehicleModel ? "#FF3B30" : "#007AFF"}
+              outlineColor={errors.vehicleModel ? COLORS.error : COLORS.border}
+              activeOutlineColor={errors.vehicleModel ? COLORS.error : COLORS.accent}
               contentStyle={styles.inputContent}
               outlineStyle={styles.inputOutline}
               placeholder="e.g., Corolla, Civic, Alto"
-              placeholderTextColor="#999999"
+              placeholderTextColor={COLORS.textSecondary}
             />
             {errors.vehicleModel ? <Text style={styles.errorText}>{errors.vehicleModel}</Text> : null}
           </View>
@@ -193,12 +194,12 @@ const VehicleDetailsScreen = ({ navigation }: any) => {
               }}
               style={[styles.textInput, errors.vehicleColor ? styles.inputError : null]}
               mode="outlined"
-              outlineColor={errors.vehicleColor ? "#FF3B30" : "#E0E0E0"}
-              activeOutlineColor={errors.vehicleColor ? "#FF3B30" : "#007AFF"}
+              outlineColor={errors.vehicleColor ? COLORS.error : COLORS.border}
+              activeOutlineColor={errors.vehicleColor ? COLORS.error : COLORS.accent}
               contentStyle={styles.inputContent}
               outlineStyle={styles.inputOutline}
               placeholder="e.g., White, Black, Silver"
-              placeholderTextColor="#999999"
+              placeholderTextColor={COLORS.textSecondary}
             />
             {errors.vehicleColor ? <Text style={styles.errorText}>{errors.vehicleColor}</Text> : null}
           </View>
@@ -210,12 +211,12 @@ const VehicleDetailsScreen = ({ navigation }: any) => {
               onChangeText={handleLicensePlateChange}
               style={[styles.textInput, errors.licensePlate ? styles.inputError : null]}
               mode="outlined"
-              outlineColor={errors.licensePlate ? "#FF3B30" : "#E0E0E0"}
-              activeOutlineColor={errors.licensePlate ? "#FF3B30" : "#007AFF"}
+              outlineColor={errors.licensePlate ? COLORS.error : COLORS.border}
+              activeOutlineColor={errors.licensePlate ? COLORS.error : COLORS.accent}
               contentStyle={styles.inputContent}
               outlineStyle={styles.inputOutline}
               placeholder="ABC-1234"
-              placeholderTextColor="#999999"
+              placeholderTextColor={COLORS.textSecondary}
               maxLength={8}
               autoCapitalize="characters"
             />
@@ -238,7 +239,7 @@ const VehicleDetailsScreen = ({ navigation }: any) => {
                   </View>
                 ) : (
                   <View style={styles.documentPlaceholder}>
-                    <IconButton icon="camera" size={32} iconColor="#666666" />
+                    <IconButton icon="camera" size={32} iconColor={COLORS.textSecondary} />
                     <Text style={styles.documentText}>Tap to upload front side</Text>
                   </View>
                 )}
@@ -259,7 +260,7 @@ const VehicleDetailsScreen = ({ navigation }: any) => {
                   </View>
                 ) : (
                   <View style={styles.documentPlaceholder}>
-                    <IconButton icon="camera" size={32} iconColor="#666666" />
+                    <IconButton icon="camera" size={32} iconColor={COLORS.textSecondary} />
                     <Text style={styles.documentText}>Tap to upload back side</Text>
                   </View>
                 )}
@@ -280,7 +281,7 @@ const VehicleDetailsScreen = ({ navigation }: any) => {
                   </View>
                 ) : (
                   <View style={styles.documentPlaceholder}>
-                    <IconButton icon="camera" size={32} iconColor="#666666" />
+                    <IconButton icon="camera" size={32} iconColor={COLORS.textSecondary} />
                     <Text style={styles.documentText}>Tap to upload vehicle card</Text>
                   </View>
                 )}
@@ -309,7 +310,7 @@ const VehicleDetailsScreen = ({ navigation }: any) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.primary,
   },
   header: {
     flexDirection: 'row',
@@ -318,6 +319,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     height: 56,
+    backgroundColor: COLORS.primary,
   },
   backButton: {
     margin: 0,
@@ -325,7 +327,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontFamily: 'Montserrat-SemiBold',
-    color: '#000000',
+    color: COLORS.secondary,
   },
   headerRight: {
     width: 40,
@@ -362,12 +364,13 @@ const styles = StyleSheet.create({
   inputLabel: {
     fontSize: 14,
     fontFamily: 'Montserrat-Medium',
-    color: '#000000',
+    color: COLORS.secondary,
     marginBottom: 8,
   },
   textInput: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.primary,
     fontSize: 16,
+    color: COLORS.secondary,
   },
   inputContent: {
     fontFamily: 'Montserrat-Regular',
@@ -377,12 +380,12 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   inputError: {
-    borderColor: '#FF3B30',
+    borderColor: COLORS.error,
   },
   errorText: {
     fontSize: 12,
     fontFamily: 'Montserrat-Regular',
-    color: '#FF3B30',
+    color: COLORS.error,
     marginTop: 4,
   },
   documentsSection: {
