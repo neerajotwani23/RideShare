@@ -275,6 +275,7 @@ const AppNavigator = () => {
             {/* Ride Flow Screens - Accessible from any tab */}
             <Stack.Screen name="DuringRide" component={DuringRideScreen} />
             <Stack.Screen name="RateRide" component={RateRideScreen} />
+            <Stack.Screen name="RideDetails" component={RideDetailsScreen} />
           </>
         )}
       </Stack.Navigator>
