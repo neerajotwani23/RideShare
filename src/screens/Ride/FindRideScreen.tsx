@@ -1,12 +1,10 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, SafeAreaView, TouchableOpacity, ImageBackground, Dimensions, TextInput as RNTextInput, Platform, ScrollView } from 'react-native';
-import { Text, Button, Card, Divider, Chip, IconButton } from 'react-native-paper';
+import { View, StyleSheet, SafeAreaView, TouchableOpacity, Dimensions, TextInput as RNTextInput, Platform, ScrollView } from 'react-native';
+import { Text, Card, Divider, Chip } from 'react-native-paper';
 import Icon from '../../components/Icon';
-import { SearchIcon } from '../../components/icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { COLORS } from '../../constants/colors';
-
-const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+import { ToggleButton } from '../../components';
 
 const recentAddresses = [
   { id: 1, label: 'Enter New Address', sub: '' },
@@ -47,7 +45,6 @@ const FindRideScreen = ({ navigation }: any) => {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [scheduledTime, setScheduledTime] = useState<Date | null>(null);
   const [scheduledDate, setScheduledDate] = useState<Date | null>(null);
-  const [showResults, setShowResults] = useState(false);
 
   const handleTimeChange = (event: any, selectedTime?: Date) => {
     setShowTimePicker(Platform.OS === 'ios');
@@ -76,36 +73,34 @@ const FindRideScreen = ({ navigation }: any) => {
         <View style={styles.bottomSheet}>
           <View style={styles.dragHandle} />
           <View style={styles.toggleRow}>
-            <TouchableOpacity
-              style={[styles.toggleButton, rideType === 'now' && styles.toggleButtonActive]}
+            <ToggleButton
+              label="Right Now"
+              isActive={rideType === 'now'}
               onPress={() => setRideType('now')}
-            >
-              <Text style={[styles.toggleText, rideType === 'now' && styles.toggleTextActive]}>Right Now</Text>
-            </TouchableOpacity>
-                  <TouchableOpacity 
-              style={[styles.toggleButton, rideType === 'schedule' && styles.toggleButtonActive]}
+            />
+            <ToggleButton
+              label="Schedule"
+              isActive={rideType === 'schedule'}
               onPress={() => setRideType('schedule')}
-                  >
-              <Text style={[styles.toggleText, rideType === 'schedule' && styles.toggleTextActive]}>Schedule</Text>
-            </TouchableOpacity>
-                    </View>
-          {rideType === 'schedule' && (
+            />
+                  </View>
+            {rideType === 'schedule' && (
             <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
-              <TouchableOpacity 
+                  <TouchableOpacity 
                 style={styles.schedulePicker}
-                onPress={() => setShowDatePicker(true)}
-              >
+                    onPress={() => setShowDatePicker(true)}
+                  >
                 <Icon name="calendar" size={20} color={COLORS.secondary} style={{ marginRight: 8 }} />
                 <Text style={styles.schedulePickerText}>
                   {scheduledDate
                     ? scheduledDate.toLocaleDateString()
                     : 'Select date'}
                 </Text>
-              </TouchableOpacity>
-              <TouchableOpacity 
+                  </TouchableOpacity>
+                  <TouchableOpacity 
                 style={[styles.schedulePicker, { marginLeft: 8 }]}
-                onPress={() => setShowTimePicker(true)}
-              >
+                    onPress={() => setShowTimePicker(true)}
+                  >
                 <Icon name="clock-outline" size={20} color={COLORS.secondary} style={{ marginRight: 8 }} />
                 <Text style={styles.schedulePickerText}>
                   {scheduledTime
@@ -158,7 +153,7 @@ const FindRideScreen = ({ navigation }: any) => {
           />
         )}
       </View>
-      {showResults && (
+      {/* showResults && (
         <ScrollView style={styles.resultsContainer} contentContainerStyle={styles.resultsContent}>
           <Text style={styles.resultsTitle}>Suggested Rides</Text>
             {mockResults.map((ride) => (
@@ -224,7 +219,7 @@ const FindRideScreen = ({ navigation }: any) => {
               </Card>
             ))}
       </ScrollView>
-      )}
+      )} */}
     </SafeAreaView>
   );
 };
@@ -269,30 +264,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 4,
     marginBottom: 16,
-  },
-  toggleButton: {
-    flex: 1,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  toggleButtonActive: {
-    backgroundColor: COLORS.secondary,
-    shadowColor: COLORS.secondary,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  toggleText: {
-    fontSize: 16,
-    fontFamily: 'Montserrat-Medium',
-    color: COLORS.textSecondary,
-  },
-  toggleTextActive: {
-    color: COLORS.primary,
-    fontFamily: 'Montserrat-Bold',
   },
   schedulePicker: {
     flexDirection: 'row',

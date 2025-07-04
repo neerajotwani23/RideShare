@@ -90,7 +90,7 @@ function MyRidesStack() {
 // Passenger Tab Navigator
 function PassengerTabs() {
   return (
-    <Tab.Navigator
+    <Tab.Navigator 
       initialRouteName="Find Ride"
       screenOptions={{
         tabBarStyle: {
@@ -110,7 +110,7 @@ function PassengerTabs() {
         headerShown: false,
       }}
     >
-      <Tab.Screen
+      <Tab.Screen 
         name="Find Ride"
         component={FindRideScreen}
         options={{
@@ -131,7 +131,7 @@ function PassengerTabs() {
           tabBarIcon: ({ color, size }) => <WalletIcon color={color} size={size} />,
         }}
       />
-      <Tab.Screen
+      <Tab.Screen 
         name="Chat"
         component={ChatBotScreen}
         options={{
@@ -172,15 +172,15 @@ function DriverTabs() {
         headerShown: false,
       }}
     >
-      <Tab.Screen
-        name="Post Ride"
+      <Tab.Screen 
+        name="Post Ride" 
         component={PostRideScreen}
         options={{
           tabBarIcon: ({ color, size }) => <PlusIcon color={color} size={size} />,
         }}
       />
-      <Tab.Screen
-        name="My Rides"
+      <Tab.Screen 
+        name="My Rides" 
         component={MyRidesScreen}
         options={{
           tabBarIcon: ({ color, size }) => <RidesIcon color={color} size={size} />,
@@ -193,15 +193,15 @@ function DriverTabs() {
           tabBarIcon: ({ color, size }) => <WalletIcon color={color} size={size} />,
         }}
       />
-      <Tab.Screen
-        name="Chat"
+      <Tab.Screen 
+        name="Chat" 
         component={ChatBotScreen}
         options={{
           tabBarIcon: ({ color, size }) => <ChatIcon color={color} size={size} />,
         }}
       />
-      <Tab.Screen
-        name="Profile"
+      <Tab.Screen 
+        name="Profile" 
         component={ProfileStack}
         options={{
           tabBarIcon: ({ color, size }) => <ProfileIcon color={color} size={size} />,
@@ -212,10 +212,6 @@ function DriverTabs() {
 }
 
 // Icon Components (using centralized Icon component)
-const HomeIcon = ({ color, size }: { color: string; size: number }) => (
-  <Icon name="home-outline" size={size} color={color} />
-);
-
 const SearchIcon = ({ color, size }: { color: string; size: number }) => (
   <Icon name="magnify" size={size} color={color} />
 );

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, ScrollView, SafeAreaView, KeyboardAvoidingView, Platform, Image } from 'react-native';
-import { Text, TextInput, IconButton, Card } from 'react-native-paper';
+import { Text, TextInput, IconButton } from 'react-native-paper';
 import { TouchableOpacity } from 'react-native';
 import { COLORS } from '../../constants/colors';
 

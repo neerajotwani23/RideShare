@@ -6,15 +6,14 @@
  */
 
 import * as React from 'react';
-import { Provider as PaperProvider } from 'react-native-paper';
+import { Provider as PaperProvider, MD3LightTheme } from 'react-native-paper';
 import AppNavigator from './src/navigation/AppNavigator';
 import { AuthProvider } from './src/context/AuthContext';
-import theme from './src/constants/theme';
 
 export default function App() {
   return (
     <AuthProvider>
-      <PaperProvider theme={theme}>
+      <PaperProvider theme={MD3LightTheme}>
         <AppNavigator />
       </PaperProvider>
     </AuthProvider>

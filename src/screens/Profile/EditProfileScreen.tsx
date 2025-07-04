@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, ScrollView, SafeAreaView, Alert } from 'react-native';
-import { Text, TextInput, Button, Card, IconButton, Divider } from 'react-native-paper';
+import { Text, TextInput, Button, Card, IconButton } from 'react-native-paper';
 import { COLORS } from '../../constants/colors';
 import Icon from '../../components/Icon';
 
@@ -20,7 +20,6 @@ const EditProfileScreen = ({ navigation }: any) => {
   const [phone, setPhone] = useState(mockCurrentUser.phone);
   const [cnic, setCnic] = useState(mockCurrentUser.cnic);
   const [about, setAbout] = useState(mockCurrentUser.about);
-  const [gender, setGender] = useState(mockCurrentUser.gender);
   const [errors, setErrors] = useState<{[key: string]: string}>({});
   const [isLoading, setIsLoading] = useState(false);
 
@@ -178,12 +177,10 @@ const EditProfileScreen = ({ navigation }: any) => {
               {errors.about ? <Text style={styles.errorText}>{errors.about}</Text> : null}
             </View>
 
-
-
             <View style={styles.inputContainer}>
               <Text style={styles.inputLabel}>Gender</Text>
               <TextInput
-                value={gender}
+                value={mockCurrentUser.gender}
                 mode="outlined"
                 style={styles.textInput}
                 outlineColor={COLORS.border}

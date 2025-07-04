@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, ScrollView, StyleSheet, SafeAreaView, Alert } from 'react-native';
-import { Text, Button, Card, SegmentedButtons, Chip, IconButton } from 'react-native-paper';
-import { LocationIcon, LocationCheckIcon, ClockIcon, UserIcon, UsersIcon } from '../../components/icons';
+import { Text, Button, Card, SegmentedButtons, Chip } from 'react-native-paper';
+import { LocationIcon, LocationCheckIcon, ClockIcon, UserIcon } from '../../components/icons';
 import { COLORS } from '../../constants/colors';
 
 const mockUpcoming = [

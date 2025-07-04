@@ -5,7 +5,6 @@ import { useAuth } from '../../context/AuthContext';
 
 const ProfileSetupScreen = ({ navigation, route }: any) => {
   const [bio, setBio] = useState('');
-  const [profileImage, setProfileImage] = useState<string | null>(null);
   const [userRole, setUserRole] = useState<string>('');
 
   const { completeProfileSetup, currentRole } = useAuth();
@@ -80,11 +79,7 @@ const ProfileSetupScreen = ({ navigation, route }: any) => {
       <View style={styles.content}>
         <View style={styles.profileSection}>
           <TouchableOpacity onPress={handleSelectPhoto} style={styles.avatarContainer}>
-            {profileImage ? (
-              <Avatar.Image size={100} source={{ uri: profileImage }} />
-            ) : (
-              <Avatar.Icon size={100} icon="account" style={styles.avatar} />
-            )}
+            <Avatar.Icon size={100} icon="account" style={styles.avatar} />
             <View style={styles.cameraIcon}>
               <IconButton
                 icon="camera"
