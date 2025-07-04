@@ -168,7 +168,9 @@ const styles = StyleSheet.create({
     fontFamily: 'Montserrat-Medium',
     color: '#2563EB',
     paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingVertical: 4,
+    minHeight: 32,
+    textAlignVertical: 'center',
   },
   content: {
     flex: 1,

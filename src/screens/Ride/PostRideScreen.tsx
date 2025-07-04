@@ -75,8 +75,8 @@ const PostRideScreen = () => {
     <SafeAreaView style={styles.container}>
       <View style={styles.mapPlaceholder}>
         {/* Map placeholder similar to FindRideScreen */}
-      </View>
-      
+        </View>
+
       <View style={styles.absoluteSheet}>
         <View style={styles.bottomSheet}>
           <View style={styles.dragHandle} />
@@ -205,17 +205,17 @@ const PostRideScreen = () => {
                     </View>
                     <View style={[styles.inputContainer, styles.halfInput]}>
                       <Icon name="cash" size={20} color="#007AFF" style={styles.inputIcon} />
-                      <TextInput
+            <TextInput
                         label="Fare per Seat"
-                        value={fare}
-                        onChangeText={setFare}
-                        keyboardType="numeric"
+              value={fare}
+              onChangeText={setFare}
+              keyboardType="numeric"
                         style={styles.input}
-                        mode="outlined"
+              mode="outlined"
                         outlineColor={COLORS.border}
                         activeOutlineColor={COLORS.secondary}
-                      />
-                    </View>
+            />
+          </View>
                   </View>
                 </Card.Content>
               </Card>
