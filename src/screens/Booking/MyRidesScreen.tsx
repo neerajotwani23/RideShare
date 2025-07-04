@@ -150,24 +150,24 @@ const MyRidesScreen = ({ navigation }: any) => {
             value: 'upcoming',
             style: { 
               backgroundColor: tab === 'upcoming' ? COLORS.secondary : COLORS.lightGray,
-              borderRadius: 8 
+              borderRadius: 24,
             },
             labelStyle: { 
               color: tab === 'upcoming' ? COLORS.primary : COLORS.secondary,
-              fontFamily: 'Montserrat-Bold' 
-            }
+              fontFamily: 'Montserrat-Bold',
+            },
           },
           { 
             label: 'Past', 
             value: 'past',
             style: { 
               backgroundColor: tab === 'past' ? COLORS.secondary : COLORS.lightGray,
-              borderRadius: 8 
+              borderRadius: 24,
             },
             labelStyle: { 
               color: tab === 'past' ? COLORS.primary : COLORS.secondary,
-              fontFamily: 'Montserrat-Bold' 
-            }
+              fontFamily: 'Montserrat-Bold',
+            },
           },
         ]}
         style={styles.segmentedButtons}
@@ -240,7 +240,6 @@ const MyRidesScreen = ({ navigation }: any) => {
                 
                 <View style={styles.rideDetails}>
                   <View style={styles.detailItem}>
-                    <UsersIcon size={16} color={COLORS.textSecondary} style={{ marginBottom: 2 }} />
                     <Text style={styles.detailLabel}>Seats</Text>
                     <Text style={styles.detailValue}>{ride.seats}</Text>
                   </View>
@@ -292,7 +291,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 24,
     marginBottom: 16,
     backgroundColor: COLORS.lightGray,
-    borderRadius: 8,
+    borderRadius: 24,
     borderWidth: 1,
     borderColor: COLORS.border,
   },
