@@ -40,6 +40,7 @@ const CustomTextInput: React.FC<CustomTextInputProps> = ({
   const defaultStyle = {
     marginBottom: 16,
     backgroundColor: COLORS.primary,
+    borderRadius: 16,
     ...style,
   };
 

@@ -371,13 +371,14 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primary,
     fontSize: 16,
     color: COLORS.secondary,
+    borderRadius: 16,
   },
   inputContent: {
     fontFamily: 'Montserrat-Regular',
     fontSize: 16,
   },
   inputOutline: {
-    borderRadius: 8,
+    borderRadius: 16,
   },
   inputError: {
     borderColor: COLORS.error,
@@ -442,7 +443,7 @@ const styles = StyleSheet.create({
   documentSuccess: {
     fontSize: 14,
     fontFamily: 'Montserrat-SemiBold',
-    color: '#34C759',
+    color: '#248CFE',
   },
   buttonContainer: {
     paddingHorizontal: 24,

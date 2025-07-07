@@ -4,8 +4,22 @@ import { Text, TextInput, Button, Switch, HelperText, Card } from 'react-native-
 import Icon from '../../components/Icon';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { COLORS } from '../../constants/colors';
+import { RideCard } from '../../components';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+
+const mockSuggestedRide = {
+  id: 'driver-1',
+  driver: 'Zoha',
+  rating: 5.0,
+  from: 'Lahore',
+  to: 'Karachi',
+  departureTime: 'Now',
+  availableSeats: 3,
+  fare: 'Rs. 200',
+  car: 'Mercedez Benz',
+  preferences: ['AC', 'No Smoking'],
+};
 
 const PostRideScreen = () => {
   const [source, setSource] = useState('');
@@ -21,6 +35,7 @@ const PostRideScreen = () => {
   const [music, setMusic] = useState(false);
   const [smoking, setSmoking] = useState(false);
   const [error, setError] = useState('');
+  const [showSuggestedRide, setShowSuggestedRide] = useState(false);
 
   const handlePost = () => {
     if (!source || !destination || !seats || !fare) {
@@ -42,7 +57,7 @@ const PostRideScreen = () => {
     };
     
     console.log('Posting ride:', rideData);
-    // Here you would typically send this data to your backend
+    setShowSuggestedRide(true);
   };
 
   const onDateChange = (event: any, selectedDate?: Date) => {
@@ -73,236 +88,244 @@ const PostRideScreen = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.mapPlaceholder}>
-        {/* Map placeholder similar to FindRideScreen */}
+      {showSuggestedRide ? (
+        <View style={[styles.absoluteSheet, { justifyContent: 'flex-start' }]}> 
+          <View style={styles.bottomSheet}>
+            <TouchableOpacity style={{ marginTop: 16, marginBottom: 8, alignSelf: 'flex-start' }} onPress={() => setShowSuggestedRide(false)}>
+              <Icon name="arrow-left" size={24} color={COLORS.secondary} />
+            </TouchableOpacity>
+            <Text style={{ fontSize: 22, fontWeight: "bold", fontFamily: 'Montserrat-Bold', color: COLORS.secondary, marginBottom: 16, marginLeft: 2 }}>Suggested Rides</Text>
+            <RideCard ride={mockSuggestedRide} />
+          </View>
         </View>
+      ) : (
+        <>
+          <View style={styles.mapPlaceholder}>
+            {/* Map placeholder similar to FindRideScreen */}
+          </View>
+          <View style={styles.absoluteSheet}>
+            <View style={styles.bottomSheet}>
+              <View style={styles.dragHandle} />
+              <ScrollView 
+                contentContainerStyle={styles.scrollContent}
+                showsVerticalScrollIndicator={false}
+                bounces={false}
+                overScrollMode="never"
+              >
+                <View style={styles.form}>
+                  <View style={styles.inputContainer}>
+                    <Icon name="map-marker" size={20} color={COLORS.accent} style={styles.inputIcon} />
+                    <TextInput
+                      label="From (Pickup Location)"
+                      value={source}
+                      onChangeText={setSource}
+                      style={styles.input}
+                      mode="outlined"
+                      outlineColor={COLORS.border}
+                      activeOutlineColor={COLORS.secondary}
+                    />
+                  </View>
 
-      <View style={styles.absoluteSheet}>
-        <View style={styles.bottomSheet}>
-          <View style={styles.dragHandle} />
-          
-          <ScrollView 
-            contentContainerStyle={styles.scrollContent}
-            showsVerticalScrollIndicator={false}
-            bounces={false}
-            overScrollMode="never"
-          >
-        
+                  <View style={styles.inputContainer}>
+                    <Icon name="map-marker-check" size={20} color={COLORS.success} style={styles.inputIcon} />
+                    <TextInput
+                      label="To (Drop-off Location)"
+                      value={destination}
+                      onChangeText={setDestination}
+                      style={styles.input}
+                      mode="outlined"
+                      outlineColor={COLORS.border}
+                      activeOutlineColor={COLORS.secondary}
+                    />
+                  </View>
 
-        <View style={styles.form}>
-              <View style={styles.inputContainer}>
-                <Icon name="map-marker" size={20} color={COLORS.accent} style={styles.inputIcon} />
-          <TextInput
-            label="From (Pickup Location)"
-            value={source}
-            onChangeText={setSource}
-            style={styles.input}
-            mode="outlined"
-                  outlineColor={COLORS.border}
-                  activeOutlineColor={COLORS.secondary}
-          />
-              </View>
+                  <Text style={styles.sectionTitle}>When do you want to travel?</Text>
+                  
+                  <View style={styles.toggleRow}>
+                    <TouchableOpacity
+                      style={[styles.toggleButton, rideType === 'now' && styles.toggleButtonActive]}
+                      onPress={() => setRideType('now')}
+                    >
+                      <Text style={[styles.toggleText, rideType === 'now' && styles.toggleTextActive]}>Leave Now</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[styles.toggleButton, rideType === 'schedule' && styles.toggleButtonActive]}
+                      onPress={() => setRideType('schedule')}
+                    >
+                      <Text style={[styles.toggleText, rideType === 'schedule' && styles.toggleTextActive]}>Schedule</Text>
+                    </TouchableOpacity>
+                  </View>
 
-              <View style={styles.inputContainer}>
-                <Icon name="map-marker-check" size={20} color={COLORS.success} style={styles.inputIcon} />
-          <TextInput
-            label="To (Drop-off Location)"
-            value={destination}
-            onChangeText={setDestination}
-            style={styles.input}
-            mode="outlined"
-                  outlineColor={COLORS.border}
-                  activeOutlineColor={COLORS.secondary}
-          />
-              </View>
+                  {rideType === 'now' && (
+                    <Card style={styles.nowCard}>
+                      <Card.Content>
+                        <View style={styles.nowContent}>
+                          <Icon name="clock-fast" size={32} color="#248CFE" style={styles.nowIcon} />
+                          <Text style={styles.nowTitle}>Leaving Now</Text>
+                          <Text style={styles.nowSubtitle}>
+                            Your ride will be available immediately for passengers to book
+                          </Text>
+                          <View style={styles.currentTimeContainer}>
+                            <Icon name="clock-outline" size={16} color={COLORS.textSecondary} />
+                            <Text style={styles.currentTime}>
+                              Current time: {formatTime(new Date())}
+                            </Text>
+                          </View>
+                        </View>
+                      </Card.Content>
+                    </Card>
+                  )}
 
-          <Text style={styles.sectionTitle}>When do you want to travel?</Text>
-              
-              <View style={styles.toggleRow}>
-                <TouchableOpacity
-                  style={[styles.toggleButton, rideType === 'now' && styles.toggleButtonActive]}
-                  onPress={() => setRideType('now')}
-                >
-                  <Text style={[styles.toggleText, rideType === 'now' && styles.toggleTextActive]}>Leave Now</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.toggleButton, rideType === 'schedule' && styles.toggleButtonActive]}
-                  onPress={() => setRideType('schedule')}
-                >
-                  <Text style={[styles.toggleText, rideType === 'schedule' && styles.toggleTextActive]}>Schedule</Text>
-                </TouchableOpacity>
-              </View>
+                  {rideType === 'schedule' && (
+                    <Card style={styles.scheduleCard}>
+                      <Card.Content>
+                        <Text style={styles.scheduleTitle}>Select Date & Time</Text>
+                        
+                        <View style={styles.timeRow}>
+                          <TouchableOpacity 
+                            style={[styles.dateTimeButton, styles.halfInput]} 
+                            onPress={() => setShowDatePicker(true)}
+                          >
+                            <View style={styles.dateTimeContent}>
+                              <Icon name="calendar" size={20} color="#248CFE" />
+                              <Text style={styles.dateTimeLabel}>Date</Text>
+                              <Text style={styles.dateTimeValue}>{formatDate(date)}</Text>
+                            </View>
+                          </TouchableOpacity>
+                          
+                          <TouchableOpacity 
+                            style={[styles.dateTimeButton, styles.halfInput]} 
+                            onPress={() => setShowTimePicker(true)}
+                          >
+                            <View style={styles.dateTimeContent}>
+                              <Icon name="clock-outline" size={20} color="#248CFE" />
+                              <Text style={styles.dateTimeLabel}>Time</Text>
+                              <Text style={styles.dateTimeValue}>{formatTime(time)}</Text>
+                            </View>
+                          </TouchableOpacity>
+                        </View>
+                      </Card.Content>
+                    </Card>
+                  )}
 
-          {rideType === 'now' && (
-            <Card style={styles.nowCard}>
-              <Card.Content>
-                <View style={styles.nowContent}>
-                      <Icon name="clock-fast" size={32} color="#007AFF" style={styles.nowIcon} />
-                  <Text style={styles.nowTitle}>Leaving Now</Text>
-                  <Text style={styles.nowSubtitle}>
-                    Your ride will be available immediately for passengers to book
-                  </Text>
-                      <View style={styles.currentTimeContainer}>
-                        <Icon name="clock-outline" size={16} color={COLORS.textSecondary} />
-                  <Text style={styles.currentTime}>
-                    Current time: {formatTime(new Date())}
-                  </Text>
+                  <Card style={styles.detailsCard}>
+                    <Card.Content>
+                      <Text style={styles.cardTitle}>Ride Details</Text>
+
+                      <View style={styles.timeRow}>
+                        <View style={[styles.inputContainer, styles.halfInput]}>
+                          <Icon name="account-multiple" size={20} color="#248CFE" style={styles.inputIcon} />
+                          <TextInput
+                            label="Available Seats"
+                            value={seats}
+                            onChangeText={setSeats}
+                            keyboardType="numeric"
+                            style={styles.input}
+                            mode="outlined"
+                            outlineColor={COLORS.border}
+                            activeOutlineColor={COLORS.secondary}
+                          />
+                        </View>
+                        <View style={[styles.inputContainer, styles.halfInput]}>
+                          <Icon name="cash" size={20} color="#248CFE" style={styles.inputIcon} />
+                          <TextInput
+                            label="Fare per Seat"
+                            value={fare}
+                            onChangeText={setFare}
+                            keyboardType="numeric"
+                            style={styles.input}
+                            mode="outlined"
+                            outlineColor={COLORS.border}
+                            activeOutlineColor={COLORS.secondary}
+                          />
+                        </View>
                       </View>
+                    </Card.Content>
+                  </Card>
+
+                  <Card style={styles.preferencesCard}>
+                    <Card.Content>
+                      <Text style={styles.cardTitle}>Ride Preferences</Text>
+                      
+                      <View style={styles.preferenceItem}>
+                        <View style={styles.preferenceContent}>
+                          <Icon name="snowflake" size={20} color="#248CFE" />
+                          <Text style={styles.preferenceText}>Air Conditioning</Text>
+                        </View>
+                        <Switch 
+                          value={ac} 
+                          onValueChange={setAc}
+                          trackColor={{ false: COLORS.border, true: '#248CFE' }}
+                          thumbColor={COLORS.primary}
+                        />
+                      </View>
+                      
+                      <View style={styles.preferenceItem}>
+                        <View style={styles.preferenceContent}>
+                          <Icon name="music" size={20} color="#FF9500" />
+                          <Text style={styles.preferenceText}>Music Allowed</Text>
+                        </View>
+                        <Switch 
+                          value={music} 
+                          onValueChange={setMusic}
+                          trackColor={{ false: COLORS.border, true: '#248CFE' }}
+                          thumbColor={COLORS.primary}
+                        />
+                      </View>
+                      
+                      <View style={styles.preferenceItem}>
+                        <View style={styles.preferenceContent}>
+                          <Icon name="smoking-off" size={20} color="#248CFE" />
+                          <Text style={styles.preferenceText}>No Smoking</Text>
+                        </View>
+                        <Switch 
+                          value={!smoking} 
+                          onValueChange={(value) => setSmoking(!value)}
+                          trackColor={{ false: COLORS.border, true: '#248CFE' }}
+                          thumbColor={COLORS.primary}
+                        />
+                      </View>
+                    </Card.Content>
+                  </Card>
+
+                  {error ? (
+                    <HelperText type="error" visible={!!error} style={styles.errorText}>
+                      {error}
+                    </HelperText>
+                  ) : null}
+
+                  <Button 
+                    mode="contained" 
+                    onPress={handlePost} 
+                    style={styles.postButton}
+                    contentStyle={styles.buttonContent}
+                    buttonColor={COLORS.secondary}
+                    textColor={COLORS.primary}
+                  >
+                    Post Ride
+                  </Button>
                 </View>
-              </Card.Content>
-            </Card>
-          )}
-
-          {rideType === 'schedule' && (
-                <Card style={styles.scheduleCard}>
-                  <Card.Content>
-              <Text style={styles.scheduleTitle}>Select Date & Time</Text>
-              
-              <View style={styles.timeRow}>
-                <TouchableOpacity 
-                  style={[styles.dateTimeButton, styles.halfInput]} 
-                  onPress={() => setShowDatePicker(true)}
-                >
-                  <View style={styles.dateTimeContent}>
-                          <Icon name="calendar" size={20} color="#007AFF" />
-                    <Text style={styles.dateTimeLabel}>Date</Text>
-                    <Text style={styles.dateTimeValue}>{formatDate(date)}</Text>
-                  </View>
-                </TouchableOpacity>
-                
-                <TouchableOpacity 
-                  style={[styles.dateTimeButton, styles.halfInput]} 
-                  onPress={() => setShowTimePicker(true)}
-                >
-                  <View style={styles.dateTimeContent}>
-                          <Icon name="clock-outline" size={20} color="#007AFF" />
-                    <Text style={styles.dateTimeLabel}>Time</Text>
-                    <Text style={styles.dateTimeValue}>{formatTime(time)}</Text>
-                  </View>
-                </TouchableOpacity>
-              </View>
-                  </Card.Content>
-                </Card>
-          )}
-
-              <Card style={styles.detailsCard}>
-                <Card.Content>
-                  <Text style={styles.cardTitle}>Ride Details</Text>
-
-          <View style={styles.timeRow}>
-                    <View style={[styles.inputContainer, styles.halfInput]}>
-                      <Icon name="account-multiple" size={20} color="#007AFF" style={styles.inputIcon} />
-            <TextInput
-              label="Available Seats"
-              value={seats}
-              onChangeText={setSeats}
-              keyboardType="numeric"
-                        style={styles.input}
-              mode="outlined"
-                        outlineColor={COLORS.border}
-                        activeOutlineColor={COLORS.secondary}
-            />
-                    </View>
-                    <View style={[styles.inputContainer, styles.halfInput]}>
-                      <Icon name="cash" size={20} color="#007AFF" style={styles.inputIcon} />
-            <TextInput
-                        label="Fare per Seat"
-              value={fare}
-              onChangeText={setFare}
-              keyboardType="numeric"
-                        style={styles.input}
-              mode="outlined"
-                        outlineColor={COLORS.border}
-                        activeOutlineColor={COLORS.secondary}
-            />
-          </View>
-                  </View>
-                </Card.Content>
-              </Card>
-
-              <Card style={styles.preferencesCard}>
-                <Card.Content>
-                  <Text style={styles.cardTitle}>Ride Preferences</Text>
-                  
-          <View style={styles.preferenceItem}>
-                    <View style={styles.preferenceContent}>
-                      <Icon name="snowflake" size={20} color="#007AFF" />
-            <Text style={styles.preferenceText}>Air Conditioning</Text>
-                    </View>
-                    <Switch 
-                      value={ac} 
-                      onValueChange={setAc}
-                      trackColor={{ false: COLORS.border, true: '#007AFF' }}
-                      thumbColor={COLORS.primary}
-                    />
-          </View>
-                  
-          <View style={styles.preferenceItem}>
-                    <View style={styles.preferenceContent}>
-                      <Icon name="music" size={20} color="#FF9500" />
-            <Text style={styles.preferenceText}>Music Allowed</Text>
-                    </View>
-                    <Switch 
-                      value={music} 
-                      onValueChange={setMusic}
-                      trackColor={{ false: COLORS.border, true: '#007AFF' }}
-                      thumbColor={COLORS.primary}
-                    />
-          </View>
-                  
-          <View style={styles.preferenceItem}>
-                    <View style={styles.preferenceContent}>
-                      <Icon name="smoking-off" size={20} color="#34C759" />
-            <Text style={styles.preferenceText}>No Smoking</Text>
-                    </View>
-                    <Switch 
-                      value={!smoking} 
-                      onValueChange={(value) => setSmoking(!value)}
-                      trackColor={{ false: COLORS.border, true: '#007AFF' }}
-                      thumbColor={COLORS.primary}
-                    />
-          </View>
-                </Card.Content>
-              </Card>
-
-              {error ? (
-                <HelperText type="error" visible={!!error} style={styles.errorText}>
-                  {error}
-                </HelperText>
-              ) : null}
-
-          <Button 
-            mode="contained" 
-            onPress={handlePost} 
-            style={styles.postButton}
-            contentStyle={styles.buttonContent}
-            buttonColor={COLORS.secondary}
-            textColor={COLORS.primary}
-          >
-                Post Ride
-          </Button>
+              </ScrollView>
             </View>
-          </ScrollView>
-        </View>
-        </View>
-
-        {showDatePicker && (
-          <DateTimePicker
-            value={date}
-            mode="date"
-            display="default"
-            onChange={onDateChange}
-          />
-        )}
-
-        {showTimePicker && (
-          <DateTimePicker
-            value={time}
-            mode="time"
-            display="default"
-            onChange={onTimeChange}
-          />
-        )}
+          </View>
+          {showDatePicker && (
+            <DateTimePicker
+              value={date}
+              mode="date"
+              display="default"
+              onChange={onDateChange}
+            />
+          )}
+          {showTimePicker && (
+            <DateTimePicker
+              value={time}
+              mode="time"
+              display="default"
+              onChange={onTimeChange}
+            />
+          )}
+        </>
+      )}
     </SafeAreaView>
   );
 };
@@ -343,7 +366,7 @@ const styles = StyleSheet.create({
     marginVertical: 12,
   },
   scrollContent: {
-    paddingBottom: 100, // Extra padding at bottom
+    paddingBottom: 16,
   },
   header: {
     alignItems: 'center',
@@ -374,6 +397,7 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     backgroundColor: COLORS.primary,
+    borderRadius: 16,
   },
   sectionTitle: {
     fontSize: 18,
@@ -430,7 +454,7 @@ const styles = StyleSheet.create({
   nowTitle: {
     fontSize: 16,
     fontFamily: 'Montserrat-SemiBold',
-    color: '#007AFF',
+    color: '#248CFE',
     marginBottom: 4,
   },
   nowSubtitle: {
@@ -447,7 +471,7 @@ const styles = StyleSheet.create({
   currentTime: {
     fontSize: 14,
     fontFamily: 'Montserrat-Medium',
-    color: '#007AFF',
+    color: '#248CFE',
     marginLeft: 4,
   },
   scheduleCard: {
@@ -494,7 +518,7 @@ const styles = StyleSheet.create({
   dateTimeButton: {
     borderWidth: 1,
     borderColor: COLORS.border,
-    borderRadius: 8,
+    borderRadius: 16,
     padding: 16,
     backgroundColor: COLORS.primary,
     justifyContent: 'center',

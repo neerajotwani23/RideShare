@@ -201,6 +201,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.primary,
     borderColor: COLORS.border,
+    borderRadius: 16,
   },
   addButton: {
     borderRadius: 12,

@@ -40,11 +40,11 @@ const NotificationsScreen = () => {
   const getNotificationIcon = (type: string) => {
     switch (type) {
       case 'ride_confirmed':
-        return { name: 'check-circle', color: '#34C759' };
+        return { name: 'check-circle', color: '#248CFE' };
       case 'ride_cancelled':
         return { name: 'close-circle', color: '#FF3B30' };
       case 'app_update':
-        return { name: 'update', color: '#007AFF' };
+        return { name: 'update', color: '#248CFE' };
       case 'payment':
         return { name: 'currency-inr', color: '#FF9500' };
       case 'review':

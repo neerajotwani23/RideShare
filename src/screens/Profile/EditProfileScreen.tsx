@@ -354,6 +354,7 @@ const styles = StyleSheet.create({
   },
   textInput: {
     backgroundColor: COLORS.primary,
+    borderRadius: 16,
   },
   inputContent: {
     fontFamily: 'Montserrat-Regular',

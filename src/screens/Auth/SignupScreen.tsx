@@ -421,6 +421,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primary,
     color: COLORS.secondary,
     marginBottom: 12,
+    borderRadius: 16,
   },
   inputContent: {
     color: COLORS.secondary,
@@ -437,7 +438,7 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderWidth: 1,
     borderColor: COLORS.border,
-    borderRadius: 8,
+    borderRadius: 16,
     marginRight: 8,
     backgroundColor: COLORS.primary,
   },
@@ -453,6 +454,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.primary,
     color: COLORS.secondary,
+    borderRadius: 16,
   },
   errorText: {
     color: COLORS.error,

@@ -285,7 +285,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: COLORS.lightGray,
-    borderRadius: 12,
+    borderRadius: 16,
     paddingRight: 4,
   },
   whereToInput: {
@@ -298,7 +298,7 @@ const styles = StyleSheet.create({
   },
   searchButton: {
     backgroundColor: COLORS.secondary,
-    borderRadius: 10,
+    borderRadius: 16,
     paddingHorizontal: 16,
     height: 40,
     justifyContent: 'center',

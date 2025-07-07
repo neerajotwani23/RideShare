@@ -43,7 +43,7 @@ const LoginScreen = ({ navigation }: any) => {
     <SafeAreaView style={styles.background}>
       <View style={styles.centeredContainer}>
           <Text style={styles.welcomeTitle}>Welcome Back!</Text>
-        <Text style={styles.welcomeSubtitle}>Please sign in to continue.</Text>
+        <Text style={styles.welcomeSubtitle}>Please Log in to continue.</Text>
         
         <FormCard>
           <CustomTextInput
@@ -63,7 +63,7 @@ const LoginScreen = ({ navigation }: any) => {
             left={<TextInput.Icon icon={() => <Icon name="lock-outline" size={22} color={COLORS.textSecondary} />} />}
             />
 
-            <TouchableOpacity style={styles.forgotPassword}>
+            <TouchableOpacity style={styles.forgotPassword} onPress={() => navigation.navigate('ResetPassword')}>
               <Text style={styles.forgotPasswordText}>Forgot password?</Text>
             </TouchableOpacity>
 

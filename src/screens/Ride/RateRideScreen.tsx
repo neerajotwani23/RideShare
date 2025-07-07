@@ -183,10 +183,11 @@ const styles = StyleSheet.create({
   },
   reviewInput: {
     backgroundColor: '#FFFFFF',
+    borderRadius: 16,
   },
   submitButton: {
     borderRadius: 25,
-    backgroundColor: '#007AFF',
+    backgroundColor: '#248CFE',
   },
 });
 
