@@ -7,7 +7,7 @@ const ProfileSetupScreen = ({ navigation, route }: any) => {
   const [bio, setBio] = useState('');
   const [userRole, setUserRole] = useState<string>('');
 
-  const { completeProfileSetup, currentRole } = useAuth();
+  const { completeProfileSetup, currentRole, logout } = useAuth();
 
   useEffect(() => {
     // Get user role from context or route params
@@ -55,8 +55,8 @@ const ProfileSetupScreen = ({ navigation, route }: any) => {
       navigation.goBack();
     } else {
       // If no previous screen, this means we're in initial setup flow
-      // but RoleSelection might not be available, so navigate to login
-      navigation.navigate('Login');
+      // Logout the user to return to authentication flow
+      logout();
     }
   };
 
