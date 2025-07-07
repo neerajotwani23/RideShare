@@ -118,7 +118,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   termsLink: {
-    color: '#2563EB',
+    color: '#248CFE',
     fontFamily: 'Montserrat-Bold',
   },
 });

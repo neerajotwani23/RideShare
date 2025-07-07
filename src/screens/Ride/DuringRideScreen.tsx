@@ -100,7 +100,7 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   avatar: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#248CFE',
   },
   personInfo: {
     flex: 1,

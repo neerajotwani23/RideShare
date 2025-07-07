@@ -10,9 +10,11 @@ import LoginScreen from '../screens/Auth/LoginScreen';
 import SignupScreen from '../screens/Auth/SignupScreen';
 import RoleSelectionScreen from '../screens/Auth/RoleSelectionScreen';
 import VehicleDetailsScreen from '../screens/Auth/VehicleDetailsScreen';
+import ResetPasswordScreen from '../screens/Auth/ResetPasswordScreen';
 
 // Profile Screens
 import ProfileSetupScreen from '../screens/Profile/ProfileSetupScreen';
+import HelpSupportScreen from '../screens/Profile/HelpSupportScreen';
 
 // Main App Screens
 import HomeScreen from '../screens/Home/HomeScreen';
@@ -101,7 +103,7 @@ function PassengerTabs() {
           paddingBottom: 8,
           height: 60,
         },
-        tabBarActiveTintColor: '#007AFF',
+        tabBarActiveTintColor: '#248CFE',
         tabBarInactiveTintColor: '#8E8E93',
         tabBarLabelStyle: {
           fontFamily: 'Montserrat-Medium',
@@ -163,7 +165,7 @@ function DriverTabs() {
           paddingBottom: 8,
           height: 60,
         },
-        tabBarActiveTintColor: '#007AFF',
+        tabBarActiveTintColor: '#248CFE',
         tabBarInactiveTintColor: '#8E8E93',
         tabBarLabelStyle: {
           fontFamily: 'Montserrat-Medium',
@@ -249,6 +251,7 @@ const AppNavigator = () => {
             <Stack.Screen name="Splash" component={SplashScreen} />
             <Stack.Screen name="Login" component={LoginScreen} />
             <Stack.Screen name="Signup" component={SignupScreen} />
+            <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
           </>
         ) : !roleSelected ? (
           // Role Selection
@@ -272,6 +275,7 @@ const AppNavigator = () => {
             <Stack.Screen name="DuringRide" component={DuringRideScreen} />
             <Stack.Screen name="RateRide" component={RateRideScreen} />
             <Stack.Screen name="RideDetails" component={RideDetailsScreen} />
+            <Stack.Screen name="HelpSupport" component={HelpSupportScreen} />
           </>
         )}
       </Stack.Navigator>

@@ -54,7 +54,7 @@ const Header: React.FC<HeaderProps> = ({
           <IconButton
             icon="chat"
             size={24}
-            iconColor="#007AFF"
+            iconColor="#248CFE"
             onPress={onChatPress}
           />
         )}

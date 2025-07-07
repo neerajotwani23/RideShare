@@ -185,7 +185,7 @@ const ProfileScreen = ({ navigation }: any) => {
 
           <TouchableOpacity 
             style={styles.menuButton}
-            onPress={() => {/* Handle help */}}
+            onPress={() => navigation && navigation.navigate('HelpSupport')}
           >
             <View style={styles.menuButtonContent}>
               <HelpIcon size={24} color={COLORS.secondary} />
