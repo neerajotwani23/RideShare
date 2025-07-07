@@ -15,6 +15,8 @@ import ResetPasswordScreen from '../screens/Auth/ResetPasswordScreen';
 // Profile Screens
 import ProfileSetupScreen from '../screens/Profile/ProfileSetupScreen';
 import HelpSupportScreen from '../screens/Profile/HelpSupportScreen';
+import SettingsScreen from '../screens/Profile/SettingsScreen';
+import ChangePasswordScreen from '../screens/Profile/ChangePasswordScreen';
 
 // Main App Screens
 import HomeScreen from '../screens/Home/HomeScreen';
@@ -276,6 +278,8 @@ const AppNavigator = () => {
             <Stack.Screen name="RateRide" component={RateRideScreen} />
             <Stack.Screen name="RideDetails" component={RideDetailsScreen} />
             <Stack.Screen name="HelpSupport" component={HelpSupportScreen} />
+            <Stack.Screen name="Settings" component={SettingsScreen} />
+            <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} />
           </>
         )}
       </Stack.Navigator>
