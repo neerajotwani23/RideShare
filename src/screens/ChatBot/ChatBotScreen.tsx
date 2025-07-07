@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, ScrollView, SafeAreaView, KeyboardAvoidingView, Platform, Image } from 'react-native';
-import { Text, TextInput, IconButton, Card } from 'react-native-paper';
+import { Text, TextInput, IconButton } from 'react-native-paper';
 import { TouchableOpacity } from 'react-native';
 import { COLORS } from '../../constants/colors';
 
@@ -232,7 +232,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 8,
   },
   userMessage: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#248CFE',
   },
   botMessage: {
     backgroundColor: '#E5E5EA',
@@ -266,7 +266,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   userAvatar: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#248CFE',
   },
   botAvatar: {
     backgroundColor: COLORS.textSecondary,
@@ -316,7 +316,7 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     backgroundColor: '#D3D3D3',
-    borderRadius: 20,
+    borderRadius: 24,
     paddingHorizontal: 8,
     paddingVertical: 6,
     marginRight: 12,
@@ -344,7 +344,7 @@ const styles = StyleSheet.create({
   },
   sendButton: {
     backgroundColor: COLORS.secondary,
-    borderRadius: 20,
+    borderRadius: 24,
     width: 40,
     height: 40,
     justifyContent: 'center',

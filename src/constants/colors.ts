@@ -2,7 +2,7 @@ export const COLORS = {
   // Primary Colors
   primary: '#FFFFFF',      // Background and cards
   secondary: '#000000',    // Headers, icons, and primary text
-  accent: '#00C853',       // CTA buttons and status indicators
+  accent: '#248CFE',       // CTA buttons and status indicators
   
   // Grays
   border: '#E0E0E0',       // Borders, input outlines, and shadows
@@ -10,7 +10,7 @@ export const COLORS = {
   disabled: '#BDBDBD',     // Disabled/inactive elements
   
   // Status Colors
-  success: '#4CAF50',      // Success states
+  success: '#248CFE',      // Success states
   error: '#E53935',        // Error states
   
   // Additional Utility Colors

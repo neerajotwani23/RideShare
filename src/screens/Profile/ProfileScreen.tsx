@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, ScrollView, SafeAreaView, TouchableOpacity, Animated } from 'react-native';
-import { Text, Button, Avatar, Card, Divider } from 'react-native-paper';
+import { Text, Card, Divider } from 'react-native-paper';
 import { COLORS } from '../../constants/colors';
 import { 
   UserIcon, 
@@ -185,7 +185,7 @@ const ProfileScreen = ({ navigation }: any) => {
 
           <TouchableOpacity 
             style={styles.menuButton}
-            onPress={() => {/* Handle help */}}
+            onPress={() => navigation && navigation.navigate('HelpSupport')}
           >
             <View style={styles.menuButtonContent}>
               <HelpIcon size={24} color={COLORS.secondary} />
@@ -196,7 +196,7 @@ const ProfileScreen = ({ navigation }: any) => {
 
           <TouchableOpacity 
             style={styles.menuButton}
-            onPress={() => {/* Handle settings */}}
+            onPress={() => navigation && navigation.navigate('Settings')}
           >
             <View style={styles.menuButtonContent}>
               <SettingsIcon size={24} color={COLORS.secondary} />

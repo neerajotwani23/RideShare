@@ -1,3 +1,9 @@
-export { default as Icon } from './Icon';
 export { default as Header } from './Header';
-export { default as Logo } from './Logo'; 
+export { default as Icon } from './Icon';
+export { default as Logo } from './Logo';
+export { default as CustomButton } from './CustomButton';
+export { default as CustomTextInput } from './CustomTextInput';
+export { default as CustomCard } from './CustomCard';
+export { default as ToggleButton } from './ToggleButton';
+export { default as RideCard } from './RideCard';
+export { default as FormCard } from './FormCard'; 

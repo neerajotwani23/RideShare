@@ -1,11 +1,25 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, ScrollView, SafeAreaView, Platform, TouchableOpacity, Dimensions } from 'react-native';
-import { Text, TextInput, Button, Switch, HelperText, Card, SegmentedButtons } from 'react-native-paper';
+import { Text, TextInput, Button, Switch, HelperText, Card } from 'react-native-paper';
 import Icon from '../../components/Icon';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { COLORS } from '../../constants/colors';
+import { RideCard } from '../../components';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+
+const mockSuggestedRide = {
+  id: 'driver-1',
+  driver: 'Zoha',
+  rating: 5.0,
+  from: 'Lahore',
+  to: 'Karachi',
+  departureTime: 'Now',
+  availableSeats: 3,
+  fare: 'Rs. 200',
+  car: 'Mercedez Benz',
+  preferences: ['AC', 'No Smoking'],
+};
 
 const PostRideScreen = () => {
   const [source, setSource] = useState('');
@@ -21,6 +35,7 @@ const PostRideScreen = () => {
   const [music, setMusic] = useState(false);
   const [smoking, setSmoking] = useState(false);
   const [error, setError] = useState('');
+  const [showSuggestedRide, setShowSuggestedRide] = useState(false);
 
   const handlePost = () => {
     if (!source || !destination || !seats || !fare) {
@@ -42,7 +57,7 @@ const PostRideScreen = () => {
     };
     
     console.log('Posting ride:', rideData);
-    // Here you would typically send this data to your backend
+    setShowSuggestedRide(true);
   };
 
   const onDateChange = (event: any, selectedDate?: Date) => {
@@ -73,22 +88,30 @@ const PostRideScreen = () => {
 
   return (
     <SafeAreaView style={styles.container}>
+      {showSuggestedRide ? (
+        <View style={[styles.absoluteSheet, { justifyContent: 'flex-start' }]}> 
+          <View style={styles.bottomSheet}>
+            <TouchableOpacity style={{ marginTop: 16, marginBottom: 8, alignSelf: 'flex-start' }} onPress={() => setShowSuggestedRide(false)}>
+              <Icon name="arrow-left" size={24} color={COLORS.secondary} />
+            </TouchableOpacity>
+            <Text style={{ fontSize: 22, fontWeight: "bold", fontFamily: 'Montserrat-Bold', color: COLORS.secondary, marginBottom: 16, marginLeft: 2 }}>Suggested Rides</Text>
+            <RideCard ride={mockSuggestedRide} />
+          </View>
+        </View>
+      ) : (
+        <>
       <View style={styles.mapPlaceholder}>
         {/* Map placeholder similar to FindRideScreen */}
         </View>
-
       <View style={styles.absoluteSheet}>
         <View style={styles.bottomSheet}>
           <View style={styles.dragHandle} />
-          
           <ScrollView 
             contentContainerStyle={styles.scrollContent}
             showsVerticalScrollIndicator={false}
             bounces={false}
             overScrollMode="never"
           >
-        
-
         <View style={styles.form}>
               <View style={styles.inputContainer}>
                 <Icon name="map-marker" size={20} color={COLORS.accent} style={styles.inputIcon} />
@@ -137,7 +160,7 @@ const PostRideScreen = () => {
             <Card style={styles.nowCard}>
               <Card.Content>
                 <View style={styles.nowContent}>
-                      <Icon name="clock-fast" size={32} color="#007AFF" style={styles.nowIcon} />
+                          <Icon name="clock-fast" size={32} color="#248CFE" style={styles.nowIcon} />
                   <Text style={styles.nowTitle}>Leaving Now</Text>
                   <Text style={styles.nowSubtitle}>
                     Your ride will be available immediately for passengers to book
@@ -164,7 +187,7 @@ const PostRideScreen = () => {
                   onPress={() => setShowDatePicker(true)}
                 >
                   <View style={styles.dateTimeContent}>
-                          <Icon name="calendar" size={20} color="#007AFF" />
+                              <Icon name="calendar" size={20} color="#248CFE" />
                     <Text style={styles.dateTimeLabel}>Date</Text>
                     <Text style={styles.dateTimeValue}>{formatDate(date)}</Text>
                   </View>
@@ -175,7 +198,7 @@ const PostRideScreen = () => {
                   onPress={() => setShowTimePicker(true)}
                 >
                   <View style={styles.dateTimeContent}>
-                          <Icon name="clock-outline" size={20} color="#007AFF" />
+                              <Icon name="clock-outline" size={20} color="#248CFE" />
                     <Text style={styles.dateTimeLabel}>Time</Text>
                     <Text style={styles.dateTimeValue}>{formatTime(time)}</Text>
                   </View>
@@ -191,7 +214,7 @@ const PostRideScreen = () => {
 
           <View style={styles.timeRow}>
                     <View style={[styles.inputContainer, styles.halfInput]}>
-                      <Icon name="account-multiple" size={20} color="#007AFF" style={styles.inputIcon} />
+                          <Icon name="account-multiple" size={20} color="#248CFE" style={styles.inputIcon} />
             <TextInput
               label="Available Seats"
               value={seats}
@@ -204,7 +227,7 @@ const PostRideScreen = () => {
             />
                     </View>
                     <View style={[styles.inputContainer, styles.halfInput]}>
-                      <Icon name="cash" size={20} color="#007AFF" style={styles.inputIcon} />
+                          <Icon name="cash" size={20} color="#248CFE" style={styles.inputIcon} />
             <TextInput
                         label="Fare per Seat"
               value={fare}
@@ -226,13 +249,13 @@ const PostRideScreen = () => {
                   
           <View style={styles.preferenceItem}>
                     <View style={styles.preferenceContent}>
-                      <Icon name="snowflake" size={20} color="#007AFF" />
+                          <Icon name="snowflake" size={20} color="#248CFE" />
             <Text style={styles.preferenceText}>Air Conditioning</Text>
                     </View>
                     <Switch 
                       value={ac} 
                       onValueChange={setAc}
-                      trackColor={{ false: COLORS.border, true: '#007AFF' }}
+                          trackColor={{ false: COLORS.border, true: '#248CFE' }}
                       thumbColor={COLORS.primary}
                     />
           </View>
@@ -245,20 +268,20 @@ const PostRideScreen = () => {
                     <Switch 
                       value={music} 
                       onValueChange={setMusic}
-                      trackColor={{ false: COLORS.border, true: '#007AFF' }}
+                          trackColor={{ false: COLORS.border, true: '#248CFE' }}
                       thumbColor={COLORS.primary}
                     />
           </View>
                   
           <View style={styles.preferenceItem}>
                     <View style={styles.preferenceContent}>
-                      <Icon name="smoking-off" size={20} color="#34C759" />
+                          <Icon name="smoking-off" size={20} color="#248CFE" />
             <Text style={styles.preferenceText}>No Smoking</Text>
                     </View>
                     <Switch 
                       value={!smoking} 
                       onValueChange={(value) => setSmoking(!value)}
-                      trackColor={{ false: COLORS.border, true: '#007AFF' }}
+                          trackColor={{ false: COLORS.border, true: '#248CFE' }}
                       thumbColor={COLORS.primary}
                     />
           </View>
@@ -285,7 +308,6 @@ const PostRideScreen = () => {
           </ScrollView>
         </View>
         </View>
-
         {showDatePicker && (
           <DateTimePicker
             value={date}
@@ -294,7 +316,6 @@ const PostRideScreen = () => {
             onChange={onDateChange}
           />
         )}
-
         {showTimePicker && (
           <DateTimePicker
             value={time}
@@ -302,6 +323,8 @@ const PostRideScreen = () => {
             display="default"
             onChange={onTimeChange}
           />
+          )}
+        </>
         )}
     </SafeAreaView>
   );
@@ -343,7 +366,7 @@ const styles = StyleSheet.create({
     marginVertical: 12,
   },
   scrollContent: {
-    paddingBottom: 100, // Extra padding at bottom
+    paddingBottom: 16,
   },
   header: {
     alignItems: 'center',
@@ -374,6 +397,7 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     backgroundColor: COLORS.primary,
+    borderRadius: 16,
   },
   sectionTitle: {
     fontSize: 18,
@@ -430,7 +454,7 @@ const styles = StyleSheet.create({
   nowTitle: {
     fontSize: 16,
     fontFamily: 'Montserrat-SemiBold',
-    color: '#007AFF',
+    color: '#248CFE',
     marginBottom: 4,
   },
   nowSubtitle: {
@@ -447,7 +471,7 @@ const styles = StyleSheet.create({
   currentTime: {
     fontSize: 14,
     fontFamily: 'Montserrat-Medium',
-    color: '#007AFF',
+    color: '#248CFE',
     marginLeft: 4,
   },
   scheduleCard: {
@@ -494,7 +518,7 @@ const styles = StyleSheet.create({
   dateTimeButton: {
     borderWidth: 1,
     borderColor: COLORS.border,
-    borderRadius: 8,
+    borderRadius: 16,
     padding: 16,
     backgroundColor: COLORS.primary,
     justifyContent: 'center',

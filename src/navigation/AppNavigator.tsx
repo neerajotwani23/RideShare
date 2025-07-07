@@ -10,9 +10,13 @@ import LoginScreen from '../screens/Auth/LoginScreen';
 import SignupScreen from '../screens/Auth/SignupScreen';
 import RoleSelectionScreen from '../screens/Auth/RoleSelectionScreen';
 import VehicleDetailsScreen from '../screens/Auth/VehicleDetailsScreen';
+import ResetPasswordScreen from '../screens/Auth/ResetPasswordScreen';
 
 // Profile Screens
 import ProfileSetupScreen from '../screens/Profile/ProfileSetupScreen';
+import HelpSupportScreen from '../screens/Profile/HelpSupportScreen';
+import SettingsScreen from '../screens/Profile/SettingsScreen';
+import ChangePasswordScreen from '../screens/Profile/ChangePasswordScreen';
 
 // Main App Screens
 import HomeScreen from '../screens/Home/HomeScreen';
@@ -90,7 +94,7 @@ function MyRidesStack() {
 // Passenger Tab Navigator
 function PassengerTabs() {
   return (
-    <Tab.Navigator
+    <Tab.Navigator 
       initialRouteName="Find Ride"
       screenOptions={{
         tabBarStyle: {
@@ -101,7 +105,7 @@ function PassengerTabs() {
           paddingBottom: 8,
           height: 60,
         },
-        tabBarActiveTintColor: '#007AFF',
+        tabBarActiveTintColor: '#248CFE',
         tabBarInactiveTintColor: '#8E8E93',
         tabBarLabelStyle: {
           fontFamily: 'Montserrat-Medium',
@@ -110,7 +114,7 @@ function PassengerTabs() {
         headerShown: false,
       }}
     >
-      <Tab.Screen
+      <Tab.Screen 
         name="Find Ride"
         component={FindRideScreen}
         options={{
@@ -131,7 +135,7 @@ function PassengerTabs() {
           tabBarIcon: ({ color, size }) => <WalletIcon color={color} size={size} />,
         }}
       />
-      <Tab.Screen
+      <Tab.Screen 
         name="Chat"
         component={ChatBotScreen}
         options={{
@@ -163,7 +167,7 @@ function DriverTabs() {
           paddingBottom: 8,
           height: 60,
         },
-        tabBarActiveTintColor: '#007AFF',
+        tabBarActiveTintColor: '#248CFE',
         tabBarInactiveTintColor: '#8E8E93',
         tabBarLabelStyle: {
           fontFamily: 'Montserrat-Medium',
@@ -172,15 +176,15 @@ function DriverTabs() {
         headerShown: false,
       }}
     >
-      <Tab.Screen
-        name="Post Ride"
+      <Tab.Screen 
+        name="Post Ride" 
         component={PostRideScreen}
         options={{
           tabBarIcon: ({ color, size }) => <PlusIcon color={color} size={size} />,
         }}
       />
-      <Tab.Screen
-        name="My Rides"
+      <Tab.Screen 
+        name="My Rides" 
         component={MyRidesScreen}
         options={{
           tabBarIcon: ({ color, size }) => <RidesIcon color={color} size={size} />,
@@ -193,15 +197,15 @@ function DriverTabs() {
           tabBarIcon: ({ color, size }) => <WalletIcon color={color} size={size} />,
         }}
       />
-      <Tab.Screen
-        name="Chat"
+      <Tab.Screen 
+        name="Chat" 
         component={ChatBotScreen}
         options={{
           tabBarIcon: ({ color, size }) => <ChatIcon color={color} size={size} />,
         }}
       />
-      <Tab.Screen
-        name="Profile"
+      <Tab.Screen 
+        name="Profile" 
         component={ProfileStack}
         options={{
           tabBarIcon: ({ color, size }) => <ProfileIcon color={color} size={size} />,
@@ -212,10 +216,6 @@ function DriverTabs() {
 }
 
 // Icon Components (using centralized Icon component)
-const HomeIcon = ({ color, size }: { color: string; size: number }) => (
-  <Icon name="home-outline" size={size} color={color} />
-);
-
 const SearchIcon = ({ color, size }: { color: string; size: number }) => (
   <Icon name="magnify" size={size} color={color} />
 );
@@ -253,6 +253,7 @@ const AppNavigator = () => {
             <Stack.Screen name="Splash" component={SplashScreen} />
             <Stack.Screen name="Login" component={LoginScreen} />
             <Stack.Screen name="Signup" component={SignupScreen} />
+            <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
           </>
         ) : !roleSelected ? (
           // Role Selection
@@ -276,6 +277,9 @@ const AppNavigator = () => {
             <Stack.Screen name="DuringRide" component={DuringRideScreen} />
             <Stack.Screen name="RateRide" component={RateRideScreen} />
             <Stack.Screen name="RideDetails" component={RideDetailsScreen} />
+            <Stack.Screen name="HelpSupport" component={HelpSupportScreen} />
+            <Stack.Screen name="Settings" component={SettingsScreen} />
+            <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} />
           </>
         )}
       </Stack.Navigator>

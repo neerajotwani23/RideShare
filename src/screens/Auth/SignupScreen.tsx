@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Image, Dimensions } from 'react-native';
 import { Text, TextInput, Button, IconButton, Menu, Card } from 'react-native-paper';
-import { parsePhoneNumber, isValidPhoneNumber } from 'libphonenumber-js';
+import { isValidPhoneNumber } from 'libphonenumber-js';
 import { useAuth } from '../../context/AuthContext';
 import { COLORS } from '../../constants/colors';
 
@@ -421,6 +421,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primary,
     color: COLORS.secondary,
     marginBottom: 12,
+    borderRadius: 16,
   },
   inputContent: {
     color: COLORS.secondary,
@@ -437,7 +438,7 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderWidth: 1,
     borderColor: COLORS.border,
-    borderRadius: 8,
+    borderRadius: 16,
     marginRight: 8,
     backgroundColor: COLORS.primary,
   },
@@ -453,6 +454,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.primary,
     color: COLORS.secondary,
+    borderRadius: 16,
   },
   errorText: {
     color: COLORS.error,

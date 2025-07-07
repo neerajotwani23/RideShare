@@ -23,20 +23,6 @@ const WalletScreen = () => {
     }
   };
 
-  const getTransactionIcon = (type: string, amount: number) => {
-    if (type === 'ride') return 'car';
-    if (type === 'topup') return 'plus-circle';
-    if (type === 'refund') return 'refresh';
-    return amount > 0 ? 'plus' : 'minus';
-  };
-
-  const getTransactionColor = (type: string, amount: number) => {
-    if (type === 'ride') return '#FF3B30';
-    if (type === 'topup') return '#34C759';
-    if (type === 'refund') return '#007AFF';
-    return amount > 0 ? '#34C759' : '#FF3B30';
-  };
-
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -215,6 +201,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.primary,
     borderColor: COLORS.border,
+    borderRadius: 16,
   },
   addButton: {
     borderRadius: 12,

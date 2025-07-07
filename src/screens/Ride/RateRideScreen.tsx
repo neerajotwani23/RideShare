@@ -5,7 +5,6 @@ import { Text, Button, Card, Avatar, TextInput } from 'react-native-paper';
 const RateRideScreen = ({ navigation, route }: any) => {
   const [rating, setRating] = useState(0);
   const [review, setReview] = useState('');
-  const { rideData } = route.params || {};
 
   const handleStarPress = (starIndex: number) => {
     setRating(starIndex + 1);
@@ -184,10 +183,11 @@ const styles = StyleSheet.create({
   },
   reviewInput: {
     backgroundColor: '#FFFFFF',
+    borderRadius: 16,
   },
   submitButton: {
     borderRadius: 25,
-    backgroundColor: '#007AFF',
+    backgroundColor: '#248CFE',
   },
 });
 

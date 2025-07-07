@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, StyleSheet, ScrollView, SafeAreaView, TouchableOpacity } from 'react-native';
-import { Text, Button, Card, Searchbar, FAB, Avatar } from 'react-native-paper';
+import { Text, Searchbar, Avatar, Card } from 'react-native-paper';
 import Icon from '../../components/Icon';
 import { COLORS } from '../../constants/colors';
 

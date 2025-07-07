@@ -5,10 +5,9 @@ import { useAuth } from '../../context/AuthContext';
 
 const ProfileSetupScreen = ({ navigation, route }: any) => {
   const [bio, setBio] = useState('');
-  const [profileImage, setProfileImage] = useState<string | null>(null);
   const [userRole, setUserRole] = useState<string>('');
 
-  const { completeProfileSetup, currentRole } = useAuth();
+  const { completeProfileSetup, currentRole, logout } = useAuth();
 
   useEffect(() => {
     // Get user role from context or route params
@@ -56,8 +55,8 @@ const ProfileSetupScreen = ({ navigation, route }: any) => {
       navigation.goBack();
     } else {
       // If no previous screen, this means we're in initial setup flow
-      // but RoleSelection might not be available, so navigate to login
-      navigation.navigate('Login');
+      // Logout the user to return to authentication flow
+      logout();
     }
   };
 
@@ -80,11 +79,7 @@ const ProfileSetupScreen = ({ navigation, route }: any) => {
       <View style={styles.content}>
         <View style={styles.profileSection}>
           <TouchableOpacity onPress={handleSelectPhoto} style={styles.avatarContainer}>
-            {profileImage ? (
-              <Avatar.Image size={100} source={{ uri: profileImage }} />
-            ) : (
               <Avatar.Icon size={100} icon="account" style={styles.avatar} />
-            )}
             <View style={styles.cameraIcon}>
               <IconButton
                 icon="camera"
@@ -107,7 +102,7 @@ const ProfileSetupScreen = ({ navigation, route }: any) => {
             style={styles.bioInput}
             mode="outlined"
             outlineColor="#E0E0E0"
-            activeOutlineColor="#007AFF"
+            activeOutlineColor="#248CFE"
             contentStyle={styles.inputContent}
             outlineStyle={styles.inputOutline}
             placeholder="Tell others about yourself..."
@@ -166,7 +161,7 @@ const styles = StyleSheet.create({
   skipButton: {
     fontSize: 16,
     fontFamily: 'Montserrat-Medium',
-    color: '#2563EB',
+    color: '#248CFE',
     paddingHorizontal: 16,
     paddingVertical: 4,
     minHeight: 32,
@@ -199,7 +194,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 0,
     right: 0,
-    backgroundColor: '#007AFF',
+    backgroundColor: '#248CFE',
     borderRadius: 18,
     width: 36,
     height: 36,
@@ -227,14 +222,14 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     fontSize: 16,
     minHeight: 100,
-    borderRadius: 10,
+    borderRadius: 16,
   },
   inputContent: {
     fontFamily: 'Montserrat-Regular',
     fontSize: 16,
   },
   inputOutline: {
-    borderRadius: 10,
+    borderRadius: 16,
   },
   infoContainer: {
     backgroundColor: '#F6F8FB',
