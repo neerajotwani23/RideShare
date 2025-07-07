@@ -1,8 +1,15 @@
 import React, { useState } from 'react';
 import { View, ScrollView, StyleSheet, SafeAreaView, Alert } from 'react-native';
-import { Text, Button, Card, SegmentedButtons, Chip } from 'react-native-paper';
+
+import { Text, Button, Card, SegmentedButtons, Chip,IconButton } from 'react-native-paper';
 import { LocationIcon, LocationCheckIcon, ClockIcon, UserIcon } from '../../components/icons';
 import { COLORS } from '../../constants/colors';
+import { scale, verticalScale, moderateScale } from 'react-native-size-matters';
+import { Dimensions } from 'react-native';
+import { I18nManager } from 'react-native';
+import { pink100 } from 'react-native-paper/lib/typescript/styles/themes/v2/colors';
+
+const SCREEN_WIDTH = Dimensions.get('window').width;
 
 const mockUpcoming = [
   { 
@@ -137,8 +144,8 @@ const MyRidesScreen = ({ navigation }: any) => {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>My Rides</Text>
-        <Text style={styles.subtitle}>Track your ride history</Text>
+        <Text  style={styles.title}>My Rides</Text >
+        <Text  style={styles.subtitle}>Track your ride history</Text >
       </View>
 
       <SegmentedButtons
@@ -173,12 +180,12 @@ const MyRidesScreen = ({ navigation }: any) => {
         style={styles.segmentedButtons}
       />
 
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
+      <ScrollView  keyboardShouldPersistTaps="handled"  showsVerticalScrollIndicator={false} style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
         {rides.length === 0 ? (
           <View style={styles.emptyState}>
-            <Text style={styles.emptyText}>
+            <Text  style={styles.emptyText}>
               {tab === 'upcoming' ? 'No upcoming rides.' : 'No past rides.'}
-            </Text>
+            </Text >
           </View>
         ) : (
           rides.map(ride => (
@@ -190,27 +197,28 @@ const MyRidesScreen = ({ navigation }: any) => {
               <Card.Content style={styles.cardContent}>
                 <View style={styles.rideHeader}>
                   <View style={{ flex: 1 }}>
-                    <View style={{ flexDirection: 'column', alignItems: 'flex-start', marginBottom: 4 }}>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 2 }}>
+                    <View style={{ flexDirection: 'column', alignItems: I18nManager.isRTL ? 'flex-end' : 'flex-start', marginBottom: 4 }}>
+                      <View style={{ flexDirection: I18nManager.isRTL ? 'row-reverse' : 'row', marginBottom: 2 }}>
                         <LocationIcon size={18} color={COLORS.textSecondary} style={{ marginRight: 4 }} />
-                        <Text style={styles.routeText}>{ride.from}</Text>
+                        <Text  style={styles.routeText}>{ride.from}</Text >
                       </View>
-                      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                      <View style={{ flexDirection: I18nManager.isRTL ? 'row-reverse' : 'row'}}>
                         <LocationCheckIcon size={18} color={COLORS.textSecondary} style={{ marginRight: 4 }} />
-                        <Text style={styles.routeText}>{ride.to}</Text>
+                        <Text style={styles.routeText}>{ride.to}</Text >
                       </View>
                     </View>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 2 }}>
+                    <View style={{flexDirection: I18nManager.isRTL ? 'row-reverse' : 'row', marginBottom: 2 }}>
                       <ClockIcon size={14} color={COLORS.textSecondary} style={{ marginRight: 4 }} />
-                      <Text style={styles.dateTimeText}>{ride.date} at {ride.time}</Text>
+                      <Text style={styles.dateTimeText}>{ride.date} at {ride.time}</Text >
                     </View>
-                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <View style={{flexDirection: I18nManager.isRTL ? 'row-reverse' : 'row' }}>
                       <UserIcon size={14} color={COLORS.textSecondary} style={{ marginRight: 4 }} />
-                      <Text style={styles.driverText}>Driver: {ride.driver}</Text>
+                      <Text style={styles.driverText}>Driver: {ride.driver}</Text >
                     </View>
                   </View>
-                  <View style={{ justifyContent: 'flex-start', alignItems: 'center', marginHorizontal: 8 }}>
-                      <Chip 
+                  <View style={{flexDirection: 'column' }}>
+                  <View style={{ justifyContent: 'flex-start', alignItems: 'center', marginLeft: 12, marginBottom: 8 }}>
+                      <Chip
                         icon={getRideTypeIcon(ride.type)}
                         style={[styles.typeChip, { backgroundColor: getRideTypeColor(ride.type) + '20' }]}
                         textStyle={[styles.typeText, { color: getRideTypeColor(ride.type) }]}
@@ -229,34 +237,35 @@ const MyRidesScreen = ({ navigation }: any) => {
                       <Button
                         mode="text"
                         onPress={() => handleCancelRide(ride.id, `${ride.from} to ${ride.to}`)}
-                        labelStyle={{ color: COLORS.error, fontFamily: 'Montserrat-Bold', fontSize: 14 }}
-                        style={{ marginTop: 4 }}
+                        labelStyle={{ color: COLORS.error, fontFamily: 'Montserrat-Bold', fontSize: 12 }}
+                        style={{ backgroundColor:'pink', width:100 , marginTop: 4 }}
                       >
                         Cancel
                       </Button>
                     )}
                   </View>
+                  </View>
                 </View>
                 
                 <View style={styles.rideDetails}>
                   <View style={styles.detailItem}>
-                    <Text style={styles.detailLabel}>Seats</Text>
-                    <Text style={styles.detailValue}>{ride.seats}</Text>
+                    <Text style={styles.detailLabel}>Seats</Text >
+                    <Text style={styles.detailValue}>{ride.seats}</Text >
                   </View>
                   <View style={styles.detailItem}>
-                    <Text style={styles.detailLabel}>Fare</Text>
-                    <Text style={styles.detailValue}>Rs. {ride.fare}</Text>
+                    <Text style={styles.detailLabel}>Fare</Text >
+                    <Text style={styles.detailValue}>Rs. {ride.fare}</Text >
                   </View>
                   <View style={styles.detailItem}>
-                    <Text style={styles.detailLabel}>Total</Text>
-                    <Text style={styles.detailValue}>Rs. {ride.fare * ride.seats}</Text>
+                    <Text style={styles.detailLabel}>Total</Text >
+                    <Text style={styles.detailValue}>Rs. {ride.fare * ride.seats}</Text >
                   </View>
                 </View>
 
                 {ride.type === 'scheduled' && ride.canCancel && tab === 'upcoming' && (
                   <Text style={styles.cancelNote}>
                     You can cancel this scheduled ride up to 1 hour before departure
-                  </Text>
+                  </Text >
                 )}
               </Card.Content>
             </Card>
@@ -273,25 +282,25 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primary,
   },
   header: {
-    padding: 24,
-    paddingBottom: 16,
+    padding: scale(24),
+    paddingBottom: verticalScale(16),
     backgroundColor: COLORS.primary,
   },
   title: {
-    fontSize: 24,
+    fontSize: moderateScale(24),
     fontFamily: 'Montserrat-Bold',
     color: COLORS.secondary,
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: moderateScale(16),
     fontFamily: 'Montserrat-Regular',
     color: COLORS.textSecondary,
   },
   segmentedButtons: {
-    marginHorizontal: 24,
-    marginBottom: 16,
+    marginHorizontal: scale(24),
+    marginBottom: verticalScale(16),
     backgroundColor: COLORS.lightGray,
-    borderRadius: 24,
+    borderRadius: scale(24),
     borderWidth: 1,
     borderColor: COLORS.border,
   },
@@ -299,36 +308,37 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingHorizontal: 24,
-    paddingBottom: 24,
+    paddingHorizontal: scale(24),
+    paddingBottom: verticalScale(24),
   },
   emptyState: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingTop: 60,
+    paddingTop: verticalScale(60),
   },
   emptyText: {
-    fontSize: 16,
+    fontSize: moderateScale(16),
     fontFamily: 'Montserrat-Regular',
     color: COLORS.textSecondary,
     textAlign: 'center',
   },
   rideCard: {
-    marginBottom: 16,
-    borderRadius: 12,
+    width: SCREEN_WIDTH - scale(48),
+    marginBottom: verticalScale(16),
+    borderRadius: scale(12),
     elevation: 2,
     backgroundColor: COLORS.primary,
     borderWidth: 1,
     borderColor: COLORS.border,
   },
   cardContent: {
-    padding: 16,
+    padding: scale(16),
   },
   rideHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    alignItems: I18nManager.isRTL ? 'flex-end' : 'flex-start',
     marginBottom: 12,
   },
   routeInfo: {
@@ -337,51 +347,56 @@ const styles = StyleSheet.create({
   },
   routeRow: {
     flexDirection: 'column',
-    alignItems: 'flex-start',
+    alignItems: I18nManager.isRTL ? 'flex-end' : 'flex-start',
     marginBottom: 4,
   },
   routeText: {
-    fontSize: 18,
+    fontSize: moderateScale(18),
     fontFamily: 'Montserrat-SemiBold',
     color: COLORS.secondary,
   },
   typeChip: {
-    alignSelf: 'flex-start',
-    marginLeft: 8,
+    alignSelf: 'flex-end',
+    marginLeft: scale(8),
     backgroundColor: COLORS.lightGray,
   },
   typeText: {
-    fontSize: 10,
+    fontSize: moderateScale(10),
     fontFamily: 'Montserrat-Medium',
     color: COLORS.secondary,
   },
   dateTimeText: {
-    fontSize: 14,
+    fontSize: moderateScale(14),
     fontFamily: 'Montserrat-Regular',
     color: COLORS.textSecondary,
-    marginBottom: 2,
+    marginBottom: verticalScale(2),
+    minWidth: scale(100)
   },
   driverText: {
-    fontSize: 12,
+    fontSize: moderateScale(12),
     fontFamily: 'Montserrat-Regular',
     color: COLORS.darkGray,
   },
   headerRight: {
-    alignItems: 'flex-end',
+    alignItems: 'flex-start',
+    marginLeft: scale(22)
   },
   statusChip: {
     alignSelf: 'flex-start',
-    marginBottom: 4,
+    marginBottom: verticalScale(4),
   },
   statusText: {
     color: COLORS.primary,
-    fontSize: 12,
+    fontSize: moderateScale(12),
     fontFamily: 'Montserrat-Medium',
+    minWidth: scale(65),
+    textAlign: 'center',
+
   },
   rideDetails: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingTop: 12,
+    paddingTop: verticalScale(12),
     borderTopWidth: 1,
     borderTopColor: COLORS.border,
   },
@@ -389,22 +404,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   detailLabel: {
-    fontSize: 12,
+    fontSize: moderateScale(12),
     fontFamily: 'Montserrat-Regular',
     color: COLORS.textSecondary,
-    marginBottom: 4,
+    marginBottom: verticalScale(4),
   },
   detailValue: {
-    fontSize: 16,
+    fontSize: moderateScale(16),
     fontFamily: 'Montserrat-SemiBold',
     color: COLORS.secondary,
   },
   cancelNote: {
-    fontSize: 11,
+    fontSize: moderateScale(11),
     fontFamily: 'Montserrat-Regular',
     color: COLORS.textSecondary,
     fontStyle: 'italic',
-    marginTop: 8,
+    marginTop: verticalScale(8),
     textAlign: 'center',
   },
 });
