@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { View, ScrollView, StyleSheet, SafeAreaView, Alert } from 'react-native';
-
-import { Text, Button, Card, SegmentedButtons, Chip,IconButton } from 'react-native-paper';
-import { LocationIcon, LocationCheckIcon, ClockIcon, UserIcon } from '../../components/icons';
+import { Text , Button, Card, SegmentedButtons, Chip, IconButton } from 'react-native-paper';
+import { LocationIcon, LocationCheckIcon, ClockIcon, UserIcon, UsersIcon } from '../../components/icons';
 import { COLORS } from '../../constants/colors';
 import { scale, verticalScale, moderateScale } from 'react-native-size-matters';
 import { Dimensions } from 'react-native';
