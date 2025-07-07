@@ -196,7 +196,7 @@ const ProfileScreen = ({ navigation }: any) => {
 
           <TouchableOpacity 
             style={styles.menuButton}
-            onPress={() => {/* Handle settings */}}
+            onPress={() => navigation && navigation.navigate('Settings')}
           >
             <View style={styles.menuButtonContent}>
               <SettingsIcon size={24} color={COLORS.secondary} />

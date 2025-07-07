@@ -110,20 +110,7 @@ const EditProfileScreen = ({ navigation }: any) => {
   };
 
   const handleChangePassword = () => {
-    Alert.alert(
-      'Change Password',
-      'This feature will redirect you to a secure password change screen.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Continue', 
-          onPress: () => {
-            // In real app, navigate to change password screen
-            Alert.alert('Info', 'Change password screen would open here');
-          }
-        }
-      ]
-    );
+    navigation.navigate('ChangePassword');
   };
 
   return (
