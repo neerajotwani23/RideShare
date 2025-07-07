@@ -50,7 +50,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setCurrentRole(null);
     setUser(null);
   };
-
+  
+  console.log(children);
   return (
     <AuthContext.Provider value={{ 
       isAuthenticated, 
@@ -65,6 +66,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       logout
     }}>
       {children}
+      
     </AuthContext.Provider>
   );
 };
