@@ -2,6 +2,8 @@ import React from 'react';
 import { View, StyleSheet, SafeAreaView } from 'react-native';
 import { Text, Button } from 'react-native-paper';
 import { useAuth } from '../../context/AuthContext';
+import COLORS from '../../constants/colors';
+import { Colors } from 'react-native/Libraries/NewAppScreen';
 
 const RoleSelectionScreen = () => {
   const { selectRole } = useAuth();
@@ -47,7 +49,7 @@ const RoleSelectionScreen = () => {
 const styles = StyleSheet.create({
   background: {
     flex: 1,
-    backgroundColor: '#F6F8FB',
+    backgroundColor: COLORS.lightGray,
   },
   centeredContainer: {
     flex: 1,
@@ -73,9 +75,9 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontFamily: 'Montserrat-Black',
     fontWeight: '900',
-    color: '#111827',
     textAlign: 'center',
     marginBottom: 8,
+    color:COLORS.secondary,
   },
   subtitle: {
     fontSize: 16,
@@ -86,7 +88,7 @@ const styles = StyleSheet.create({
   },
   driverButton: {
     borderRadius: 18,
-    backgroundColor: '#111111',
+    backgroundColor: COLORS.secondary,
     marginBottom: 16,
     width: '100%',
   },
@@ -107,7 +109,7 @@ const styles = StyleSheet.create({
   passengerButtonLabel: {
     fontFamily: 'Montserrat-Bold',
     fontSize: 18,
-    color: '#222F3E',
+    color: COLORS.secondary,
   },
   termsText: {
     fontSize: 13,

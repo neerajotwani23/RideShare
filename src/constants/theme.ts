@@ -4,7 +4,7 @@ import { COLORS } from './colors';
 const theme = {
   ...DefaultTheme,
   colors: {
-    ...DefaultTheme.colors,
+  
     primary: COLORS.accent,        // Blue (#248CFE)
     secondary: COLORS.success,     // Blue (#248CFE)
     background: COLORS.primary,    // White (#FFFFFF)
