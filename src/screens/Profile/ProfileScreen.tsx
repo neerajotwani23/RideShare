@@ -55,12 +55,12 @@ const ProfileScreen = ({ navigation }: any) => {
 
   const passengerTextColor = animatedValue.interpolate({
     inputRange: [0, 1],
-    outputRange: [COLORS.primary, COLORS.textSecondary],
+    outputRange: [COLORS.accent, COLORS.textSecondary],
   });
 
   const driverTextColor = animatedValue.interpolate({
     inputRange: [0, 1],
-    outputRange: [COLORS.textSecondary, COLORS.primary],
+    outputRange: [COLORS.textSecondary, COLORS.accent],
   });
 
   return (
@@ -68,7 +68,7 @@ const ProfileScreen = ({ navigation }: any) => {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
           <View style={styles.avatarContainer}>
-            <UserIcon size={60} color={COLORS.primary} />
+            <UserIcon size={60} color="#FFFFFF" />
           </View>
           <Text style={styles.name}>{user.name}</Text>
           <Text style={styles.email}>{user.email}</Text>
@@ -78,19 +78,19 @@ const ProfileScreen = ({ navigation }: any) => {
           <Card.Content>
             <View style={styles.statsRow}>
               <View style={styles.statItem}>
-                <CarIcon size={24} color={COLORS.secondary} />
+                <CarIcon size={24} color={COLORS.accent} />
                 <Text style={styles.statNumber}>{user.rides}</Text>
                 <Text style={styles.statLabel}>Total Rides</Text>
               </View>
               <Divider style={styles.statDivider} />
               <View style={styles.statItem}>
-                <StarIcon size={24} color={COLORS.secondary} />
+                <StarIcon size={24} color={COLORS.accent} />
                 <Text style={styles.statNumber}>{user.rating}</Text>
                 <Text style={styles.statLabel}>Rating</Text>
               </View>
               <Divider style={styles.statDivider} />
               <View style={styles.statItem}>
-                <EditIcon size={24} color={COLORS.secondary} />
+                <EditIcon size={24} color={COLORS.accent} />
                 <Text style={styles.statNumber}>15</Text>
                 <Text style={styles.statLabel}>Reviews</Text>
               </View>
@@ -153,7 +153,7 @@ const ProfileScreen = ({ navigation }: any) => {
             onPress={() => navigation && navigation.navigate('EditProfile')}
           >
             <View style={styles.menuButtonContent}>
-              <UserEditIcon size={24} color={COLORS.secondary} />
+              <UserEditIcon size={24} color={COLORS.accent} />
               <Text style={styles.menuButtonText}>Edit Profile</Text>
               <ArrowLeftIcon size={20} color={COLORS.textSecondary} style={styles.chevronIcon} />
             </View>
@@ -164,7 +164,7 @@ const ProfileScreen = ({ navigation }: any) => {
             onPress={() => navigation && navigation.navigate('Reviews')}
           >
             <View style={styles.menuButtonContent}>
-              <StarIcon size={24} color={COLORS.secondary} />
+              <StarIcon size={24} color={COLORS.accent} />
               <Text style={styles.menuButtonText}>My Reviews</Text>
               <ArrowLeftIcon size={20} color={COLORS.textSecondary} style={styles.chevronIcon} />
             </View>
@@ -176,7 +176,7 @@ const ProfileScreen = ({ navigation }: any) => {
               onPress={() => navigation && navigation.navigate('VehicleDetails')}
             >
               <View style={styles.menuButtonContent}>
-                <CarIcon size={24} color={COLORS.secondary} />
+                <CarIcon size={24} color={COLORS.accent} />
                 <Text style={styles.menuButtonText}>Vehicle Details</Text>
                 <ArrowLeftIcon size={20} color={COLORS.textSecondary} style={styles.chevronIcon} />
               </View>
@@ -188,7 +188,7 @@ const ProfileScreen = ({ navigation }: any) => {
             onPress={() => navigation && navigation.navigate('HelpSupport')}
           >
             <View style={styles.menuButtonContent}>
-              <HelpIcon size={24} color={COLORS.secondary} />
+              <HelpIcon size={24} color={COLORS.accent} />
               <Text style={styles.menuButtonText}>Help & Support</Text>
               <ArrowLeftIcon size={20} color={COLORS.textSecondary} style={styles.chevronIcon} />
             </View>
@@ -199,7 +199,7 @@ const ProfileScreen = ({ navigation }: any) => {
             onPress={() => navigation && navigation.navigate('Settings')}
           >
             <View style={styles.menuButtonContent}>
-              <SettingsIcon size={24} color={COLORS.secondary} />
+              <SettingsIcon size={24} color={COLORS.accent} />
               <Text style={styles.menuButtonText}>Settings</Text>
               <ArrowLeftIcon size={20} color={COLORS.textSecondary} style={styles.chevronIcon} />
             </View>
@@ -237,10 +237,18 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: COLORS.textSecondary,
+    backgroundColor: COLORS.accent,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 16,
+    elevation: 4,
+    shadowColor: COLORS.accent,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
   },
   name: {
     fontSize: 24,
@@ -351,7 +359,7 @@ const styles = StyleSheet.create({
     height: 40,
     borderRadius: 20,
     position: 'relative',
-    backgroundColor: COLORS.textSecondary,
+    backgroundColor: '#E5E5EA',
   },
   roleSwitchTextContainer: {
     position: 'absolute',
@@ -387,7 +395,7 @@ const styles = StyleSheet.create({
     width: 34,
     height: 34,
     borderRadius: 17,
-    backgroundColor: COLORS.primary,
+    backgroundColor: COLORS.accent,
     shadowColor: COLORS.secondary,
     shadowOffset: {
       width: 0,

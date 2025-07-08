@@ -6,13 +6,13 @@ export const COLORS = {
   transparent: 'transparent',   // No change
 
   // Semi-Dark Accents
-  secondary: '#007AFF',         // Primary blue from Figma (used as secondary role)
+  secondary: '#0A80ED',         // Primary blue from Figma (used as secondary role)
   border: '#E5E5EA',            // Outline color
   textSecondary: '#808080',     // Standard black text (secondary use)
   darkGray: '#000000',          // Same black used for onSurface
 
   // Vibrant Elements
-  accent: '#34C759',            // Green as accent (formerly secondary in theme)
+  accent: '#0A80ED',            // Green as accent (formerly secondary in theme)
   success: '#34C759',           // Same green as positive status
   error: '#FF3B30',             // Standard iOS-style red (added for error balance)
 };

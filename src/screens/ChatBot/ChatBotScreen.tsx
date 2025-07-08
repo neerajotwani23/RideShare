@@ -269,10 +269,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#248CFE',
   },
   botAvatar: {
-    backgroundColor: COLORS.textSecondary,
+    backgroundColor: '#0A80ED',
   },
   avatarText: {
-    color: COLORS.primary,
+    color: '#FFFFFF',
     fontSize: 12,
     fontFamily: 'Montserrat-SemiBold',
   },
@@ -284,7 +284,7 @@ const styles = StyleSheet.create({
     flexGrow: 0,
   },
   quickQuestionChip: {
-    backgroundColor: COLORS.textSecondary,
+    backgroundColor: '#0A80ED',
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
@@ -302,7 +302,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   quickQuestionText: {
-    color: COLORS.primary,
+    color: '#FFFFFF',
     fontSize: 14,
     fontFamily: 'Montserrat-Medium',
   },
