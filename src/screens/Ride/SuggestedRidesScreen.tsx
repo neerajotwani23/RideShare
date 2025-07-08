@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { Text } from 'react-native-paper';
-import Icon from '../../components/Icon';
-import { RideCard } from '../../components';
+import { Icon, RideCard, RideFilters } from '../../components';
 
 const mockResults = [
   {
@@ -33,6 +32,13 @@ const mockResults = [
 
 const SuggestedRidesScreen = ({ navigation }: any) => {
   const [rides, setRides] = useState(mockResults);
+  const [showFilters, setShowFilters] = useState(false);
+  const [activeFilters, setActiveFilters] = useState({
+    priceRange: [0, 1000],
+    carType: [],
+    amenities: [],
+    rating: 0,
+  });
 
   const handleRemove = (id: string) => {
     setRides(rides.filter(r => r.id !== id));
@@ -43,6 +49,42 @@ const SuggestedRidesScreen = ({ navigation }: any) => {
     console.log('Request ride:', id);
   };
 
+  const handleApplyFilters = (filters: any) => {
+    setActiveFilters(filters);
+    // Apply filters to rides
+    const filteredRides = mockResults.filter(ride => {
+      // Filter by amenities
+      if (filters.amenities.length > 0) {
+        const hasAllAmenities = filters.amenities.every((amenity: string) =>
+          ride.preferences.includes(amenity)
+        );
+        if (!hasAllAmenities) return false;
+      }
+
+      // Filter by car type
+      if (filters.carType.length > 0 && !filters.carType.includes('Any')) {
+        if (!filters.carType.some((type: string) => ride.car.includes(type))) {
+          return false;
+        }
+      }
+
+      // Filter by price
+      const fareNumber = parseInt(ride.fare.replace('Rs. ', ''));
+      if (fareNumber < filters.priceRange[0] || fareNumber > filters.priceRange[1]) {
+        return false;
+      }
+
+      // Filter by rating
+      if (filters.rating > 0 && ride.rating < filters.rating) {
+        return false;
+      }
+
+      return true;
+    });
+
+    setRides(filteredRides);
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -50,6 +92,12 @@ const SuggestedRidesScreen = ({ navigation }: any) => {
           <Icon name="arrow-left" size={24} color="#111" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Suggested Rides</Text>
+        <TouchableOpacity 
+          onPress={() => setShowFilters(true)} 
+          style={styles.filterButton}
+        >
+          <Icon name="filter" size={24} color="#111" />
+        </TouchableOpacity>
       </View>
       <ScrollView contentContainerStyle={styles.content}>
         {rides.map((ride) => (
@@ -61,8 +109,14 @@ const SuggestedRidesScreen = ({ navigation }: any) => {
             onRemove={() => handleRemove(ride.id)}
           />
         ))}
-        {rides.length === 0 && <Text style={styles.noRides}>No more rides found.</Text>}
+        {rides.length === 0 && <Text style={styles.noRides}>No rides found matching your filters.</Text>}
       </ScrollView>
+
+      <RideFilters
+        visible={showFilters}
+        onClose={() => setShowFilters(false)}
+        onApply={handleApplyFilters}
+      />
     </View>
   );
 };
@@ -87,9 +141,13 @@ const styles = StyleSheet.create({
     padding: 4,
   },
   headerTitle: {
+    flex: 1,
     fontSize: 22,
     fontFamily: 'Montserrat-Bold',
     color: '#111',
+  },
+  filterButton: {
+    padding: 4,
   },
   content: {
     padding: 20,
