@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, SafeAreaView, TouchableOpacity, Alert } from 'react-native';
+import { View, StyleSheet, SafeAreaView, TouchableOpacity, Alert, ScrollView } from 'react-native';
 import { Text, TextInput, Button, Avatar, IconButton } from 'react-native-paper';
 import { useAuth } from '../../context/AuthContext';
+import COLORS from '../../constants/colors';
 
 const ProfileSetupScreen = ({ navigation, route }: any) => {
   const [bio, setBio] = useState('');
@@ -62,6 +63,7 @@ const ProfileSetupScreen = ({ navigation, route }: any) => {
 
   return (
     <SafeAreaView style={styles.container}>
+    <ScrollView contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled">
       <View style={styles.header}>
         <IconButton
           icon="arrow-left"
@@ -102,7 +104,7 @@ const ProfileSetupScreen = ({ navigation, route }: any) => {
             style={styles.bioInput}
             mode="outlined"
             outlineColor="#E0E0E0"
-            activeOutlineColor="#248CFE"
+            activeOutlineColor={COLORS.accent}
             contentStyle={styles.inputContent}
             outlineStyle={styles.inputOutline}
             placeholder="Tell others about yourself..."
@@ -129,6 +131,7 @@ const ProfileSetupScreen = ({ navigation, route }: any) => {
           Save & Continue
         </Button>
       </View>
+      </ScrollView>
     </SafeAreaView>
   );
 };
@@ -156,7 +159,7 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontFamily: 'Montserrat-Black',
     fontWeight: '900',
-    color: '#111827',
+    color: COLORS.secondary,
   },
   skipButton: {
     fontSize: 16,
@@ -207,7 +210,7 @@ const styles = StyleSheet.create({
   photoText: {
     fontSize: 16,
     fontFamily: 'Montserrat-Medium',
-    color: '#666666',
+    color: COLORS.secondary,
   },
   inputContainer: {
     marginBottom: 32,
@@ -255,7 +258,7 @@ const styles = StyleSheet.create({
   },
   saveButton: {
     borderRadius: 18,
-    backgroundColor: '#111111',
+    backgroundColor: COLORS.secondary,
   },
   buttonContent: {
     paddingVertical: 14,

@@ -6,7 +6,7 @@ import { COLORS } from '../../constants/colors';
 import { scale, verticalScale, moderateScale } from 'react-native-size-matters';
 import { Dimensions } from 'react-native';
 import { I18nManager } from 'react-native';
-import { pink100 } from 'react-native-paper/lib/typescript/styles/themes/v2/colors';
+
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 
