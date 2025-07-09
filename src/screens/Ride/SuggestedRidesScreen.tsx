@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { Text } from 'react-native-paper';
 import { Icon, RideCard, RideFilters } from '../../components';
+import { COLORS } from '../../constants/colors';
 
 const mockResults = [
   {
@@ -96,7 +97,7 @@ const SuggestedRidesScreen = ({ navigation }: any) => {
           onPress={() => setShowFilters(true)} 
           style={styles.filterButton}
         >
-          <Icon name="filter" size={24} color="#111" />
+          <Icon name="filter" size={24} color={COLORS.accent} />
         </TouchableOpacity>
       </View>
       <ScrollView contentContainerStyle={styles.content}>

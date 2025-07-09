@@ -117,26 +117,7 @@ const RideFilters: React.FC<RideFiltersProps> = ({
             </View>
 
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Car Type</Text>
-              <View style={styles.optionsGrid}>
-                {carTypes.map(type => (
-                  <TouchableOpacity
-                    key={type}
-                    style={[
-                      styles.optionButton,
-                      filters.carType.includes(type) && styles.optionSelected,
-                    ]}
-                    onPress={() => handleCarTypeSelect(type)}
-                  >
-                    <Text style={[
-                      styles.optionText,
-                      filters.carType.includes(type) && styles.optionTextSelected,
-                    ]}>
-                      {type}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
+              {/* Car Type filter removed */}
             </View>
 
             <View style={styles.section}>
