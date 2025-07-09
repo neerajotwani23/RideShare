@@ -99,15 +99,7 @@ const RideCard: React.FC<RideCardProps> = ({
               textStyle={styles.requestButtonLabel}
               onPress={onRequest}
             >
-              Request
-            </Chip>
-            <Chip
-              mode="outlined"
-              style={styles.removeButton}
-              textStyle={styles.removeButtonLabel}
-              onPress={onRemove}
-            >
-              Remove
+              <Text style={styles.requestButtonText}>Request</Text>
             </Chip>
           </View>
         )}
@@ -212,18 +204,32 @@ const styles = StyleSheet.create({
   },
   buttonRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 8,
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+    marginTop: 12,
   },
   requestButton: {
     flex: 1,
-    marginRight: 8,
     backgroundColor: COLORS.accent,
+    borderRadius: 24,
+    height: 44,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 8,
   },
   requestButtonLabel: {
-    fontSize: 14,
-    fontFamily: 'Montserrat-Bold',
     color: COLORS.primary,
+    fontFamily: 'Montserrat-SemiBold',
+    fontSize: 16,
+    textAlign: 'center',
+    width: '100%',
+  },
+  requestButtonText: {
+    color: COLORS.primary,
+    fontFamily: 'Montserrat-SemiBold',
+    fontSize: 16,
+    textAlign: 'center',
+    width: '100%',
   },
   removeButton: {
     flex: 1,

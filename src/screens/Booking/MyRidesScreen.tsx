@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { View, ScrollView, StyleSheet, SafeAreaView, Alert } from 'react-native';
-import { Text , Button, Card, SegmentedButtons, Chip, IconButton } from 'react-native-paper';
+import { View, ScrollView, StyleSheet, SafeAreaView, Alert, Modal, TouchableOpacity } from 'react-native';
+import { Text , Button, Card, SegmentedButtons, Chip, IconButton, Checkbox } from 'react-native-paper';
 import { LocationIcon, LocationCheckIcon, ClockIcon, UserIcon, UsersIcon } from '../../components/icons';
 import { COLORS } from '../../constants/colors';
 import { scale, verticalScale, moderateScale } from 'react-native-size-matters';
@@ -96,8 +96,20 @@ const mockPast = [
 
 const MyRidesScreen = ({ navigation }: any) => {
   const [tab, setTab] = useState('upcoming');
+  const [filterModalVisible, setFilterModalVisible] = useState(false);
+  const [statusFilters, setStatusFilters] = useState({ Confirmed: true, Active: true, Pending: true });
 
-  const rides = tab === 'upcoming' ? mockUpcoming : mockPast;
+  const rides = (tab === 'upcoming' ? mockUpcoming : mockPast).filter(ride => {
+    if (tab === 'upcoming') {
+      return statusFilters[ride.status as keyof typeof statusFilters];
+    } else {
+      // For past, only filter if status is Confirmed, Active, or Pending
+      if (['Confirmed', 'Active', 'Pending'].includes(ride.status)) {
+        return statusFilters[ride.status as keyof typeof statusFilters];
+      }
+      return true;
+    }
+  });
 
   const handleCancelRide = (rideId: number, rideName: string) => {
     Alert.alert(
@@ -143,9 +155,41 @@ const MyRidesScreen = ({ navigation }: any) => {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text  style={styles.title}>My Rides</Text >
-        <Text  style={styles.subtitle}>Track your ride history</Text >
+        <View style={{ flex: 1 }}>
+          <Text style={styles.title}>My Rides</Text>
+          <Text style={styles.subtitle}>Track your ride history</Text>
+        </View>
+        <TouchableOpacity onPress={() => setFilterModalVisible(true)} style={styles.filterButton}>
+          <IconButton icon="filter" size={24} iconColor={COLORS.accent} />
+        </TouchableOpacity>
       </View>
+
+      {/* Filter Modal */}
+      <Modal
+        visible={filterModalVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setFilterModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Filter by Status</Text>
+            {(['Confirmed', 'Active', 'Pending'] as const).map((status) => (
+              <View key={status} style={styles.checkboxRow}>
+                <Checkbox
+                  status={statusFilters[status] ? 'checked' : 'unchecked'}
+                  onPress={() => setStatusFilters(f => ({ ...f, [status]: !f[status] }))}
+                  color={COLORS.accent}
+                />
+                <Text style={styles.checkboxLabel}>{status}</Text>
+              </View>
+            ))}
+            <Button mode="contained" style={styles.applyButton} onPress={() => setFilterModalVisible(false)}>
+              Apply
+            </Button>
+          </View>
+        </View>
+      </Modal>
 
       <SegmentedButtons
         value={tab}
@@ -284,16 +328,24 @@ const styles = StyleSheet.create({
     padding: scale(24),
     paddingBottom: verticalScale(16),
     backgroundColor: COLORS.primary,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   title: {
     fontSize: moderateScale(24),
     fontFamily: 'Montserrat-Bold',
-    color: COLORS.secondary,
+    color: COLORS.accent,
+    marginBottom: 0,
+    textAlign: 'left',
   },
   subtitle: {
-    fontSize: moderateScale(16),
-    fontFamily: 'Montserrat-Regular',
+    fontSize: moderateScale(15),
     color: COLORS.textSecondary,
+    fontFamily: 'Montserrat-Regular',
+    marginBottom: 12,
+    marginTop: 2,
+    textAlign: 'left',
   },
   segmentedButtons: {
     marginHorizontal: scale(24),
@@ -420,6 +472,45 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     marginTop: verticalScale(8),
     textAlign: 'center',
+  },
+  filterButton: {
+    marginLeft: 8,
+    alignSelf: 'center',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: COLORS.primary,
+    borderRadius: 16,
+    padding: 24,
+    width: 300,
+    alignItems: 'center',
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontFamily: 'Montserrat-Bold',
+    marginBottom: 16,
+    color: COLORS.secondary,
+  },
+  checkboxRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  checkboxLabel: {
+    fontSize: 16,
+    fontFamily: 'Montserrat-Regular',
+    color: COLORS.secondary,
+    marginLeft: 8,
+  },
+  applyButton: {
+    marginTop: 12,
+    borderRadius: 16,
+    backgroundColor: COLORS.accent,
   },
 });
 
