@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, StyleSheet, ScrollView, SafeAreaView } from 'react-native';
+import { View, StyleSheet, ScrollView } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Text, Button, Card, Avatar, Chip, Divider } from 'react-native-paper';
 import Header from '../../components/Header';
 import { COLORS } from '../../constants/colors';

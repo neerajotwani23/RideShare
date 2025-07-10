@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, SafeAreaView, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, TouchableOpacity } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Text, HelperText, Divider, TextInput } from 'react-native-paper';
 import { useAuth } from '../../context/AuthContext';
 import { COLORS } from '../../constants/colors';
