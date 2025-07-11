@@ -3,6 +3,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Icon from '../components/Icon';
+import { useSafeAreaInsets } from '../hooks/useSafeAreaInsets';
 
 // Auth Screens
 import SplashScreen from '../screens/Auth/SplashScreen';
@@ -93,6 +94,8 @@ function MyRidesStack() {
 
 // Passenger Tab Navigator
 function PassengerTabs() {
+  const { getTabBarHeight, getTabBarPaddingBottom } = useSafeAreaInsets();
+  
   return (
     <Tab.Navigator 
       initialRouteName="Find Ride"
@@ -102,8 +105,8 @@ function PassengerTabs() {
           borderTopWidth: 1,
           borderTopColor: '#E5E5EA',
           paddingTop: 8,
-          paddingBottom: 8,
-          height: 60,
+          paddingBottom: getTabBarPaddingBottom(), // Use utility function
+          height: getTabBarHeight(), // Use utility function
         },
         tabBarActiveTintColor: '#248CFE',
         tabBarInactiveTintColor: '#8E8E93',
@@ -155,6 +158,8 @@ function PassengerTabs() {
 
 // Driver Tab Navigator
 function DriverTabs() {
+  const { getTabBarHeight, getTabBarPaddingBottom } = useSafeAreaInsets();
+  
   return (
     <Tab.Navigator
       initialRouteName="Post Ride"
@@ -164,8 +169,8 @@ function DriverTabs() {
           borderTopWidth: 1,
           borderTopColor: '#E5E5EA',
           paddingTop: 8,
-          paddingBottom: 8,
-          height: 60,
+          paddingBottom: getTabBarPaddingBottom(), // Use utility function
+          height: getTabBarHeight(), // Use utility function
         },
         tabBarActiveTintColor: '#248CFE',
         tabBarInactiveTintColor: '#8E8E93',

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, SafeAreaView, TouchableOpacity, Dimensions, Platform, ScrollView } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Dimensions, Platform, ScrollView } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 import { Text, Card, Divider, Chip, TextInput, Switch } from 'react-native-paper';

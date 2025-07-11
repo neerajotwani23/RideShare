@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, SafeAreaView, Platform, TouchableOpacity, Dimensions } from 'react-native';
+import { View, StyleSheet, ScrollView, Platform, TouchableOpacity, Dimensions } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Text, TextInput, Button, Switch, HelperText, Card } from 'react-native-paper';
 import Icon from '../../components/Icon';
 import DateTimePicker from '@react-native-community/datetimepicker';

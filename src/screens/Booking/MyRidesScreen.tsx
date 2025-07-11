@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, ScrollView, StyleSheet, SafeAreaView, Alert, Modal, TouchableOpacity } from 'react-native';
+import { View, ScrollView, StyleSheet, Alert, Modal, TouchableOpacity } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Text , Button, Card, SegmentedButtons, Chip, IconButton, Checkbox } from 'react-native-paper';
 import { LocationIcon, LocationCheckIcon, ClockIcon, UserIcon, UsersIcon } from '../../components/icons';
 import { COLORS } from '../../constants/colors';
