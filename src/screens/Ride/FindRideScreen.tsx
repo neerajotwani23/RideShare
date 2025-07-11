@@ -91,7 +91,7 @@ const FindRideScreen = ({ navigation }: any) => {
           <Text style={styles.mapTitle}>Map Integration</Text>
           <Text style={styles.mapSubtext}>Live location tracking will be displayed here</Text>
         </View>
-      </View>
+        </View>
       <View style={styles.absoluteSheet}>
         <View style={styles.bottomSheet}>
           <View style={styles.dragHandle} />
@@ -130,18 +130,18 @@ const FindRideScreen = ({ navigation }: any) => {
 
             <Text style={styles.sectionTitle}>When do you want to travel?</Text>
             
-            <View style={styles.toggleRow}>
-              <ToggleButton
-                label="Right Now"
-                isActive={rideType === 'now'}
-                onPress={() => setRideType('now')}
-              />
-              <ToggleButton
-                label="Schedule"
-                isActive={rideType === 'schedule'}
-                onPress={() => setRideType('schedule')}
-              />
-            </View>
+          <View style={styles.toggleRow}>
+            <ToggleButton
+              label="Right Now"
+              isActive={rideType === 'now'}
+              onPress={() => setRideType('now')}
+            />
+            <ToggleButton
+              label="Schedule"
+              isActive={rideType === 'schedule'}
+              onPress={() => setRideType('schedule')}
+            />
+                  </View>
 
             {rideType === 'now' && (
               <Card style={styles.nowCard}>
@@ -169,28 +169,28 @@ const FindRideScreen = ({ navigation }: any) => {
                   <Text style={styles.scheduleTitle}>Select Date & Time</Text>
                   
                   <View style={styles.timeRow}>
-                    <TouchableOpacity 
+                  <TouchableOpacity 
                       style={[styles.dateTimeButton, styles.halfInput]} 
-                      onPress={() => setShowDatePicker(true)}
-                    >
+                    onPress={() => setShowDatePicker(true)}
+                  >
                       <View style={styles.dateTimeContent}>
                         <Icon name="calendar" size={20} color="#248CFE" />
                         <Text style={styles.dateTimeLabel}>Date</Text>
                         <Text style={styles.dateTimeValue}>{formatDate(date)}</Text>
                       </View>
-                    </TouchableOpacity>
+                  </TouchableOpacity>
                     
-                    <TouchableOpacity 
+                  <TouchableOpacity 
                       style={[styles.dateTimeButton, styles.halfInput]} 
-                      onPress={() => setShowTimePicker(true)}
-                    >
+                    onPress={() => setShowTimePicker(true)}
+                  >
                       <View style={styles.dateTimeContent}>
                         <Icon name="clock-outline" size={20} color="#248CFE" />
                         <Text style={styles.dateTimeLabel}>Time</Text>
                         <Text style={styles.dateTimeValue}>{formatTime(time)}</Text>
                       </View>
-                    </TouchableOpacity>
-                  </View>
+              </TouchableOpacity>
+            </View>
                 </Card.Content>
               </Card>
             )}
@@ -216,20 +216,20 @@ const FindRideScreen = ({ navigation }: any) => {
                   <View style={styles.preferenceContent}>
                     <Icon name="music" size={20} color="#FF9500" />
                     <Text style={styles.preferenceText}>Music Allowed</Text>
-                  </View>
+            </View>
                   <Switch 
                     value={music} 
                     onValueChange={setMusic}
                     trackColor={{ false: COLORS.border, true: '#248CFE' }}
                     thumbColor={COLORS.primary}
                   />
-                </View>
+                    </View>
                 
                 <View style={styles.preferenceItem}>
                   <View style={styles.preferenceContent}>
                     <Icon name="smoking-off" size={20} color="#248CFE" />
                     <Text style={styles.preferenceText}>No Smoking</Text>
-                  </View>
+                    </View>
                   <Switch 
                     value={!smoking} 
                     onValueChange={(value) => setSmoking(!value)}
@@ -245,7 +245,7 @@ const FindRideScreen = ({ navigation }: any) => {
             </TouchableOpacity>
           </View>
           </ScrollView>
-        </View>
+              </View>
         {showDatePicker && (
           <DateTimePicker
             value={date}
