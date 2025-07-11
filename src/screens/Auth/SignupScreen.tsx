@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Image, Dimensions } from 'react-native';
-import { Text, TextInput, Button, IconButton, Menu, Card } from 'react-native-paper';
+import { View, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Image, Dimensions, Alert } from 'react-native';
+import { Text, TextInput, Button, IconButton, Menu, Card, ActivityIndicator } from 'react-native-paper';
 import { isValidPhoneNumber } from 'libphonenumber-js';
 import { useAuth } from '../../context/AuthContext';
 import { COLORS } from '../../constants/colors';
@@ -28,7 +28,7 @@ const SignupScreen = ({ navigation }: any) => {
   const [cnicError, setCnicError] = useState('');
   const [formError, setFormError] = useState('');
 
-  const { signup } = useAuth();
+  const { signup, isLoading } = useAuth();
 
   const countries = [
     { code: 'PK', callingCode: '+92', flag: 'PK', name: 'Pakistan' },
@@ -111,23 +111,45 @@ const SignupScreen = ({ navigation }: any) => {
   };
 
   const validateForm = () => {
-    if (!firstName.trim()) return false;
-    if (!lastName.trim()) return false;
-    if (!email.includes('@')) return false;
-    if (phoneError || !phoneNumber.trim()) return false;
-    if (cnicError || cnic.replace(/\D/g, '').length !== 13) return false;
-    if (password.length < 6) return false;
-    if (password !== confirmPassword) return false;
-    return true;
+    return (
+      firstName.trim() &&
+      lastName.trim() &&
+      email.trim() &&
+      password.trim() &&
+      confirmPassword.trim() &&
+      !phoneError &&
+      !cnicError &&
+      password === confirmPassword
+    );
   };
 
-  const handleSignup = () => {
-    if (validateForm()) {
-      setFormError('');
-      signup();
-      navigation.replace('RoleSelection');
-    } else {
-      setFormError('Please fill all fields correctly to create an account.');
+  const handleSignup = async () => {
+    if (!validateForm()) {
+      setFormError('Please fill all required fields correctly.');
+      return;
+    }
+
+    const userData = {
+      first_name: firstName,
+      last_name: lastName,
+      email,
+      password,
+      user_type: 'passenger', // Hardcoded as per discussion
+      phone_no: `${selectedCountry.callingCode}${phoneNumber}`,
+      cnic,
+    };
+    
+    setFormError('');
+
+    try {
+      await signup(userData);
+      Alert.alert(
+        'Signup Successful',
+        'Your account has been created. Please log in.',
+        [{ text: 'OK', onPress: () => navigation.navigate('Login') }]
+      );
+    } catch (e: any) {
+      setFormError(e.message || 'An error occurred during signup.');
     }
   };
 
@@ -310,16 +332,20 @@ const SignupScreen = ({ navigation }: any) => {
             />
 
             {/* Sign Up Button */}
-            <Button
-              mode="contained"
-              onPress={handleSignup}
-              style={styles.signupButton}
-              contentStyle={styles.buttonContent}
-              labelStyle={styles.buttonLabel}
-              disabled={!validateForm()}
-            >
-              Create Account
-            </Button>
+            {isLoading ? (
+              <ActivityIndicator animating={true} color={COLORS.primary} style={styles.signupButton} />
+            ) : (
+              <Button
+                mode="contained"
+                onPress={handleSignup}
+                style={styles.signupButton}
+                contentStyle={styles.buttonContent}
+                labelStyle={styles.buttonLabel}
+                disabled={!validateForm() || isLoading}
+              >
+                Create Account
+              </Button>
+            )}
 
             <View style={styles.dividerContainer}>
               <View style={styles.divider} />

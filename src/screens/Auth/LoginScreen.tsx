@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, SafeAreaView, TouchableOpacity } from 'react-native';
-import { Text, HelperText, Divider, TextInput } from 'react-native-paper';
+import { Text, HelperText, Divider, TextInput, ActivityIndicator } from 'react-native-paper';
 import { useAuth } from '../../context/AuthContext';
 import { COLORS } from '../../constants/colors';
 import { CustomTextInput, CustomButton, FormCard, Icon } from '../../components';
@@ -9,7 +9,7 @@ const LoginScreen = ({ navigation }: any) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const { login } = useAuth();
+  const { login, isLoading } = useAuth();
 
   const validate = () => {
     if (!email.trim()) {
@@ -28,9 +28,14 @@ const LoginScreen = ({ navigation }: any) => {
     return true;
   };
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (validate()) {
-      login({ email, password });
+      try {
+        await login({ email, password });
+        // Navigation will be handled by AuthContext state change
+      } catch (e: any) {
+        setError(e.message || 'An error occurred during login.');
+      }
     }
   };
 
@@ -69,12 +74,16 @@ const LoginScreen = ({ navigation }: any) => {
 
             {error ? <HelperText type="error" visible style={styles.errorText}>{error}</HelperText> : null}
 
-          <CustomButton 
-              onPress={handleLogin} 
-              style={styles.loginButton}
-            >
-              Log In
-          </CustomButton>
+          {isLoading ? (
+            <ActivityIndicator animating={true} color={COLORS.primary} style={styles.loginButton} />
+          ) : (
+            <CustomButton 
+                onPress={handleLogin} 
+                style={styles.loginButton}
+              >
+                Log In
+            </CustomButton>
+          )}
 
             <View style={styles.dividerContainer}>
             <Divider style={styles.divider} />

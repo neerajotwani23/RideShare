@@ -156,8 +156,8 @@ const MyRidesScreen = ({ navigation }: any) => {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <View style={{ flex: 1 }}>
-          <Text style={styles.title}>My Rides</Text>
-          <Text style={styles.subtitle}>Track your ride history</Text>
+        <Text style={styles.title}>My Rides</Text>
+        <Text style={styles.subtitle}>Track your ride history</Text>
         </View>
         <TouchableOpacity onPress={() => setFilterModalVisible(true)} style={styles.filterButton}>
           <IconButton icon="filter" size={24} iconColor={COLORS.accent} />
@@ -261,7 +261,7 @@ const MyRidesScreen = ({ navigation }: any) => {
                   </View>
                   <View style={{flexDirection: 'column' }}>
                   <View style={{ justifyContent: 'flex-start', alignItems: 'center', marginLeft: 12, marginBottom: 8 }}>
-                      <Chip
+                      <Chip 
                         icon={getRideTypeIcon(ride.type)}
                         style={[styles.typeChip, { backgroundColor: getRideTypeColor(ride.type) + '20' }]}
                         textStyle={[styles.typeText, { color: getRideTypeColor(ride.type) }]}
