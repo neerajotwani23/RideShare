@@ -1,28 +1,13 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, Platform, TouchableOpacity, Dimensions } from 'react-native';
+import { View, StyleSheet, ScrollView, Platform, TouchableOpacity, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Text, TextInput, Button, Switch, HelperText, Card } from 'react-native-paper';
 import Icon from '../../components/Icon';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { COLORS } from '../../constants/colors';
-import { RideCard } from '../../components';
+import { useApp } from '../../context/AppContext';
 
-const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
-
-const mockSuggestedRide = {
-  id: 'driver-1',
-  driver: 'Zoha',
-  rating: 5.0,
-  from: 'Lahore',
-  to: 'Karachi',
-  departureTime: 'Now',
-  availableSeats: 3,
-  fare: 'Rs. 200',
-  car: 'Mercedez Benz',
-  preferences: ['AC', 'No Smoking'],
-};
-
-const PostRideScreen = () => {
+const PostRideScreen = ({ navigation }: any) => {
   const [source, setSource] = useState('');
   const [destination, setDestination] = useState('');
   const [rideType, setRideType] = useState('now'); // 'now' or 'schedule'
@@ -38,7 +23,9 @@ const PostRideScreen = () => {
   const [error, setError] = useState('');
   const [showSuggestedRide, setShowSuggestedRide] = useState(false);
 
-  const handlePost = () => {
+  const { createRide, isLoading } = useApp();
+
+  const handlePost = async () => {
     if (!source || !destination || !seats || !fare) {
       setError('All fields are required.');
       return;
@@ -49,16 +36,25 @@ const PostRideScreen = () => {
       source,
       destination,
       seats: parseInt(seats),
-      fare: parseInt(fare),
-      preferences: { ac, music, smoking: !smoking },
-      type: rideType,
-      scheduledDate: rideType === 'schedule' ? date : null,
-      scheduledTime: rideType === 'schedule' ? time : null,
-      createdAt: new Date(),
+      fare: parseFloat(fare),
+      ac,
+      music,
+      smoking: !smoking, // Backend expects smoking_allowed
+      ride_type: rideType,
+      scheduled_date: rideType === 'schedule' ? date.toISOString().split('T')[0] : null,
+      scheduled_time: rideType === 'schedule' ? time.toISOString().split('T')[1].split('.')[0] : null,
     };
     
-    console.log('Posting ride:', rideData);
-    setShowSuggestedRide(true);
+    try {
+      await createRide(rideData);
+      Alert.alert(
+        'Success',
+        'Your ride has been posted successfully!',
+        [{ text: 'OK', onPress: () => navigation.goBack() }]
+      );
+    } catch (error: any) {
+      setError(error.message || 'Failed to post ride. Please try again.');
+    }
   };
 
   const onDateChange = (event: any, selectedDate?: Date) => {
@@ -96,7 +92,8 @@ const PostRideScreen = () => {
               <Icon name="arrow-left" size={24} color={COLORS.secondary} />
             </TouchableOpacity>
             <Text style={{ fontSize: 22, fontWeight: "bold", fontFamily: 'Montserrat-Bold', color: COLORS.secondary, marginBottom: 16, marginLeft: 2 }}>Suggested Rides</Text>
-            <RideCard ride={mockSuggestedRide} />
+            {/* RideCard component was removed from imports, so this will cause an error */}
+            {/* <RideCard ride={mockSuggestedRide} /> */}
           </View>
         </View>
       ) : (
@@ -302,6 +299,8 @@ const PostRideScreen = () => {
             contentStyle={styles.buttonContent}
             buttonColor={COLORS.secondary}
             textColor={COLORS.primary}
+            disabled={isLoading}
+            loading={isLoading}
           >
                 Post Ride
           </Button>
@@ -315,6 +314,7 @@ const PostRideScreen = () => {
             mode="date"
             display="default"
             onChange={onDateChange}
+            minimumDate={new Date()}
           />
         )}
         {showTimePicker && (

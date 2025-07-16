@@ -247,7 +247,7 @@ const WalletIcon = ({ color, size }: { color: string; size: number }) => (
 
 // Main App Navigator
 const AppNavigator = () => {
-  const { isAuthenticated, roleSelected, profileSetupComplete, currentRole } = useAuth();
+  const { isAuthenticated, roleSelected, profileSetupComplete, vehicleDetailsComplete, currentRole } = useAuth();
 
   return (
     <NavigationContainer>
@@ -257,6 +257,7 @@ const AppNavigator = () => {
           <>
             <Stack.Screen name="Splash" component={SplashScreen} />
             <Stack.Screen name="Login" component={LoginScreen} />
+            <Stack.Screen name="RoleSelection" component={RoleSelectionScreen} />
             <Stack.Screen name="Signup" component={SignupScreen} />
             <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
           </>
@@ -264,9 +265,13 @@ const AppNavigator = () => {
           // Role Selection
           <Stack.Screen name="RoleSelection" component={RoleSelectionScreen} />
         ) : !profileSetupComplete ? (
-          // Profile Setup Flow
+          // Profile Setup Flow (Required for drivers, optional for passengers)
           <>
             <Stack.Screen name="ProfileSetup" component={ProfileSetupScreen} />
+          </>
+        ) : currentRole === 'driver' && !vehicleDetailsComplete ? (
+          // Vehicle Details Flow (Required for drivers only)
+          <>
             <Stack.Screen name="VehicleDetails" component={VehicleDetailsScreen} />
           </>
         ) : (

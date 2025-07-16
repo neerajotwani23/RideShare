@@ -6,13 +6,18 @@ interface AuthContextType {
   isAuthenticated: boolean;
   roleSelected: boolean;
   profileSetupComplete: boolean;
+  vehicleDetailsComplete: boolean;
   currentRole: 'driver' | 'passenger' | null;
+  selectedRoleForSignup: 'driver' | 'passenger' | null;
   user: any;
   isLoading: boolean;
   login: (credentials: any) => Promise<void>;
   signup: (userData: any) => Promise<any>;
   selectRole: (role: 'driver' | 'passenger') => void;
+  selectRoleForSignup: (role: 'driver' | 'passenger') => void;
   completeProfileSetup: () => void;
+  completeVehicleDetails: () => void;
+  skipProfileSetup: () => void;
   logout: () => Promise<void>;
 }
 
@@ -22,7 +27,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [roleSelected, setRoleSelected] = useState(false);
   const [profileSetupComplete, setProfileSetupComplete] = useState(false);
+  const [vehicleDetailsComplete, setVehicleDetailsComplete] = useState(false);
   const [currentRole, setCurrentRole] = useState<'driver' | 'passenger' | null>(null);
+  const [selectedRoleForSignup, setSelectedRoleForSignup] = useState<'driver' | 'passenger' | null>(null);
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -32,15 +39,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       try {
         const token = await AsyncStorage.getItem('accessToken');
         const userData = await AsyncStorage.getItem('user');
+        const profileSetup = await AsyncStorage.getItem('profileSetupComplete');
+        const vehicleDetails = await AsyncStorage.getItem('vehicleDetailsComplete');
+        
         if (token && userData) {
           const parsedUser = JSON.parse(userData);
           setUser(parsedUser);
           setIsAuthenticated(true);
-          // Assuming role selection and profile setup are stored or derived
           setCurrentRole(parsedUser.user_type);
-          setRoleSelected(!!parsedUser.user_type);
-          // This might need more specific logic based on your app's flow
-          setProfileSetupComplete(true); 
+          setRoleSelected(true);
+          setProfileSetupComplete(profileSetup === 'true');
+          setVehicleDetailsComplete(vehicleDetails === 'true');
         }
       } catch (error) {
         console.error('Failed to load auth state', error);
@@ -62,8 +71,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setIsAuthenticated(true);
       setCurrentRole(data.user.user_type);
       setRoleSelected(true);
-      // Logic to determine if profile setup is complete should be added here
-      setProfileSetupComplete(true); // Placeholder
+      
+      // Check if user has completed onboarding
+      const profileSetup = await AsyncStorage.getItem('profileSetupComplete');
+      const vehicleDetails = await AsyncStorage.getItem('vehicleDetailsComplete');
+      setProfileSetupComplete(profileSetup === 'true');
+      setVehicleDetailsComplete(vehicleDetails === 'true');
     } catch (error) {
       logout()
       throw error;
@@ -88,10 +101,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setRoleSelected(true);
     setCurrentRole(role);
     setProfileSetupComplete(false);
+    setVehicleDetailsComplete(false);
   };
 
-  const completeProfileSetup = () => {
+  const selectRoleForSignup = (role: 'driver' | 'passenger') => {
+    setSelectedRoleForSignup(role);
+  };
+
+  const completeProfileSetup = async () => {
     setProfileSetupComplete(true);
+    await AsyncStorage.setItem('profileSetupComplete', 'true');
+  };
+
+  const completeVehicleDetails = async () => {
+    setVehicleDetailsComplete(true);
+    await AsyncStorage.setItem('vehicleDetailsComplete', 'true');
+  };
+
+  const skipProfileSetup = async () => {
+    // Only passengers can skip profile setup
+    if (currentRole === 'passenger') {
+      setProfileSetupComplete(true);
+      await AsyncStorage.setItem('profileSetupComplete', 'true');
+    }
   };
 
   const logout = async () => {
@@ -99,6 +131,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       await AsyncStorage.removeItem('accessToken');
       await AsyncStorage.removeItem('user');
+      await AsyncStorage.removeItem('profileSetupComplete');
+      await AsyncStorage.removeItem('vehicleDetailsComplete');
     } catch (error) {
         console.error('Failed to logout', error);
     }
@@ -106,7 +140,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setIsAuthenticated(false);
         setRoleSelected(false);
         setProfileSetupComplete(false);
+        setVehicleDetailsComplete(false);
         setCurrentRole(null);
+        setSelectedRoleForSignup(null);
         setUser(null);
         setIsLoading(false);
     }
@@ -117,23 +153,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       isAuthenticated, 
       roleSelected, 
       profileSetupComplete,
+      vehicleDetailsComplete,
       currentRole,
+      selectedRoleForSignup,
       user,
       isLoading,
       login, 
       signup, 
       selectRole,
+      selectRoleForSignup,
       completeProfileSetup,
+      completeVehicleDetails,
+      skipProfileSetup,
       logout
     }}>
       {children}
-      
     </AuthContext.Provider>
   );
 };
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) throw new Error('useAuth must be used within an AuthProvider');
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
   return context;
 }; 

@@ -30,7 +30,7 @@ const SignupScreen = ({ navigation }: any) => {
   const [cnicError, setCnicError] = useState('');
   const [formError, setFormError] = useState('');
 
-  const { signup, isLoading } = useAuth();
+  const { signup, isLoading, selectedRoleForSignup } = useAuth();
 
   const countries = [
     { code: 'PK', callingCode: '+92', flag: 'PK', name: 'Pakistan' },
@@ -131,17 +131,22 @@ const SignupScreen = ({ navigation }: any) => {
       return;
     }
 
+    if (!selectedRoleForSignup) {
+      setFormError('Please select a role first.');
+      return;
+    }
+
     const userData = {
       first_name: firstName,
       last_name: lastName,
       email,
       password,
-      user_type: 'passenger', // Hardcoded as per discussion
+      user_type: selectedRoleForSignup,
       phone_no: `${selectedCountry.callingCode}${phoneNumber}`,
       cnic,
     };
     
-    setFormError('');
+      setFormError('');
 
     try {
       await signup(userData);
@@ -151,7 +156,25 @@ const SignupScreen = ({ navigation }: any) => {
         [{ text: 'OK', onPress: () => navigation.navigate('Login') }]
       );
     } catch (e: any) {
-      setFormError(e.message || 'An error occurred during signup.');
+      let message = 'An error occurred during signup.';
+      if (typeof e === 'string') {
+        message = e;
+      } else if (e && typeof e === 'object') {
+        if (e.message) {
+          message = e.message;
+        } else if (e.detail) {
+          message = e.detail;
+        } else if (Array.isArray(e) && e[0]?.msg) {
+          message = e[0].msg;
+    } else {
+          try {
+            message = JSON.stringify(e);
+          } catch {
+            message = 'An error occurred during signup.';
+          }
+        }
+      }
+      setFormError(message);
     }
   };
 
@@ -174,7 +197,7 @@ const SignupScreen = ({ navigation }: any) => {
         <View style={styles.logoSection}>
           <TouchableOpacity 
             style={styles.backButton}
-            onPress={() => navigation.navigate('Login')}
+            onPress={() => navigation.navigate('RoleSelection')}
           >
             <IconButton
               icon="arrow-left"
@@ -337,16 +360,16 @@ const SignupScreen = ({ navigation }: any) => {
             {isLoading ? (
               <ActivityIndicator animating={true} color={COLORS.primary} style={styles.signupButton} />
             ) : (
-              <Button
-                mode="contained"
-                onPress={handleSignup}
-                style={styles.signupButton}
-                contentStyle={styles.buttonContent}
-                labelStyle={styles.buttonLabel}
+            <Button
+              mode="contained"
+              onPress={handleSignup}
+              style={styles.signupButton}
+              contentStyle={styles.buttonContent}
+              labelStyle={styles.buttonLabel}
                 disabled={!validateForm() || isLoading}
-              >
-                Create Account
-              </Button>
+            >
+              Create Account
+            </Button>
             )}
 
             <View style={styles.dividerContainer}>

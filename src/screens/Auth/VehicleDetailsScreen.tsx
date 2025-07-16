@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, ScrollView, TouchableOpacity, Alert, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Text, TextInput, Button, IconButton } from 'react-native-paper';
+import { Text, TextInput, Button, IconButton, ActivityIndicator } from 'react-native-paper';
 import { useAuth } from '../../context/AuthContext';
+import { useApp } from '../../context/AppContext';
 import { COLORS } from '../../constants/colors';
 
 const VehicleDetailsScreen = ({ navigation }: any) => {
@@ -14,7 +15,9 @@ const VehicleDetailsScreen = ({ navigation }: any) => {
   const [drivingLicenseBack, setDrivingLicenseBack] = useState<string | null>(null);
   const [vehicleRegistration, setVehicleRegistration] = useState<string | null>(null);
   const [errors, setErrors] = useState<{[key: string]: string}>({});
-  const { completeProfileSetup } = useAuth();
+  
+  const { completeVehicleDetails, logout } = useAuth();
+  const { createVehicle, isLoading } = useApp();
 
   const handleDocumentUpload = (documentType: 'licenseFront' | 'licenseBack' | 'vehicleReg') => {
     Alert.alert(
@@ -79,16 +82,36 @@ const VehicleDetailsScreen = ({ navigation }: any) => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSave = () => {
-    if (validateForm()) {
-      // Save vehicle details and complete profile setup
+  const handleSave = async () => {
+    if (!validateForm()) {
+      return;
+    }
+
+    try {
+      // Create vehicle in backend
+      const vehicleData = {
+        make: vehicleMake.trim(),
+        model: vehicleModel.trim(),
+        color: vehicleColor.trim(),
+        license_plate: licensePlate.trim(),
+        driving_license_front: drivingLicenseFront,
+        driving_license_back: drivingLicenseBack,
+        vehicle_registration: vehicleRegistration,
+      };
+
+      await createVehicle(vehicleData);
+      
+      // Complete vehicle details setup
+      await completeVehicleDetails();
+      
       Alert.alert(
         'Success',
         'Vehicle details saved successfully! Your account will be reviewed and activated within 24 hours.',
-        [
-          { text: 'OK', onPress: () => completeProfileSetup() }
-        ]
+        [{ text: 'OK' }]
       );
+      // Navigation will be handled automatically by AppNavigator
+    } catch (error: any) {
+      Alert.alert('Error', error.message || 'Failed to save vehicle details. Please try again.');
     }
   };
 
@@ -117,8 +140,16 @@ const VehicleDetailsScreen = ({ navigation }: any) => {
     if (navigation.canGoBack()) {
       navigation.goBack();
     } else {
-      // If no previous screen, navigate to the main tab that contains profile
-      navigation.navigate('MainTabs', { screen: 'Profile' });
+      // If no previous screen, this means we're in initial setup flow
+      // Show exit confirmation
+      Alert.alert(
+        'Exit Setup',
+        'Are you sure you want to exit? You will be logged out.',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Exit', style: 'destructive', onPress: logout }
+        ]
+      );
     }
   };
 
@@ -206,7 +237,7 @@ const VehicleDetailsScreen = ({ navigation }: any) => {
           </View>
 
           <View style={styles.inputContainer}>
-            <Text style={styles.inputLabel}>License Plate Number *</Text>
+            <Text style={styles.inputLabel}>License Plate *</Text>
             <TextInput
               value={licensePlate}
               onChangeText={handleLicensePlateChange}
@@ -216,74 +247,65 @@ const VehicleDetailsScreen = ({ navigation }: any) => {
               activeOutlineColor={errors.licensePlate ? COLORS.error : COLORS.accent}
               contentStyle={styles.inputContent}
               outlineStyle={styles.inputOutline}
-              placeholder="ABC-1234"
+              placeholder="e.g., ABC-123"
               placeholderTextColor={COLORS.textSecondary}
-              maxLength={8}
               autoCapitalize="characters"
             />
             {errors.licensePlate ? <Text style={styles.errorText}>{errors.licensePlate}</Text> : null}
           </View>
 
+          {/* Document Upload Sections */}
           <View style={styles.documentsSection}>
             <Text style={styles.sectionTitle}>Required Documents</Text>
             
+            {/* Driving License Front */}
             <View style={styles.documentContainer}>
               <Text style={styles.documentLabel}>Driving License (Front) *</Text>
               <TouchableOpacity
-                style={[styles.documentUpload, errors.drivingLicenseFront ? styles.documentError : null]}
+                style={styles.documentUpload}
                 onPress={() => handleDocumentUpload('licenseFront')}
               >
                 {drivingLicenseFront ? (
-                  <View style={styles.documentPreview}>
-                    <Image source={{ uri: drivingLicenseFront }} style={styles.documentImage} />
-                    <Text style={styles.documentSuccess}>✓ Uploaded</Text>
-                  </View>
+                  <Image source={{ uri: drivingLicenseFront }} style={styles.documentImage} />
                 ) : (
-                  <View style={styles.documentPlaceholder}>
-                    <IconButton icon="camera" size={32} iconColor={COLORS.textSecondary} />
-                    <Text style={styles.documentText}>Tap to upload front side</Text>
+                  <View style={styles.uploadPlaceholder}>
+                    <Text style={styles.uploadText}>Upload Front</Text>
                   </View>
                 )}
               </TouchableOpacity>
               {errors.drivingLicenseFront ? <Text style={styles.errorText}>{errors.drivingLicenseFront}</Text> : null}
             </View>
 
+            {/* Driving License Back */}
             <View style={styles.documentContainer}>
               <Text style={styles.documentLabel}>Driving License (Back) *</Text>
               <TouchableOpacity
-                style={[styles.documentUpload, errors.drivingLicenseBack ? styles.documentError : null]}
+                style={styles.documentUpload}
                 onPress={() => handleDocumentUpload('licenseBack')}
               >
                 {drivingLicenseBack ? (
-                  <View style={styles.documentPreview}>
-                    <Image source={{ uri: drivingLicenseBack }} style={styles.documentImage} />
-                    <Text style={styles.documentSuccess}>✓ Uploaded</Text>
-                  </View>
+                  <Image source={{ uri: drivingLicenseBack }} style={styles.documentImage} />
                 ) : (
-                  <View style={styles.documentPlaceholder}>
-                    <IconButton icon="camera" size={32} iconColor={COLORS.textSecondary} />
-                    <Text style={styles.documentText}>Tap to upload back side</Text>
+                  <View style={styles.uploadPlaceholder}>
+                    <Text style={styles.uploadText}>Upload Back</Text>
                   </View>
                 )}
               </TouchableOpacity>
               {errors.drivingLicenseBack ? <Text style={styles.errorText}>{errors.drivingLicenseBack}</Text> : null}
             </View>
 
+            {/* Vehicle Registration */}
             <View style={styles.documentContainer}>
               <Text style={styles.documentLabel}>Vehicle Registration *</Text>
               <TouchableOpacity
-                style={[styles.documentUpload, errors.vehicleRegistration ? styles.documentError : null]}
+                style={styles.documentUpload}
                 onPress={() => handleDocumentUpload('vehicleReg')}
               >
                 {vehicleRegistration ? (
-                  <View style={styles.documentPreview}>
-                    <Image source={{ uri: vehicleRegistration }} style={styles.documentImage} />
-                    <Text style={styles.documentSuccess}>✓ Uploaded</Text>
-                  </View>
+                  <Image source={{ uri: vehicleRegistration }} style={styles.documentImage} />
                 ) : (
-                  <View style={styles.documentPlaceholder}>
-                    <IconButton icon="camera" size={32} iconColor={COLORS.textSecondary} />
-                    <Text style={styles.documentText}>Tap to upload vehicle card</Text>
+                  <View style={styles.uploadPlaceholder}>
+                    <Text style={styles.uploadText}>Upload Document</Text>
                   </View>
                 )}
               </TouchableOpacity>
@@ -300,8 +322,10 @@ const VehicleDetailsScreen = ({ navigation }: any) => {
           style={styles.saveButton}
           contentStyle={styles.buttonContent}
           labelStyle={styles.buttonLabel}
+          disabled={isLoading}
+          loading={isLoading}
         >
-          Submit for Verification
+          Save & Complete Setup
         </Button>
       </View>
     </SafeAreaView>
@@ -464,6 +488,15 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: 'Montserrat-SemiBold',
     color: COLORS.primary,
+  },
+  uploadPlaceholder: {
+    alignItems: 'center',
+    padding: 20,
+  },
+  uploadText: {
+    fontSize: 14,
+    fontFamily: 'Montserrat-Regular',
+    color: COLORS.textSecondary,
   },
 });
 

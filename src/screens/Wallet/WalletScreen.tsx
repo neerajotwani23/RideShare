@@ -1,116 +1,197 @@
-import React, { useState } from 'react';
-import { View, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Text, Card, Button, TextInput } from 'react-native-paper';
+import React, { useState, useEffect } from 'react';
+import { View, ScrollView, StyleSheet, SafeAreaView, TouchableOpacity, Alert } from 'react-native';
+import { Text, Card, Button, TextInput, ActivityIndicator } from 'react-native-paper';
 import { WalletIcon, CarIcon, RefreshIcon, CalendarIcon, AddIcon } from '../../components/icons';
 import { COLORS } from '../../constants/colors';
-
-const mockTransactions = [
-  { id: 1, desc: 'Ride to Campus', amount: -200, type: 'ride', date: '2024-01-15' },
-  { id: 2, desc: 'Added Balance', amount: 1000, type: 'topup', date: '2024-01-14' },
-  { id: 3, desc: 'Ride to Office', amount: -150, type: 'ride', date: '2024-01-13' },
-  { id: 4, desc: 'Refund - Cancelled Ride', amount: 200, type: 'refund', date: '2024-01-12' },
-];
+import { useApp } from '../../context/AppContext';
 
 const WalletScreen = () => {
-  const [balance, setBalance] = useState(650);
   const [addAmount, setAddAmount] = useState('');
+  const { 
+    walletBalance, 
+    transactions, 
+    addMoneyToWallet, 
+    refreshWalletBalance, 
+    refreshTransactions,
+    isLoading,
+    isRefreshing 
+  } = useApp();
 
-  const handleAdd = () => {
-    const amt = parseInt(addAmount, 10);
-    if (!isNaN(amt) && amt > 0) {
-      setBalance(balance + amt);
+  useEffect(() => {
+    refreshWalletBalance();
+    refreshTransactions();
+  }, []);
+
+  const handleAdd = async () => {
+    const amt = parseFloat(addAmount);
+    if (isNaN(amt) || amt <= 0) {
+      Alert.alert('Invalid Amount', 'Please enter a valid amount greater than 0.');
+      return;
+    }
+
+    try {
+      await addMoneyToWallet(amt);
       setAddAmount('');
+      Alert.alert('Success', `Rs. ${amt.toFixed(2)} has been added to your wallet.`);
+    } catch (error: any) {
+      Alert.alert('Error', error.message || 'Failed to add money to wallet.');
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-GB');
+  };
+
+  const getTransactionIcon = (type: string) => {
+    switch (type) {
+      case 'ride':
+        return <CarIcon size={24} color={COLORS.error} />;
+      case 'topup':
+        return <AddIcon size={24} color={COLORS.success} />;
+      case 'refund':
+        return <RefreshIcon size={24} color={COLORS.accent} />;
+      default:
+        return <WalletIcon size={24} color={COLORS.textSecondary} />;
+    }
+  };
+
+  const getTransactionColor = (type: string) => {
+    switch (type) {
+      case 'ride':
+        return COLORS.error;
+      case 'topup':
+        return COLORS.success;
+      case 'refund':
+        return COLORS.accent;
+      default:
+        return COLORS.textSecondary;
     }
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>My Wallet</Text>
-      </View>
-
-      <Card style={styles.balanceCard}>
-        <Card.Content style={styles.balanceContent}>
-          <View style={styles.balanceHeader}>
-            <Text style={styles.balanceLabel}>Current Balance</Text>
-            <TouchableOpacity>
-              <RefreshIcon size={20} color={COLORS.primary} />
-            </TouchableOpacity>
-          </View>
-          <View style={styles.balanceAmountContainer}>
-            <Text style={styles.balanceCurrency}>Rs.</Text>
-            <Text style={styles.balanceAmount}>{balance.toLocaleString()}</Text>
-          </View>
-          <Text style={styles.balanceSubtext}>Available for rides</Text>
-        </Card.Content>
-      </Card>
-
-      <Card style={styles.addMoneyCard}>
-        <Card.Content>
-          <Text style={styles.addMoneyTitle}>Add Money</Text>
-          <View style={styles.inputContainer}>
-            <Text style={styles.inputCurrency}>Rs.</Text>
-          <TextInput
-            label="Amount (Rs.)"
-            value={addAmount}
-            onChangeText={setAddAmount}
-            keyboardType="numeric"
-            style={styles.input}
-            mode="outlined"
-          />
-          </View>
-          <Button 
-            mode="contained" 
-            onPress={handleAdd} 
-            style={styles.addButton}
-            icon={() => <AddIcon size={18} color={COLORS.primary} />}
+      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+        {/* Header */}
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>Wallet</Text>
+          <TouchableOpacity 
+            style={styles.refreshButton}
+            onPress={() => {
+              refreshWalletBalance();
+              refreshTransactions();
+            }}
+            disabled={isRefreshing}
           >
-            Add Money
-          </Button>
-        </Card.Content>
-      </Card>
+            <RefreshIcon size={24} color={COLORS.accent} />
+          </TouchableOpacity>
+        </View>
 
-      <View style={styles.transactionsSection}>
-        <Text style={styles.sectionTitle}>Recent Transactions</Text>
-        <ScrollView style={styles.transactionsList}>
-          {mockTransactions.length === 0 ? (
+        {/* Balance Card */}
+        <Card style={styles.balanceCard}>
+          <Card.Content style={styles.balanceContent}>
+            <View style={styles.balanceHeader}>
+              <WalletIcon size={32} color={COLORS.accent} />
+              <Text style={styles.balanceTitle}>Current Balance</Text>
+            </View>
+            <Text style={styles.balanceAmount}>
+              Rs. {walletBalance.toFixed(2)}
+            </Text>
+            {isRefreshing && (
+              <ActivityIndicator size="small" color={COLORS.accent} style={styles.refreshIndicator} />
+            )}
+          </Card.Content>
+        </Card>
+
+        {/* Add Money Section */}
+        <Card style={styles.addMoneyCard}>
+          <Card.Content style={styles.addMoneyContent}>
+            <Text style={styles.sectionTitle}>Add Money</Text>
+            <View style={styles.addMoneyRow}>
+              <TextInput
+                style={styles.amountInput}
+                mode="outlined"
+                label="Amount (Rs.)"
+                value={addAmount}
+                onChangeText={setAddAmount}
+                keyboardType="numeric"
+                outlineColor={COLORS.border}
+                activeOutlineColor={COLORS.accent}
+                theme={{ roundness: 12 }}
+              />
+              <Button
+                mode="contained"
+                onPress={handleAdd}
+                style={styles.addButton}
+                contentStyle={styles.buttonContent}
+                labelStyle={styles.buttonLabel}
+                disabled={isLoading || !addAmount.trim()}
+                loading={isLoading}
+              >
+                Add
+              </Button>
+            </View>
+          </Card.Content>
+        </Card>
+
+        {/* Quick Add Buttons */}
+        <View style={styles.quickAddContainer}>
+          <Text style={styles.sectionTitle}>Quick Add</Text>
+          <View style={styles.quickAddButtons}>
+            {[100, 200, 500, 1000].map((amount) => (
+              <TouchableOpacity
+                key={amount}
+                style={styles.quickAddButton}
+                onPress={() => setAddAmount(amount.toString())}
+              >
+                <Text style={styles.quickAddText}>Rs. {amount}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+
+        {/* Transactions */}
+        <View style={styles.transactionsContainer}>
+          <Text style={styles.sectionTitle}>Recent Transactions</Text>
+          {isLoading ? (
+            <ActivityIndicator size="large" color={COLORS.accent} style={styles.loadingIndicator} />
+          ) : transactions.length === 0 ? (
             <Card style={styles.emptyCard}>
               <Card.Content style={styles.emptyContent}>
-                <WalletIcon size={48} color={COLORS.textSecondary} style={styles.emptyIcon} />
+                <WalletIcon size={48} color={COLORS.textSecondary} />
                 <Text style={styles.emptyText}>No transactions yet</Text>
                 <Text style={styles.emptySubtext}>Your transaction history will appear here</Text>
               </Card.Content>
             </Card>
           ) : (
-            mockTransactions.map(transaction => (
-              <Card key={transaction.id} style={styles.transactionCard}>
+            transactions.map((transaction, index) => (
+              <Card key={transaction.id || index} style={styles.transactionCard}>
                 <Card.Content style={styles.transactionContent}>
                   <View style={styles.transactionLeft}>
-                    <View style={[styles.transactionIconContainer, { backgroundColor: COLORS.lightGray }]}>
-                      {transaction.type === 'ride' && <CarIcon size={20} color={COLORS.textSecondary} />}
-                      {transaction.type === 'topup' && <AddIcon size={20} color={COLORS.secondary} />}
-                      {transaction.type === 'refund' && <RefreshIcon size={20} color={COLORS.textSecondary} />}
-                    </View>
-                    <View style={styles.transactionDetails}>
-                      <Text style={styles.transactionDesc}>{transaction.desc}</Text>
-                      <View style={styles.transactionDateContainer}>
-                        <CalendarIcon size={12} color={COLORS.textSecondary} />
-                      <Text style={styles.transactionDate}>{transaction.date}</Text>
-                      </View>
+                    {getTransactionIcon(transaction.type)}
+                    <View style={styles.transactionInfo}>
+                      <Text style={styles.transactionDesc}>{transaction.description}</Text>
+                      <Text style={styles.transactionDate}>
+                        {formatDate(transaction.created_at)}
+                      </Text>
                     </View>
                   </View>
-                  <View style={styles.transactionAmountContainer}>
-                    <Text style={styles.transactionAmount}>
-                      {transaction.amount > 0 ? '+' : '-'} Rs. {Math.abs(transaction.amount)}
-                  </Text>
+                  <View style={styles.transactionRight}>
+                    <Text style={[
+                      styles.transactionAmount,
+                      { color: getTransactionColor(transaction.type) }
+                    ]}>
+                      {transaction.amount > 0 ? '+' : ''}Rs. {transaction.amount.toFixed(2)}
+                    </Text>
+                    <Text style={styles.transactionType}>
+                      {transaction.type.charAt(0).toUpperCase() + transaction.type.slice(1)}
+                    </Text>
                   </View>
                 </Card.Content>
               </Card>
             ))
           )}
-        </ScrollView>
-      </View>
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 };
@@ -120,15 +201,25 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.primary,
   },
+  scrollView: {
+    flex: 1,
+  },
   header: {
-    padding: 24,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+    paddingTop: 24,
     paddingBottom: 16,
     backgroundColor: COLORS.primary,
   },
-  title: {
+  headerTitle: {
     fontSize: 24,
     fontFamily: 'Montserrat-Bold',
     color: COLORS.secondary,
+  },
+  refreshButton: {
+    padding: 8,
   },
   balanceCard: {
     marginHorizontal: 24,
@@ -143,24 +234,14 @@ const styles = StyleSheet.create({
   },
   balanceHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 8,
   },
-  balanceLabel: {
+  balanceTitle: {
     fontSize: 16,
     fontFamily: 'Montserrat-Medium',
     color: COLORS.textSecondary,
-  },
-  balanceAmountContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  balanceCurrency: {
-    fontSize: 32,
-    fontFamily: 'Montserrat-Bold',
-    color: COLORS.secondary,
-    marginRight: 4,
+    marginLeft: 8,
   },
   balanceAmount: {
     fontSize: 32,
@@ -168,10 +249,8 @@ const styles = StyleSheet.create({
     color: COLORS.secondary,
     marginBottom: 4,
   },
-  balanceSubtext: {
-    fontSize: 14,
-    fontFamily: 'Montserrat-Regular',
-    color: COLORS.textSecondary,
+  refreshIndicator: {
+    marginTop: 8,
   },
   addMoneyCard: {
     marginHorizontal: 24,
@@ -181,42 +260,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: COLORS.border,
   },
-  addMoneyTitle: {
-    fontSize: 18,
-    fontFamily: 'Montserrat-SemiBold',
-    color: COLORS.secondary,
-  },
-  inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  inputCurrency: {
-    fontSize: 18,
-    fontFamily: 'Montserrat-Bold',
-    color: COLORS.textSecondary,
-    marginRight: 4,
-    alignSelf: 'center',
-  },
-  input: {
-    flex: 1,
-    backgroundColor: COLORS.primary,
-    borderColor: COLORS.border,
-    borderRadius: 16,
-  },
-  addButton: {
-    borderRadius: 12,
-    backgroundColor: COLORS.secondary,
-    marginTop: 4,
-  },
-  addButtonLabel: {
-    color: COLORS.primary,
-    fontFamily: 'Montserrat-Bold',
-    fontSize: 16,
-  },
-  transactionsSection: {
-    marginHorizontal: 24,
-    marginBottom: 24,
+  addMoneyContent: {
+    padding: 24,
   },
   sectionTitle: {
     fontSize: 18,
@@ -224,8 +269,93 @@ const styles = StyleSheet.create({
     color: COLORS.secondary,
     marginBottom: 12,
   },
-  transactionsList: {
-    // maxHeight: 220, // Remove this line to allow natural scrolling
+  addMoneyRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  amountInput: {
+    flex: 1,
+    marginRight: 12,
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.border,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    activeOutlineColor: COLORS.accent,
+    outlineColor: COLORS.border,
+    theme: { roundness: 12 },
+  },
+  addButton: {
+    borderRadius: 12,
+    backgroundColor: COLORS.secondary,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+  },
+  buttonContent: {
+    height: 40,
+  },
+  buttonLabel: {
+    color: COLORS.primary,
+    fontFamily: 'Montserrat-Bold',
+    fontSize: 16,
+  },
+  quickAddContainer: {
+    marginHorizontal: 24,
+    marginBottom: 24,
+    borderRadius: 12,
+    backgroundColor: COLORS.primary,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  quickAddButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    paddingVertical: 12,
+  },
+  quickAddButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    backgroundColor: COLORS.lightGray,
+  },
+  quickAddText: {
+    fontSize: 16,
+    fontFamily: 'Montserrat-Medium',
+    color: COLORS.secondary,
+  },
+  transactionsContainer: {
+    marginHorizontal: 24,
+    marginBottom: 24,
+  },
+  loadingIndicator: {
+    marginTop: 20,
+  },
+  emptyCard: {
+    borderRadius: 12,
+    backgroundColor: COLORS.primary,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    alignItems: 'center',
+    marginTop: 24,
+  },
+  emptyContent: {
+    alignItems: 'center',
+    padding: 24,
+  },
+  emptyIcon: {
+    marginBottom: 12,
+  },
+  emptyText: {
+    fontSize: 16,
+    fontFamily: 'Montserrat-Bold',
+    color: COLORS.textSecondary,
+    marginBottom: 4,
+  },
+  emptySubtext: {
+    fontSize: 14,
+    fontFamily: 'Montserrat-Regular',
+    color: COLORS.disabled,
   },
   transactionCard: {
     marginBottom: 10,
@@ -254,7 +384,7 @@ const styles = StyleSheet.create({
     marginRight: 12,
     backgroundColor: COLORS.lightGray,
   },
-  transactionDetails: {
+  transactionInfo: {
     flex: 1,
   },
   transactionDesc: {
@@ -262,54 +392,25 @@ const styles = StyleSheet.create({
     fontFamily: 'Montserrat-Medium',
     color: COLORS.secondary,
   },
-  transactionDateContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 2,
-  },
   transactionDate: {
     fontSize: 12,
     fontFamily: 'Montserrat-Regular',
     color: COLORS.textSecondary,
-    marginLeft: 4,
+    marginTop: 2,
   },
-  transactionAmountContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    minWidth: 80,
-    justifyContent: 'flex-end',
+  transactionRight: {
+    alignItems: 'flex-end',
   },
   transactionAmount: {
     fontSize: 16,
     fontFamily: 'Montserrat-Bold',
     color: COLORS.secondary,
-    marginLeft: 4,
+    marginBottom: 2,
   },
-  emptyCard: {
-    borderRadius: 12,
-    backgroundColor: COLORS.primary,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    alignItems: 'center',
-    marginTop: 24,
-  },
-  emptyContent: {
-    alignItems: 'center',
-    padding: 24,
-  },
-  emptyIcon: {
-    marginBottom: 12,
-  },
-  emptyText: {
-    fontSize: 16,
-    fontFamily: 'Montserrat-Bold',
-    color: COLORS.textSecondary,
-    marginBottom: 4,
-  },
-  emptySubtext: {
-    fontSize: 14,
+  transactionType: {
+    fontSize: 12,
     fontFamily: 'Montserrat-Regular',
-    color: COLORS.disabled,
+    color: COLORS.textSecondary,
   },
 });
 

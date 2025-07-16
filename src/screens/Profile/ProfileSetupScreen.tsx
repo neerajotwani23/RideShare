@@ -3,13 +3,15 @@ import { View, StyleSheet, TouchableOpacity, Alert, ScrollView } from 'react-nat
 import { Text, TextInput, Button, Avatar, IconButton } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../context/AuthContext';
+import { useApp } from '../../context/AppContext';
 import COLORS from '../../constants/colors';
 
 const ProfileSetupScreen = ({ navigation, route }: any) => {
   const [bio, setBio] = useState('');
   const [userRole, setUserRole] = useState<string>('');
 
-  const { completeProfileSetup, currentRole, logout } = useAuth();
+  const { completeProfileSetup, skipProfileSetup, currentRole, logout } = useAuth();
+  const { updateProfile, isLoading } = useApp();
 
   useEffect(() => {
     // Get user role from context or route params
@@ -29,25 +31,45 @@ const ProfileSetupScreen = ({ navigation, route }: any) => {
     );
   };
 
-  const handleSave = () => {
-    completeProfileSetup();
-    // Navigation will be handled automatically by AppNavigator based on auth state
+  const handleSave = async () => {
+    try {
+      // Update profile with bio if provided
+      if (bio.trim()) {
+        await updateProfile({ bio: bio.trim() });
+      }
+      
+      completeProfileSetup();
+      // Navigation will be handled automatically by AppNavigator based on auth state
+    } catch (error: any) {
+      Alert.alert('Error', error.message || 'Failed to save profile. Please try again.');
+    }
   };
 
   const handleSkip = () => {
-    // Check if user is a driver and needs to provide vehicle details
+    // Only passengers can skip profile setup
     if (userRole === 'driver') {
       Alert.alert(
-        'Vehicle Details Required',
-        'As a driver, you need to provide vehicle details and documents for verification before you can start offering rides.',
-        [
-          { text: 'Continue', onPress: () => navigation.navigate('VehicleDetails') },
-          { text: 'Cancel', style: 'cancel' }
-        ]
+        'Profile Setup Required',
+        'As a driver, you need to complete your profile setup before proceeding to vehicle details.',
+        [{ text: 'OK' }]
       );
     } else {
-      completeProfileSetup();
-      // Navigation will be handled automatically by AppNavigator
+      // Passengers can skip profile setup
+      Alert.alert(
+        'Skip Profile Setup',
+        'You can complete your profile later from the settings. Are you sure you want to skip?',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { 
+            text: 'Skip', 
+            style: 'destructive',
+            onPress: () => {
+              skipProfileSetup();
+              // Navigation will be handled automatically by AppNavigator
+            }
+          }
+        ]
+      );
     }
   };
 
@@ -58,7 +80,14 @@ const ProfileSetupScreen = ({ navigation, route }: any) => {
     } else {
       // If no previous screen, this means we're in initial setup flow
       // Logout the user to return to authentication flow
-      logout();
+      Alert.alert(
+        'Exit Setup',
+        'Are you sure you want to exit? You will be logged out.',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Exit', style: 'destructive', onPress: logout }
+        ]
+      );
     }
   };
 
@@ -74,9 +103,11 @@ const ProfileSetupScreen = ({ navigation, route }: any) => {
           style={styles.backButton}
         />
         <Text style={styles.headerTitle}>Profile Setup</Text>
-        <TouchableOpacity onPress={handleSkip}>
-          <Text style={styles.skipButton}>Skip</Text>
-        </TouchableOpacity>
+        {userRole === 'passenger' && (
+          <TouchableOpacity onPress={handleSkip}>
+            <Text style={styles.skipButton}>Skip</Text>
+          </TouchableOpacity>
+        )}
       </View>
 
       <View style={styles.content}>
@@ -114,9 +145,14 @@ const ProfileSetupScreen = ({ navigation, route }: any) => {
         </View>
 
         <View style={styles.infoContainer}>
-          <Text style={styles.infoTitle}>Complete Your Profile Later</Text>
+          <Text style={styles.infoTitle}>
+            {userRole === 'driver' ? 'Complete Your Profile' : 'Complete Your Profile Later'}
+          </Text>
           <Text style={styles.infoText}>
-            You can add more details like preferences and settings from your profile page anytime.
+            {userRole === 'driver' 
+              ? 'As a driver, you need to complete your profile before proceeding to vehicle details.'
+              : 'You can add more details like preferences and settings from your profile page anytime.'
+            }
           </Text>
         </View>
       </View>
@@ -128,8 +164,10 @@ const ProfileSetupScreen = ({ navigation, route }: any) => {
           style={styles.saveButton}
           contentStyle={styles.buttonContent}
           labelStyle={styles.buttonLabel}
+          disabled={isLoading}
+          loading={isLoading}
         >
-          Save & Continue
+          {userRole === 'driver' ? 'Save & Continue' : 'Save & Continue'}
         </Button>
       </View>
       </ScrollView>

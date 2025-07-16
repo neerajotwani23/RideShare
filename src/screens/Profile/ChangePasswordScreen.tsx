@@ -1,85 +1,174 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, TouchableOpacity } from 'react-native';
-import { Text, TextInput, Button } from 'react-native-paper';
-import Icon from '../../components/Icon';
+import { View, StyleSheet, Alert } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Text, TextInput, Button, Card, IconButton, ActivityIndicator } from 'react-native-paper';
 import { COLORS } from '../../constants/colors';
+import Icon from '../../components/Icon';
+import { useApp } from '../../context/AppContext';
 
 const ChangePasswordScreen = ({ navigation }: any) => {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [error, setError] = useState('');
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [errors, setErrors] = useState<{[key: string]: string}>({});
 
-  const handleSave = () => {
-    if (!currentPassword || !newPassword || !confirmPassword) {
-      setError('All fields are required.');
+  const { changePassword, isLoading } = useApp();
+
+  const validateForm = () => {
+    const newErrors: {[key: string]: string} = {};
+
+    if (!currentPassword.trim()) {
+      newErrors.currentPassword = 'Current password is required';
+    }
+
+    if (!newPassword.trim()) {
+      newErrors.newPassword = 'New password is required';
+    } else if (newPassword.length < 6) {
+      newErrors.newPassword = 'New password must be at least 6 characters';
+    }
+
+    if (!confirmPassword.trim()) {
+      newErrors.confirmPassword = 'Please confirm your new password';
+    } else if (newPassword !== confirmPassword) {
+      newErrors.confirmPassword = 'Passwords do not match';
+    }
+
+    if (currentPassword === newPassword) {
+      newErrors.newPassword = 'New password must be different from current password';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleChangePassword = async () => {
+    if (!validateForm()) {
       return;
     }
-    if (newPassword !== confirmPassword) {
-      setError('New passwords do not match.');
-      return;
+
+    try {
+      await changePassword({
+        current_password: currentPassword,
+        new_password: newPassword,
+      });
+
+      Alert.alert(
+        'Success',
+        'Your password has been changed successfully!',
+        [{ text: 'OK', onPress: () => navigation.goBack() }]
+      );
+    } catch (error: any) {
+      Alert.alert('Error', error.message || 'Failed to change password. Please try again.');
     }
-    setError('');
-    // TODO: Implement password change logic
-    console.log('Password changed!');
   };
 
   return (
-    <View style={styles.container}>
-      {/* Header */}
+    <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Icon name="arrow-left" size={24} color={COLORS.secondary} />
-        </TouchableOpacity>
+        <IconButton
+          icon="arrow-left"
+          size={24}
+          iconColor={COLORS.secondary}
+          onPress={() => navigation.goBack()}
+          style={styles.backButton}
+        />
         <Text style={styles.headerTitle}>Change Password</Text>
-        <View style={{ width: 24 }} />
+        <View style={{ width: 48 }} />
       </View>
 
-      {/* Form */}
-      <View style={styles.form}>
-        <TextInput
-          label="Current Password"
-          value={currentPassword}
-          onChangeText={setCurrentPassword}
-          secureTextEntry
-          style={styles.input}
-          mode="outlined"
-          outlineColor={COLORS.border}
-          activeOutlineColor={COLORS.accent}
-        />
-        <TextInput
-          label="New Password"
-          value={newPassword}
-          onChangeText={setNewPassword}
-          secureTextEntry
-          style={styles.input}
-          mode="outlined"
-          outlineColor={COLORS.border}
-          activeOutlineColor={COLORS.accent}
-        />
-        <TextInput
-          label="Confirm New Password"
-          value={confirmPassword}
-          onChangeText={setConfirmPassword}
-          secureTextEntry
-          style={styles.input}
-          mode="outlined"
-          outlineColor={COLORS.border}
-          activeOutlineColor={COLORS.accent}
-        />
-        {error ? <Text style={styles.errorText}>{error}</Text> : null}
-      </View>
+      <Card style={styles.card}>
+        <Card.Content style={styles.cardContent}>
+          <Text style={styles.sectionTitle}>Update Your Password</Text>
+          <Text style={styles.sectionSubtitle}>
+            Enter your current password and choose a new one
+          </Text>
 
-      {/* Save Button */}
-      <Button
-        mode="contained"
-        style={styles.saveButton}
-        labelStyle={styles.saveButtonLabel}
-        onPress={handleSave}
-      >
-        Save
-      </Button>
-    </View>
+          <TextInput
+            style={styles.input}
+            mode="outlined"
+            label="Current Password"
+            value={currentPassword}
+            onChangeText={setCurrentPassword}
+            secureTextEntry={!showCurrentPassword}
+            outlineColor={COLORS.border}
+            activeOutlineColor={COLORS.accent}
+            theme={{ roundness: 12 }}
+            error={!!errors.currentPassword}
+            left={<TextInput.Icon icon={() => <Icon name="lock-outline" size={20} color={COLORS.textSecondary} />} />}
+            right={
+              <TextInput.Icon 
+                icon={showCurrentPassword ? "eye-off" : "eye"} 
+                onPress={() => setShowCurrentPassword(!showCurrentPassword)}
+              />
+            }
+          />
+          {errors.currentPassword ? <Text style={styles.errorText}>{errors.currentPassword}</Text> : null}
+
+          <TextInput
+            style={styles.input}
+            mode="outlined"
+            label="New Password"
+            value={newPassword}
+            onChangeText={setNewPassword}
+            secureTextEntry={!showNewPassword}
+            outlineColor={COLORS.border}
+            activeOutlineColor={COLORS.accent}
+            theme={{ roundness: 12 }}
+            error={!!errors.newPassword}
+            left={<TextInput.Icon icon={() => <Icon name="lock-plus-outline" size={20} color={COLORS.textSecondary} />} />}
+            right={
+              <TextInput.Icon 
+                icon={showNewPassword ? "eye-off" : "eye"} 
+                onPress={() => setShowNewPassword(!showNewPassword)}
+              />
+            }
+          />
+          {errors.newPassword ? <Text style={styles.errorText}>{errors.newPassword}</Text> : null}
+
+          <TextInput
+            style={styles.input}
+            mode="outlined"
+            label="Confirm New Password"
+            value={confirmPassword}
+            onChangeText={setConfirmPassword}
+            secureTextEntry={!showConfirmPassword}
+            outlineColor={COLORS.border}
+            activeOutlineColor={COLORS.accent}
+            theme={{ roundness: 12 }}
+            error={!!errors.confirmPassword}
+            left={<TextInput.Icon icon={() => <Icon name="lock-check-outline" size={20} color={COLORS.textSecondary} />} />}
+            right={
+              <TextInput.Icon 
+                icon={showConfirmPassword ? "eye-off" : "eye"} 
+                onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+              />
+            }
+          />
+          {errors.confirmPassword ? <Text style={styles.errorText}>{errors.confirmPassword}</Text> : null}
+
+          <View style={styles.passwordRequirements}>
+            <Text style={styles.requirementsTitle}>Password Requirements:</Text>
+            <Text style={styles.requirement}>• At least 6 characters long</Text>
+            <Text style={styles.requirement}>• Must be different from current password</Text>
+          </View>
+
+          <Button
+            mode="contained"
+            onPress={handleChangePassword}
+            style={styles.changeButton}
+            contentStyle={styles.buttonContent}
+            labelStyle={styles.buttonLabel}
+            disabled={isLoading}
+            loading={isLoading}
+          >
+            Change Password
+          </Button>
+        </Card.Content>
+      </Card>
+    </SafeAreaView>
   );
 };
 
@@ -109,13 +198,26 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     flex: 1,
   },
-  form: {
-    backgroundColor: COLORS.primary,
-    marginTop: 24,
-    marginHorizontal: 16,
+  card: {
+    margin: 16,
     borderRadius: 12,
-    padding: 20,
     elevation: 1,
+    backgroundColor: COLORS.primary,
+  },
+  cardContent: {
+    padding: 20,
+  },
+  sectionTitle: {
+    fontSize: 24,
+    fontFamily: 'Montserrat-Bold',
+    color: COLORS.secondary,
+    marginBottom: 8,
+  },
+  sectionSubtitle: {
+    fontSize: 16,
+    fontFamily: 'Montserrat-Regular',
+    color: COLORS.textSecondary,
+    marginBottom: 24,
   },
   input: {
     backgroundColor: COLORS.primary,
@@ -129,13 +231,32 @@ const styles = StyleSheet.create({
     marginTop: 4,
     textAlign: 'center',
   },
-  saveButton: {
-    margin: 24,
+  passwordRequirements: {
+    marginTop: 20,
+    paddingHorizontal: 10,
+  },
+  requirementsTitle: {
+    fontSize: 18,
+    fontFamily: 'Montserrat-SemiBold',
+    color: COLORS.secondary,
+    marginBottom: 8,
+  },
+  requirement: {
+    fontSize: 14,
+    fontFamily: 'Montserrat-Regular',
+    color: COLORS.textSecondary,
+    marginBottom: 4,
+  },
+  changeButton: {
+    marginTop: 20,
     borderRadius: 24,
     backgroundColor: COLORS.secondary,
     elevation: 0,
   },
-  saveButtonLabel: {
+  buttonContent: {
+    paddingVertical: 10,
+  },
+  buttonLabel: {
     color: COLORS.primary,
     fontFamily: 'Montserrat-SemiBold',
     fontSize: 16,

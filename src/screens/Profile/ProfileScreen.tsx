@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, TouchableOpacity, Animated } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, StyleSheet, ScrollView, TouchableOpacity, Animated, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Text, Card, Divider } from 'react-native-paper';
+import { Text, Card, Divider, ActivityIndicator } from 'react-native-paper';
 import { COLORS } from '../../constants/colors';
 import { 
   UserIcon, 
@@ -15,23 +15,41 @@ import {
   UserEditIcon
 } from '../../components/icons';
 import { useAuth } from '../../context/AuthContext';
-
-const mockUser = {
-  name: 'Ahmed Khan',
-  gender: 'Male',
-  bio: 'Passionate about sustainable transportation and meeting new people through carpooling.',
-  rides: 23,
-  rating: 4.8,
-  phone: '+92 300 1234567',
-  email: 'ahmed.khan@email.com',
-  role: 'driver', // This would come from context in real app
-};
+import { useApp } from '../../context/AppContext';
 
 const ProfileScreen = ({ navigation }: any) => {
-  const user = mockUser;
-  const [currentRole, setCurrentRole] = useState(user.role);
-  const [animatedValue] = useState(new Animated.Value(user.role === 'driver' ? 1 : 0));
-  const { logout } = useAuth();
+  const [currentRole, setCurrentRole] = useState<'driver' | 'passenger'>('passenger');
+  const [animatedValue] = useState(new Animated.Value(0));
+  const { logout, user } = useAuth();
+  const { 
+    userProfile, 
+    reviewsReceived, 
+    myRides, 
+    refreshUserProfile, 
+    refreshReviews, 
+    refreshMyRides,
+    isLoading,
+    isRefreshing 
+  } = useApp();
+
+  // Load data when component mounts
+  useEffect(() => {
+    refreshUserProfile();
+    refreshReviews();
+    refreshMyRides();
+  }, []);
+
+  // Set current role based on user data
+  useEffect(() => {
+    if (userProfile?.user_type) {
+      setCurrentRole(userProfile.user_type);
+      Animated.timing(animatedValue, {
+        toValue: userProfile.user_type === 'driver' ? 1 : 0,
+        duration: 300,
+        useNativeDriver: false,
+      }).start();
+    }
+  }, [userProfile]);
 
   const handleRoleSwitch = () => {
     const newRole = currentRole === 'driver' ? 'passenger' : 'driver';
@@ -45,8 +63,14 @@ const ProfileScreen = ({ navigation }: any) => {
   };
 
   const handleLogout = () => {
-    logout();
-    // Navigation will be handled automatically by AppNavigator based on auth state
+    Alert.alert(
+      'Logout',
+      'Are you sure you want to logout?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Logout', style: 'destructive', onPress: logout }
+      ]
+    );
   };
 
   const switchTranslateX = animatedValue.interpolate({
@@ -64,15 +88,67 @@ const ProfileScreen = ({ navigation }: any) => {
     outputRange: [COLORS.textSecondary, COLORS.accent],
   });
 
+  // Get user data with fallbacks
+  const getUserName = () => {
+    if (userProfile?.first_name && userProfile?.last_name) {
+      return `${userProfile.first_name} ${userProfile.last_name}`;
+    }
+    if (user?.first_name && user?.last_name) {
+      return `${user.first_name} ${user.last_name}`;
+    }
+    return 'User';
+  };
+
+  const getUserEmail = () => {
+    return userProfile?.email || user?.email || 'No email';
+  };
+
+  const getUserBio = () => {
+    return userProfile?.bio || 'No bio available';
+  };
+
+  const getUserPhone = () => {
+    return userProfile?.phone_no || user?.phone_no || 'No phone';
+  };
+
+  const getTotalRides = () => {
+    return myRides.length;
+  };
+
+  const getAverageRating = () => {
+    if (reviewsReceived.length === 0) return 0;
+    const totalRating = reviewsReceived.reduce((sum, review) => sum + review.rating, 0);
+    return (totalRating / reviewsReceived.length).toFixed(1);
+  };
+
+  const getTotalReviews = () => {
+    return reviewsReceived.length;
+  };
+
+  if (isRefreshing) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={COLORS.accent} />
+          <Text style={styles.loadingText}>Loading profile...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
           <View style={styles.avatarContainer}>
-            <UserIcon size={60} color="#FFFFFF" />
+            {userProfile?.profile_picture ? (
+              <UserIcon size={60} color="#FFFFFF" />
+            ) : (
+              <UserIcon size={60} color="#FFFFFF" />
+            )}
           </View>
-          <Text style={styles.name}>{user.name}</Text>
-          <Text style={styles.email}>{user.email}</Text>
+          <Text style={styles.name}>{getUserName()}</Text>
+          <Text style={styles.email}>{getUserEmail()}</Text>
         </View>
 
         <Card style={styles.statsCard}>
@@ -80,19 +156,19 @@ const ProfileScreen = ({ navigation }: any) => {
             <View style={styles.statsRow}>
               <View style={styles.statItem}>
                 <CarIcon size={24} color={COLORS.accent} />
-                <Text style={styles.statNumber}>{user.rides}</Text>
+                <Text style={styles.statNumber}>{getTotalRides()}</Text>
                 <Text style={styles.statLabel}>Total Rides</Text>
               </View>
               <Divider style={styles.statDivider} />
               <View style={styles.statItem}>
                 <StarIcon size={24} color={COLORS.accent} />
-                <Text style={styles.statNumber}>{user.rating}</Text>
+                <Text style={styles.statNumber}>{getAverageRating()}</Text>
                 <Text style={styles.statLabel}>Rating</Text>
               </View>
               <Divider style={styles.statDivider} />
               <View style={styles.statItem}>
                 <EditIcon size={24} color={COLORS.accent} />
-                <Text style={styles.statNumber}>15</Text>
+                <Text style={styles.statNumber}>{getTotalReviews()}</Text>
                 <Text style={styles.statLabel}>Reviews</Text>
               </View>
             </View>
@@ -101,7 +177,7 @@ const ProfileScreen = ({ navigation }: any) => {
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>About</Text>
-          <Text style={styles.bioText}>{user.bio}</Text>
+          <Text style={styles.bioText}>{getUserBio()}</Text>
         </View>
 
         <View style={styles.roleSwitchSection}>
@@ -212,7 +288,8 @@ const ProfileScreen = ({ navigation }: any) => {
           >
             <View style={styles.menuButtonContent}>
               <LogoutIcon size={24} color={COLORS.error} />
-              <Text style={[styles.menuButtonText, styles.logoutText]}>Logout</Text>
+              <Text style={[styles.menuButtonText, { color: COLORS.error }]}>Logout</Text>
+              <ArrowLeftIcon size={20} color={COLORS.textSecondary} style={styles.chevronIcon} />
             </View>
           </TouchableOpacity>
         </View>
@@ -414,6 +491,18 @@ const styles = StyleSheet.create({
     color: COLORS.textSecondary,
     textAlign: 'center',
     marginTop: 8,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: COLORS.primary,
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    fontFamily: 'Montserrat-Regular',
+    color: COLORS.textSecondary,
   },
 });
 

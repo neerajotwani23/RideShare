@@ -10,6 +10,7 @@ import { StatusBar, Platform } from 'react-native';
 import { Provider as PaperProvider } from 'react-native-paper';
 import AppNavigator from './src/navigation/AppNavigator';
 import { AuthProvider } from './src/context/AuthContext';
+import { AppProvider } from './src/context/AppContext';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import theme from './src/constants/theme';
 
@@ -23,9 +24,11 @@ export default function App() {
         translucent={true} // true allows content to go under status bar, SafeAreaView will handle spacing
       />
       <AuthProvider>
-        <PaperProvider theme={theme}>
-          <AppNavigator />
-        </PaperProvider>
+        <AppProvider>
+          <PaperProvider theme={theme}>
+            <AppNavigator />
+          </PaperProvider>
+        </AppProvider>
       </AuthProvider>
     </SafeAreaProvider>
   );

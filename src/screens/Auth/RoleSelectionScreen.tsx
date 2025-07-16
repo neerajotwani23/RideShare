@@ -6,12 +6,12 @@ import { useAuth } from '../../context/AuthContext';
 import COLORS from '../../constants/colors';
 import { Colors } from 'react-native/Libraries/NewAppScreen';
 
-const RoleSelectionScreen = () => {
-  const { selectRole } = useAuth();
+const RoleSelectionScreen = ({ navigation }: any) => {
+  const { selectRoleForSignup } = useAuth();
 
-  const handleRoleSelection = (role: string) => {
-    selectRole(role as 'driver' | 'passenger');
-    // Navigation will be handled automatically by AuthContext state change
+  const handleRoleSelection = (role: 'driver' | 'passenger') => {
+    selectRoleForSignup(role);
+    navigation.navigate('Signup');
   };
 
   return (

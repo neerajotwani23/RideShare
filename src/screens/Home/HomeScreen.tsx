@@ -4,9 +4,13 @@ import { Text, Searchbar, Avatar, Card } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from '../../components/Icon';
 import { COLORS } from '../../constants/colors';
+import { useApp } from '../../context/AppContext';
+import { useAuth } from '../../context/AuthContext';
 
 const HomeScreen = ({ navigation }: any) => {
   const [searchQuery, setSearchQuery] = React.useState('');
+  const { userProfile, walletBalance, isRefreshing } = useApp();
+  const { user } = useAuth();
 
   const quickActions = [
     { 
@@ -27,9 +31,26 @@ const HomeScreen = ({ navigation }: any) => {
     { 
       title: 'Wallet', 
       icon: 'wallet-outline',
-      onPress: () => navigation.navigate('Profile')
+      onPress: () => navigation.navigate('Wallet')
     },
   ];
+
+  const getUserName = () => {
+    if (userProfile) {
+      return `${userProfile.first_name} ${userProfile.last_name}`;
+    }
+    if (user) {
+      return `${user.first_name} ${user.last_name}`;
+    }
+    return 'User';
+  };
+
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good Morning!';
+    if (hour < 17) return 'Good Afternoon!';
+    return 'Good Evening!';
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -37,7 +58,7 @@ const HomeScreen = ({ navigation }: any) => {
         <View style={styles.header}>
           <View style={styles.headerContent}>
             <View>
-              <Text style={styles.greeting}>Good Morning!</Text>
+              <Text style={styles.greeting}>{getGreeting()}</Text>
               <Text style={styles.subtitle}>Where are you going today?</Text>
             </View>
             <TouchableOpacity onPress={() => navigation.navigate('Profile')}>
@@ -68,106 +89,39 @@ const HomeScreen = ({ navigation }: any) => {
           </Card.Content>
         </Card>
 
-        <View style={styles.quickActions}>
+        <View style={styles.quickActionsContainer}>
           <Text style={styles.sectionTitle}>Quick Actions</Text>
-          <View style={styles.actionGrid}>
+          <View style={styles.quickActionsGrid}>
             {quickActions.map((action, index) => (
-              <TouchableOpacity 
+              <TouchableOpacity
                 key={index}
-                style={styles.actionCard}
+                style={styles.quickActionCard}
                 onPress={action.onPress}
               >
-                <View style={styles.actionIconContainer}>
-                  <Icon
-                    name={action.icon}
-                    size={24}
-                    color={COLORS.accent}
-                    style={styles.actionIcon}
-                  />
-                </View>
-                <Text style={styles.actionText}>{action.title}</Text>
+                <Icon name={action.icon} size={32} color={COLORS.accent} />
+                <Text style={styles.quickActionText}>{action.title}</Text>
               </TouchableOpacity>
             ))}
           </View>
         </View>
 
-        <View style={styles.suggestedRides}>
-          <Text style={styles.sectionTitle}>Suggested Rides</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            <Card style={styles.rideCard}>
-              <Card.Content style={styles.rideCardContent}>
-                <View style={styles.rideHeader}>
-                  <View style={styles.locationContainer}>
-                    <Icon name="map-marker" size={16} color={COLORS.accent} />
-                    <Text style={styles.rideFrom}>Downtown</Text>
-                  </View>
-                  <View style={styles.locationContainer}>
-                    <Icon name="map-marker-check" size={16} color={COLORS.success} />
-                    <Text style={styles.rideTo}>Business District</Text>
-                  </View>
-                </View>
-                <View style={styles.rideDetails}>
-                  <View style={styles.rideDetail}>
-                    <Icon name="clock-outline" size={16} color={COLORS.textSecondary} />
-                    <Text style={styles.rideTime}>8:30 AM</Text>
-                  </View>
-                  <View style={styles.rideDetail}>
-                    <Icon name="currency-inr" size={16} color={COLORS.textSecondary} />
-                    <Text style={styles.ridePrice}>Rs. 150</Text>
-                  </View>
-                </View>
-              </Card.Content>
-            </Card>
-            <Card style={styles.rideCard}>
-              <Card.Content style={styles.rideCardContent}>
-                <View style={styles.rideHeader}>
-                  <View style={styles.locationContainer}>
-                    <Icon name="map-marker" size={16} color={COLORS.accent} />
-                    <Text style={styles.rideFrom}>University</Text>
-                  </View>
-                  <View style={styles.locationContainer}>
-                    <Icon name="map-marker-check" size={16} color={COLORS.success} />
-                    <Text style={styles.rideTo}>Mall</Text>
-                  </View>
-                </View>
-                <View style={styles.rideDetails}>
-                  <View style={styles.rideDetail}>
-                    <Icon name="clock-outline" size={16} color={COLORS.textSecondary} />
-                    <Text style={styles.rideTime}>2:00 PM</Text>
-                  </View>
-                  <View style={styles.rideDetail}>
-                    <Icon name="currency-inr" size={16} color={COLORS.textSecondary} />
-                    <Text style={styles.ridePrice}>Rs. 200</Text>
-                  </View>
-                </View>
-              </Card.Content>
-            </Card>
-            <Card style={styles.rideCard}>
-              <Card.Content style={styles.rideCardContent}>
-                <View style={styles.rideHeader}>
-                  <View style={styles.locationContainer}>
-                    <Icon name="map-marker" size={16} color={COLORS.accent} />
-                    <Text style={styles.rideFrom}>Airport</Text>
-                  </View>
-                  <View style={styles.locationContainer}>
-                    <Icon name="map-marker-check" size={16} color={COLORS.success} />
-                    <Text style={styles.rideTo}>City Center</Text>
-                  </View>
-                </View>
-                <View style={styles.rideDetails}>
-                  <View style={styles.rideDetail}>
-                    <Icon name="clock-outline" size={16} color={COLORS.textSecondary} />
-                    <Text style={styles.rideTime}>6:15 PM</Text>
-                  </View>
-                  <View style={styles.rideDetail}>
-                    <Icon name="currency-inr" size={16} color={COLORS.textSecondary} />
-                    <Text style={styles.ridePrice}>Rs. 500</Text>
-                  </View>
-                </View>
-              </Card.Content>
-            </Card>
-          </ScrollView>
-        </View>
+        <Card style={styles.walletCard}>
+          <Card.Content style={styles.walletContent}>
+            <View style={styles.walletHeader}>
+              <Icon name="wallet-outline" size={24} color={COLORS.accent} />
+              <Text style={styles.walletTitle}>Wallet Balance</Text>
+            </View>
+            <Text style={styles.walletBalance}>
+              Rs. {walletBalance.toFixed(2)}
+            </Text>
+            <TouchableOpacity 
+              style={styles.addMoneyButton}
+              onPress={() => navigation.navigate('Wallet')}
+            >
+              <Text style={styles.addMoneyText}>Add Money</Text>
+            </TouchableOpacity>
+          </Card.Content>
+        </Card>
       </ScrollView>
     </SafeAreaView>
   );
@@ -241,9 +195,74 @@ const styles = StyleSheet.create({
     fontFamily: 'Montserrat-Regular',
     color: COLORS.textSecondary,
   },
-  quickActions: {
+  quickActionsContainer: {
     paddingHorizontal: 24,
     marginBottom: 24,
+  },
+  quickActionsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+  quickActionCard: {
+    width: '48%',
+    backgroundColor: COLORS.primary,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    elevation: 2,
+  },
+  quickActionText: {
+    fontSize: 14,
+    fontFamily: 'Montserrat-Medium',
+    color: COLORS.secondary,
+    textAlign: 'center',
+    marginTop: 8,
+  },
+  walletCard: {
+    marginHorizontal: 24,
+    marginBottom: 24,
+    borderRadius: 12,
+    backgroundColor: COLORS.primary,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  walletContent: {
+    padding: 24,
+    alignItems: 'center',
+  },
+  walletHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  walletTitle: {
+    fontSize: 20,
+    fontFamily: 'Montserrat-Bold',
+    color: COLORS.secondary,
+    marginLeft: 8,
+  },
+  walletBalance: {
+    fontSize: 36,
+    fontFamily: 'Montserrat-Bold',
+    color: COLORS.secondary,
+    marginBottom: 16,
+  },
+  addMoneyButton: {
+    backgroundColor: COLORS.accent,
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    alignItems: 'center',
+    width: '100%',
+  },
+  addMoneyText: {
+    color: COLORS.primary,
+    fontSize: 16,
+    fontFamily: 'Montserrat-SemiBold',
   },
   sectionTitle: {
     fontSize: 20,
