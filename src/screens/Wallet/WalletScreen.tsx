@@ -72,7 +72,7 @@ const WalletScreen = () => {
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         {/* Header */}
-        <View style={styles.header}>
+      <View style={styles.header}>
           <Text style={styles.headerTitle}>Wallet</Text>
           <TouchableOpacity 
             style={styles.refreshButton}
@@ -84,54 +84,54 @@ const WalletScreen = () => {
           >
             <RefreshIcon size={24} color={COLORS.accent} />
           </TouchableOpacity>
-        </View>
+      </View>
 
         {/* Balance Card */}
-        <Card style={styles.balanceCard}>
-          <Card.Content style={styles.balanceContent}>
-            <View style={styles.balanceHeader}>
+      <Card style={styles.balanceCard}>
+        <Card.Content style={styles.balanceContent}>
+          <View style={styles.balanceHeader}>
               <WalletIcon size={32} color={COLORS.accent} />
               <Text style={styles.balanceTitle}>Current Balance</Text>
-            </View>
+          </View>
             <Text style={styles.balanceAmount}>
               Rs. {walletBalance.toFixed(2)}
             </Text>
             {isRefreshing && (
               <ActivityIndicator size="small" color={COLORS.accent} style={styles.refreshIndicator} />
             )}
-          </Card.Content>
-        </Card>
+        </Card.Content>
+      </Card>
 
         {/* Add Money Section */}
-        <Card style={styles.addMoneyCard}>
+      <Card style={styles.addMoneyCard}>
           <Card.Content style={styles.addMoneyContent}>
             <Text style={styles.sectionTitle}>Add Money</Text>
             <View style={styles.addMoneyRow}>
-              <TextInput
+          <TextInput
                 style={styles.amountInput}
                 mode="outlined"
-                label="Amount (Rs.)"
-                value={addAmount}
-                onChangeText={setAddAmount}
-                keyboardType="numeric"
+            label="Amount (Rs.)"
+            value={addAmount}
+            onChangeText={setAddAmount}
+            keyboardType="numeric"
                 outlineColor={COLORS.border}
                 activeOutlineColor={COLORS.accent}
                 theme={{ roundness: 12 }}
-              />
-              <Button
-                mode="contained"
-                onPress={handleAdd}
-                style={styles.addButton}
+          />
+          <Button 
+            mode="contained" 
+            onPress={handleAdd} 
+            style={styles.addButton}
                 contentStyle={styles.buttonContent}
                 labelStyle={styles.buttonLabel}
                 disabled={isLoading || !addAmount.trim()}
                 loading={isLoading}
-              >
+          >
                 Add
-              </Button>
+          </Button>
             </View>
-          </Card.Content>
-        </Card>
+        </Card.Content>
+      </Card>
 
         {/* Quick Add Buttons */}
         <View style={styles.quickAddContainer}>
@@ -151,7 +151,7 @@ const WalletScreen = () => {
 
         {/* Transactions */}
         <View style={styles.transactionsContainer}>
-          <Text style={styles.sectionTitle}>Recent Transactions</Text>
+        <Text style={styles.sectionTitle}>Recent Transactions</Text>
           {isLoading ? (
             <ActivityIndicator size="large" color={COLORS.accent} style={styles.loadingIndicator} />
           ) : transactions.length === 0 ? (
@@ -184,14 +184,14 @@ const WalletScreen = () => {
                     </Text>
                     <Text style={styles.transactionType}>
                       {transaction.type.charAt(0).toUpperCase() + transaction.type.slice(1)}
-                    </Text>
+                  </Text>
                   </View>
                 </Card.Content>
               </Card>
             ))
           )}
         </View>
-      </ScrollView>
+        </ScrollView>
     </SafeAreaView>
   );
 };
@@ -278,13 +278,9 @@ const styles = StyleSheet.create({
     flex: 1,
     marginRight: 12,
     backgroundColor: COLORS.primary,
-    borderColor: COLORS.border,
     borderRadius: 16,
     borderWidth: 1,
     borderColor: COLORS.border,
-    activeOutlineColor: COLORS.accent,
-    outlineColor: COLORS.border,
-    theme: { roundness: 12 },
   },
   addButton: {
     borderRadius: 12,
@@ -303,6 +299,7 @@ const styles = StyleSheet.create({
   quickAddContainer: {
     marginHorizontal: 24,
     marginBottom: 24,
+    padding: 24,
     borderRadius: 12,
     backgroundColor: COLORS.primary,
     borderWidth: 1,
@@ -312,12 +309,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     paddingVertical: 12,
+    gap: 8,
   },
   quickAddButton: {
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: 12,
     backgroundColor: COLORS.lightGray,
+    flex: 1,
+    alignItems: 'center',
   },
   quickAddText: {
     fontSize: 16,

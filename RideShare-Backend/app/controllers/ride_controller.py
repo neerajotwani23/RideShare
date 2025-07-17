@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 
 from ..services import RideService
-from ..models import User, RideStatusEnum, GenderPreferenceEnum
+from ..models import User, RideStatusEnum, GenderPreferenceEnum, UserTypeEnum
 from .. import schemas
 from ..database import SessionLocal
 from .auth_controller import AuthController
@@ -48,7 +48,7 @@ class RideController:
     ):
         """Create a new ride (Post Ride functionality)"""
         # Verify user is a driver
-        if current_user.user_type.value != "driver":
+        if current_user.user_type != UserTypeEnum.DRIVER:
             raise HTTPException(status_code=403, detail="Only drivers can create rides")
             
         ride_service = RideService(db)

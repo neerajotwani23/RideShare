@@ -68,7 +68,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await AsyncStorage.setItem('accessToken', data.access_token);
       await AsyncStorage.setItem('user', JSON.stringify(data.user));
       setUser(data.user);
-      setIsAuthenticated(true);
+    setIsAuthenticated(true);
       setCurrentRole(data.user.user_type);
       setRoleSelected(true);
       
@@ -137,13 +137,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.error('Failed to logout', error);
     }
     finally {
-        setIsAuthenticated(false);
-        setRoleSelected(false);
-        setProfileSetupComplete(false);
+    setIsAuthenticated(false);
+    setRoleSelected(false);
+    setProfileSetupComplete(false);
         setVehicleDetailsComplete(false);
-        setCurrentRole(null);
+    setCurrentRole(null);
         setSelectedRoleForSignup(null);
-        setUser(null);
+    setUser(null);
         setIsLoading(false);
     }
   };

@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 import os
 
 from .models import Base
-from .database import engine, SessionLocal
+from .database import engine, SessionLocal, setup_database_schema
 from .controllers import (
     AuthController,
     UserController,
@@ -24,8 +24,9 @@ def get_db():
     finally:
         db.close()
 
-# Create database tables
-Base.metadata.create_all(bind=engine)
+# Setup database schema (only creates tables if they don't exist)
+print("🚀 Starting RideShare Backend...")
+setup_database_schema()
 
 # FastAPI app configuration
 app = FastAPI(

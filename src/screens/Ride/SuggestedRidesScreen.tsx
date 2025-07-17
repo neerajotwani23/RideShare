@@ -1,38 +1,11 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
-import { Text } from 'react-native-paper';
+import React, { useState, useEffect } from 'react';
+import { View, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
+import { Text, Card } from 'react-native-paper';
 import { Icon, RideCard, RideFilters } from '../../components';
 import { COLORS } from '../../constants/colors';
-
-const mockResults = [
-  {
-    id: '1',
-    driver: 'Sarah Ahmed',
-    rating: 4.9,
-    from: 'Downtown',
-    to: 'Campus',
-    departureTime: '09:00 AM',
-    availableSeats: 2,
-    fare: 'Rs. 200',
-    car: 'Toyota Corolla',
-    preferences: ['AC', 'No Smoking'],
-  },
-  {
-    id: '2',
-    driver: 'Ali Hassan',
-    rating: 4.7,
-    from: 'City Center',
-    to: 'University',
-    departureTime: '09:15 AM',
-    availableSeats: 1,
-    fare: 'Rs. 180',
-    car: 'Honda Civic',
-    preferences: ['Music OK', 'AC'],
-  },
-];
+import { useApp } from '../../context/AppContext';
 
 const SuggestedRidesScreen = ({ navigation }: any) => {
-  const [rides, setRides] = useState(mockResults);
   const [showFilters, setShowFilters] = useState(false);
   const [activeFilters, setActiveFilters] = useState({
     priceRange: [0, 1000],
@@ -41,8 +14,21 @@ const SuggestedRidesScreen = ({ navigation }: any) => {
     rating: 0,
   });
 
+  const { 
+    availableRides, 
+    refreshAvailableRides, 
+    isLoading, 
+    isRefreshing 
+  } = useApp();
+
+  useEffect(() => {
+    // Fetch available rides when component mounts
+    refreshAvailableRides();
+  }, []);
+
   const handleRemove = (id: string) => {
-    setRides(rides.filter(r => r.id !== id));
+    // This would typically remove from favorites or hide the ride
+    console.log('Remove ride:', id);
   };
 
   const handleRequest = (id: string) => {
@@ -52,39 +38,26 @@ const SuggestedRidesScreen = ({ navigation }: any) => {
 
   const handleApplyFilters = (filters: any) => {
     setActiveFilters(filters);
-    // Apply filters to rides
-    const filteredRides = mockResults.filter(ride => {
-      // Filter by amenities
-      if (filters.amenities.length > 0) {
-        const hasAllAmenities = filters.amenities.every((amenity: string) =>
-          ride.preferences.includes(amenity)
-        );
-        if (!hasAllAmenities) return false;
-      }
-
-      // Filter by car type
-      if (filters.carType.length > 0 && !filters.carType.includes('Any')) {
-        if (!filters.carType.some((type: string) => ride.car.includes(type))) {
-          return false;
-        }
-      }
-
-      // Filter by price
-      const fareNumber = parseInt(ride.fare.replace('Rs. ', ''));
-      if (fareNumber < filters.priceRange[0] || fareNumber > filters.priceRange[1]) {
-        return false;
-      }
-
-      // Filter by rating
-      if (filters.rating > 0 && ride.rating < filters.rating) {
-        return false;
-      }
-
-      return true;
-    });
-
-    setRides(filteredRides);
+    // Apply filters to rides - this would typically call the API with filters
+    refreshAvailableRides(filters);
   };
+
+  const formatRideData = (ride: any) => ({
+    id: ride.id?.toString() || ride.id,
+    driver: ride.driver?.name || ride.driver_name || 'Unknown Driver',
+    rating: ride.driver?.rating || ride.rating || 0,
+    from: ride.source || ride.from,
+    to: ride.destination || ride.to,
+    departureTime: ride.scheduled_time || ride.departure_time || 'Now',
+    availableSeats: ride.available_seats || ride.seats || 0,
+    fare: `Rs. ${ride.fare || 0}`,
+    car: ride.vehicle?.model || ride.car_model || 'Car',
+    preferences: [
+      ...(ride.ac ? ['AC'] : []),
+      ...(ride.music ? ['Music OK'] : []),
+      ...(ride.smoking_allowed ? [] : ['No Smoking']),
+    ],
+  });
 
   return (
     <View style={styles.container}>
@@ -100,18 +73,38 @@ const SuggestedRidesScreen = ({ navigation }: any) => {
           <Icon name="filter" size={24} color={COLORS.accent} />
         </TouchableOpacity>
       </View>
+      
+      {isLoading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={COLORS.accent} />
+          <Text style={styles.loadingText}>Finding rides for you...</Text>
+        </View>
+      ) : (
       <ScrollView contentContainerStyle={styles.content}>
-        {rides.map((ride) => (
+          {availableRides.length > 0 ? (
+            availableRides.map((ride) => (
           <RideCard
             key={ride.id}
-            ride={ride}
+                ride={formatRideData(ride)}
             showActions={true}
             onRequest={() => handleRequest(ride.id)}
             onRemove={() => handleRemove(ride.id)}
           />
-        ))}
-        {rides.length === 0 && <Text style={styles.noRides}>No rides found matching your filters.</Text>}
+            ))
+          ) : (
+            <Card style={styles.emptyCard}>
+              <Card.Content style={styles.emptyContent}>
+                <Icon name="car-off" size={48} color={COLORS.textSecondary} />
+                <Text style={styles.emptyTitle}>No Rides Available</Text>
+                <Text style={styles.emptySubtext}>
+                  There are currently no rides available matching your criteria. 
+                  Try adjusting your filters or check back later.
+                </Text>
+              </Card.Content>
+            </Card>
+          )}
       </ScrollView>
+      )}
 
       <RideFilters
         visible={showFilters}
@@ -159,6 +152,45 @@ const styles = StyleSheet.create({
     fontFamily: 'Montserrat-Regular',
     fontSize: 16,
     marginTop: 40,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 18,
+    color: '#555',
+    fontFamily: 'Montserrat-Regular',
+  },
+  emptyCard: {
+    marginTop: 20,
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+  },
+  emptyContent: {
+    alignItems: 'center',
+    padding: 20,
+  },
+  emptyTitle: {
+    fontSize: 20,
+    fontFamily: 'Montserrat-Bold',
+    color: '#333',
+    marginTop: 15,
+  },
+  emptySubtext: {
+    fontSize: 15,
+    color: '#666',
+    textAlign: 'center',
+    marginTop: 5,
+    fontFamily: 'Montserrat-Regular',
   },
 });
 

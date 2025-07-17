@@ -13,6 +13,28 @@ class PaymentTypeEnum(enum.Enum):
     CASH = "cash"
     WALLET = "wallet"
 
+class GenderPreferenceEnum(enum.Enum):
+    ANY = "any"
+    MALE = "male"
+    FEMALE = "female"
+
+class RideStatusEnum(enum.Enum):
+    PENDING = "pending"
+    ACTIVE = "active"
+    CONFIRMED = "confirmed"
+    COMPLETED = "completed"
+    CANCELLED = "cancelled"
+
+class RequestStatusEnum(enum.Enum):
+    PENDING = "pending"
+    ACCEPTED = "accepted"
+    REJECTED = "rejected"
+    CANCELLED = "cancelled"
+
+class UserTypeEnum(enum.Enum):
+    DRIVER = "driver"
+    PASSENGER = "passenger"
+
 class User(Base):
     __tablename__ = "users"
     
@@ -22,7 +44,7 @@ class User(Base):
     email = Column(String(255), unique=True, index=True, nullable=False)
     password = Column(String(255), nullable=False)
     phone_no = Column(String(20), nullable=True)
-    user_type = Column(String(50), nullable=True)  # e.g., 'driver', 'passenger', 'both'
+    user_type = Column(SQLEnum(UserTypeEnum), nullable=True)  # Use enum instead of string
     cnic = Column(String(20), nullable=True)
     profile_picture = Column(String(500), nullable=True)
     bio = Column(Text, nullable=True)
@@ -60,7 +82,7 @@ class Ride(Base):
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)  # Driver
     timing = Column(DateTime, nullable=False)
-    status = Column(String(50), default="active")  # active, completed, cancelled
+    status = Column(SQLEnum(RideStatusEnum), default=RideStatusEnum.ACTIVE)  # Use enum instead of string
     source = Column(String(255), nullable=False)
     destination = Column(String(255), nullable=False)
     fare = Column(Float, nullable=False)
@@ -68,7 +90,7 @@ class Ride(Base):
     ac = Column(Boolean, default=False)
     smoking = Column(Boolean, default=False)
     music = Column(Boolean, default=False)
-    gender_preference = Column(Boolean, default=False)
+    gender_preference = Column(SQLEnum(GenderPreferenceEnum), default=GenderPreferenceEnum.ANY)  # Use enum
     
     # Relationships
     driver = relationship("User", back_populates="rides_offered")
@@ -83,14 +105,14 @@ class RideRequest(Base):
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)  # Passenger
     ride_id = Column(Integer, ForeignKey("rides.id"), nullable=False)
     datetime = Column(DateTime, default=func.now())
-    status = Column(String(50), default="pending")  # pending, accepted, rejected, completed
+    status = Column(SQLEnum(RequestStatusEnum), default=RequestStatusEnum.PENDING)  # Use enum
     source = Column(String(255), nullable=False)
     destination = Column(String(255), nullable=False)
     seats = Column(Integer, nullable=False)
     ac = Column(Boolean, default=False)
     smoking = Column(Boolean, default=False)
     music = Column(Boolean, default=False)
-    gender_preference = Column(Boolean, default=False)
+    gender_preference = Column(SQLEnum(GenderPreferenceEnum), default=GenderPreferenceEnum.ANY)  # Use enum
     
     # Relationships
     passenger = relationship("User", back_populates="ride_requests")

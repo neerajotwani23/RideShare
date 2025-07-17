@@ -86,15 +86,15 @@ const ChangePasswordScreen = ({ navigation }: any) => {
             Enter your current password and choose a new one
           </Text>
 
-          <TextInput
+        <TextInput
             style={styles.input}
             mode="outlined"
-            label="Current Password"
-            value={currentPassword}
-            onChangeText={setCurrentPassword}
+          label="Current Password"
+          value={currentPassword}
+          onChangeText={setCurrentPassword}
             secureTextEntry={!showCurrentPassword}
-            outlineColor={COLORS.border}
-            activeOutlineColor={COLORS.accent}
+          outlineColor={COLORS.border}
+          activeOutlineColor={COLORS.accent}
             theme={{ roundness: 12 }}
             error={!!errors.currentPassword}
             left={<TextInput.Icon icon={() => <Icon name="lock-outline" size={20} color={COLORS.textSecondary} />} />}
@@ -107,15 +107,15 @@ const ChangePasswordScreen = ({ navigation }: any) => {
           />
           {errors.currentPassword ? <Text style={styles.errorText}>{errors.currentPassword}</Text> : null}
 
-          <TextInput
+        <TextInput
             style={styles.input}
             mode="outlined"
-            label="New Password"
-            value={newPassword}
-            onChangeText={setNewPassword}
+          label="New Password"
+          value={newPassword}
+          onChangeText={setNewPassword}
             secureTextEntry={!showNewPassword}
-            outlineColor={COLORS.border}
-            activeOutlineColor={COLORS.accent}
+          outlineColor={COLORS.border}
+          activeOutlineColor={COLORS.accent}
             theme={{ roundness: 12 }}
             error={!!errors.newPassword}
             left={<TextInput.Icon icon={() => <Icon name="lock-plus-outline" size={20} color={COLORS.textSecondary} />} />}
@@ -128,15 +128,15 @@ const ChangePasswordScreen = ({ navigation }: any) => {
           />
           {errors.newPassword ? <Text style={styles.errorText}>{errors.newPassword}</Text> : null}
 
-          <TextInput
+        <TextInput
             style={styles.input}
             mode="outlined"
-            label="Confirm New Password"
-            value={confirmPassword}
-            onChangeText={setConfirmPassword}
+          label="Confirm New Password"
+          value={confirmPassword}
+          onChangeText={setConfirmPassword}
             secureTextEntry={!showConfirmPassword}
-            outlineColor={COLORS.border}
-            activeOutlineColor={COLORS.accent}
+          outlineColor={COLORS.border}
+          activeOutlineColor={COLORS.accent}
             theme={{ roundness: 12 }}
             error={!!errors.confirmPassword}
             left={<TextInput.Icon icon={() => <Icon name="lock-check-outline" size={20} color={COLORS.textSecondary} />} />}
@@ -153,10 +153,10 @@ const ChangePasswordScreen = ({ navigation }: any) => {
             <Text style={styles.requirementsTitle}>Password Requirements:</Text>
             <Text style={styles.requirement}>• At least 6 characters long</Text>
             <Text style={styles.requirement}>• Must be different from current password</Text>
-          </View>
+      </View>
 
-          <Button
-            mode="contained"
+      <Button
+        mode="contained"
             onPress={handleChangePassword}
             style={styles.changeButton}
             contentStyle={styles.buttonContent}
@@ -165,7 +165,7 @@ const ChangePasswordScreen = ({ navigation }: any) => {
             loading={isLoading}
           >
             Change Password
-          </Button>
+      </Button>
         </Card.Content>
       </Card>
     </SafeAreaView>

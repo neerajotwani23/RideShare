@@ -72,6 +72,7 @@ function PostRideStack() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="PostRideMain" component={PostRideScreen} />
+      <Stack.Screen name="SuggestedRides" component={SuggestedRidesScreen} />
       <Stack.Screen name="RideDetails" component={RideDetailsScreen} />
       <Stack.Screen name="DuringRide" component={DuringRideScreen} />
       <Stack.Screen name="RateRide" component={RateRideScreen} />

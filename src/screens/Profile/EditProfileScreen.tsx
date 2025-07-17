@@ -139,38 +139,38 @@ const EditProfileScreen = ({ navigation }: any) => {
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         {/* Header */}
-        <View style={styles.header}>
-          <IconButton
-            icon="arrow-left"
-            size={24}
-            iconColor={COLORS.secondary}
-            onPress={() => navigation.goBack()}
+      <View style={styles.header}>
+        <IconButton
+          icon="arrow-left"
+          size={24}
+          iconColor={COLORS.secondary}
+          onPress={() => navigation.goBack()}
             style={styles.backButton}
-          />
-          <Text style={styles.headerTitle}>Edit Profile</Text>
+        />
+        <Text style={styles.headerTitle}>Edit Profile</Text>
           <View style={{ width: 48 }} />
-        </View>
+      </View>
 
         <Card style={styles.card}>
           <Card.Content style={styles.cardContent}>
             <Text style={styles.sectionTitle}>Personal Information</Text>
-
-            <TextInput
+            
+              <TextInput
               style={styles.input}
               mode="outlined"
               label="Full Name"
-              value={fullName}
-              onChangeText={setFullName}
+                value={fullName}
+                onChangeText={setFullName}
               outlineColor={COLORS.border}
               activeOutlineColor={COLORS.accent}
               theme={{ roundness: 12 }}
               error={!!errors.fullName}
-            />
-            {errors.fullName ? <Text style={styles.errorText}>{errors.fullName}</Text> : null}
+              />
+              {errors.fullName ? <Text style={styles.errorText}>{errors.fullName}</Text> : null}
 
-            <TextInput
+              <TextInput
               style={styles.input}
-              mode="outlined"
+                mode="outlined"
               label="Email Address"
               value={email}
               onChangeText={setEmail}
@@ -183,37 +183,37 @@ const EditProfileScreen = ({ navigation }: any) => {
             />
             {errors.email ? <Text style={styles.errorText}>{errors.email}</Text> : null}
 
-            <TextInput
+              <TextInput
               style={styles.input}
-              mode="outlined"
+                mode="outlined"
               label="Phone Number"
               value={phone}
               onChangeText={(text) => setPhone(formatPhone(text))}
               keyboardType="phone-pad"
-              outlineColor={COLORS.border}
-              activeOutlineColor={COLORS.accent}
+                outlineColor={COLORS.border}
+                activeOutlineColor={COLORS.accent}
               theme={{ roundness: 12 }}
               error={!!errors.phone}
             />
             {errors.phone ? <Text style={styles.errorText}>{errors.phone}</Text> : null}
 
-            <TextInput
+              <TextInput
               style={styles.input}
               mode="outlined"
               label="CNIC"
-              value={cnic}
-              onChangeText={(text) => setCnic(formatCNIC(text))}
+                value={cnic}
+                onChangeText={(text) => setCnic(formatCNIC(text))}
               keyboardType="numeric"
-              outlineColor={COLORS.border}
-              activeOutlineColor={COLORS.accent}
+                outlineColor={COLORS.border}
+                activeOutlineColor={COLORS.accent}
               theme={{ roundness: 12 }}
               error={!!errors.cnic}
             />
             {errors.cnic ? <Text style={styles.errorText}>{errors.cnic}</Text> : null}
 
-            <TextInput
+              <TextInput
               style={[styles.input, styles.textArea]}
-              mode="outlined"
+                mode="outlined"
               label="About"
               value={about}
               onChangeText={setAbout}
@@ -244,15 +244,15 @@ const EditProfileScreen = ({ navigation }: any) => {
           <Card.Content style={styles.cardContent}>
             <Text style={styles.sectionTitle}>Security</Text>
             
-            <Button
-              mode="outlined"
-              onPress={handleChangePassword}
-              style={styles.changePasswordButton}
+              <Button
+                mode="outlined"
+                onPress={handleChangePassword}
+                style={styles.changePasswordButton}
               contentStyle={styles.buttonContent}
               labelStyle={[styles.buttonLabel, { color: COLORS.accent }]}
-            >
+              >
               Change Password
-            </Button>
+              </Button>
           </Card.Content>
         </Card>
       </ScrollView>

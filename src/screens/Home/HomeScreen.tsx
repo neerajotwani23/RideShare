@@ -93,7 +93,7 @@ const HomeScreen = ({ navigation }: any) => {
           <Text style={styles.sectionTitle}>Quick Actions</Text>
           <View style={styles.quickActionsGrid}>
             {quickActions.map((action, index) => (
-              <TouchableOpacity
+              <TouchableOpacity 
                 key={index}
                 style={styles.quickActionCard}
                 onPress={action.onPress}
@@ -110,7 +110,7 @@ const HomeScreen = ({ navigation }: any) => {
             <View style={styles.walletHeader}>
               <Icon name="wallet-outline" size={24} color={COLORS.accent} />
               <Text style={styles.walletTitle}>Wallet Balance</Text>
-            </View>
+                  </View>
             <Text style={styles.walletBalance}>
               Rs. {walletBalance.toFixed(2)}
             </Text>
@@ -120,8 +120,8 @@ const HomeScreen = ({ navigation }: any) => {
             >
               <Text style={styles.addMoneyText}>Add Money</Text>
             </TouchableOpacity>
-          </Card.Content>
-        </Card>
+              </Card.Content>
+            </Card>
       </ScrollView>
     </SafeAreaView>
   );

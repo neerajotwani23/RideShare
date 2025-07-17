@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker, declarative_base
 import os
 from dotenv import load_dotenv
@@ -33,5 +33,45 @@ else:
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-#Base = declarative_base()
-#Base.metadata.create_all(engine)
+# Function to setup database schema
+def setup_database_schema():
+    """Create database tables if they don't exist"""
+    print("🗑️  Checking database schema...")
+    
+    try:
+        # Import Base here to avoid circular imports
+        from .models import Base
+        
+        # Check if tables already exist
+        with engine.connect() as connection:
+            try:
+                result = connection.execute(text("SHOW TABLES"))
+                existing_tables = [row[0] for row in result]
+                
+                if existing_tables:
+                    print(f"ℹ️  Found {len(existing_tables)} existing tables: {existing_tables}")
+                    print("✅ Database schema already exists, skipping creation")
+                    return
+                else:
+                    print("ℹ️  No existing tables found")
+            except Exception as e:
+                print(f"⚠️  Could not check existing tables: {e}")
+                print("ℹ️  Proceeding with table creation...")
+        
+        print("🏗️  Creating tables with updated schema...")
+        Base.metadata.create_all(bind=engine)
+        
+        print("✅ Database schema setup completed successfully!")
+        print("📋 Schema includes:")
+        print("  - Proper enum types for user_type, ride_status, gender_preference")
+        print("  - Updated field names (seats_offered instead of seats)")
+        print("  - Proper relationships and constraints")
+        
+    except Exception as e:
+        print(f"❌ Error setting up database: {e}")
+        raise
+
+# Uncomment the line below to automatically reset database on startup
+# reset_database_schema()
+
+Base = declarative_base()

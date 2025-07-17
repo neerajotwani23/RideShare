@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, Platform, TouchableOpacity, Alert } from 'react-native';
+import { View, StyleSheet, ScrollView, Platform, TouchableOpacity, Alert, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Text, TextInput, Button, Switch, HelperText, Card } from 'react-native-paper';
 import Icon from '../../components/Icon';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { COLORS } from '../../constants/colors';
 import { useApp } from '../../context/AppContext';
+
+const { height: screenHeight } = Dimensions.get('window');
 
 const PostRideScreen = ({ navigation }: any) => {
   const [source, setSource] = useState('');
@@ -21,7 +23,6 @@ const PostRideScreen = ({ navigation }: any) => {
   const [music, setMusic] = useState(false);
   const [smoking, setSmoking] = useState(false);
   const [error, setError] = useState('');
-  const [showSuggestedRide, setShowSuggestedRide] = useState(false);
 
   const { createRide, isLoading } = useApp();
 
@@ -32,17 +33,30 @@ const PostRideScreen = ({ navigation }: any) => {
     }
     setError('');
     
+    // Create timing datetime based on ride type
+    let timing: Date;
+    if (rideType === 'now') {
+      timing = new Date(); // Current time
+    } else {
+      // Combine date and time for scheduled rides
+      const combinedDateTime = new Date(date);
+      combinedDateTime.setHours(time.getHours());
+      combinedDateTime.setMinutes(time.getMinutes());
+      combinedDateTime.setSeconds(0);
+      combinedDateTime.setMilliseconds(0);
+      timing = combinedDateTime;
+    }
+    
     const rideData = {
+      timing: timing.toISOString(),
       source,
       destination,
-      seats: parseInt(seats),
+      seats_offered: parseInt(seats),
       fare: parseFloat(fare),
       ac,
       music,
-      smoking: !smoking, // Backend expects smoking_allowed
-      ride_type: rideType,
-      scheduled_date: rideType === 'schedule' ? date.toISOString().split('T')[0] : null,
-      scheduled_time: rideType === 'schedule' ? time.toISOString().split('T')[1].split('.')[0] : null,
+      smoking: smoking, // Backend expects smoking boolean directly
+      gender_preference: 'any' // Default to any gender preference
     };
     
     try {
@@ -50,10 +64,12 @@ const PostRideScreen = ({ navigation }: any) => {
       Alert.alert(
         'Success',
         'Your ride has been posted successfully!',
-        [{ text: 'OK', onPress: () => navigation.goBack() }]
+        [{ text: 'OK', onPress: () => navigation.navigate('SuggestedRides') }]
       );
     } catch (error: any) {
-      setError(error.message || 'Failed to post ride. Please try again.');
+      console.error('Post ride error:', error);
+      const errorMessage = error?.message || error?.toString() || 'Failed to post ride. Please try again.';
+      setError(errorMessage);
     }
   };
 
@@ -85,19 +101,6 @@ const PostRideScreen = ({ navigation }: any) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      {showSuggestedRide ? (
-        <View style={[styles.absoluteSheet, { justifyContent: 'flex-start' }]}> 
-          <View style={styles.bottomSheet}>
-            <TouchableOpacity style={{ marginTop: 16, marginBottom: 8, alignSelf: 'flex-start' }} onPress={() => setShowSuggestedRide(false)}>
-              <Icon name="arrow-left" size={24} color={COLORS.secondary} />
-            </TouchableOpacity>
-            <Text style={{ fontSize: 22, fontWeight: "bold", fontFamily: 'Montserrat-Bold', color: COLORS.secondary, marginBottom: 16, marginLeft: 2 }}>Suggested Rides</Text>
-            {/* RideCard component was removed from imports, so this will cause an error */}
-            {/* <RideCard ride={mockSuggestedRide} /> */}
-          </View>
-        </View>
-      ) : (
-        <>
       <View style={styles.mapPlaceholder}>
         {/* Map placeholder similar to FindRideScreen */}
         </View>
@@ -324,8 +327,6 @@ const PostRideScreen = ({ navigation }: any) => {
             display="default"
             onChange={onTimeChange}
           />
-          )}
-        </>
         )}
     </SafeAreaView>
   );

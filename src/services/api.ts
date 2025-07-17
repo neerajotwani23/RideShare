@@ -15,8 +15,35 @@ const getAuthHeaders = async () => {
 // Helper function to handle API responses
 const handleResponse = async (response: Response) => {
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.detail || errorData.message || `HTTP ${response.status}`);
+    try {
+      const errorData = await response.json();
+      
+      // Handle different error response formats
+      if (errorData.detail) {
+        throw new Error(errorData.detail);
+      } else if (errorData.message) {
+        throw new Error(errorData.message);
+      } else if (errorData.error) {
+        throw new Error(errorData.error);
+      } else if (Array.isArray(errorData)) {
+        // Handle array of validation errors
+        const errorMessages = errorData.map((err: any) => 
+          err.message || err.msg || JSON.stringify(err)
+        ).join(', ');
+        throw new Error(errorMessages);
+      } else if (typeof errorData === 'object') {
+        // Handle object with multiple error fields
+        const errorMessages = Object.entries(errorData)
+          .map(([key, value]) => `${key}: ${value}`)
+          .join(', ');
+        throw new Error(errorMessages);
+      } else {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+    } catch (parseError) {
+      // If JSON parsing fails, throw generic error
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
   }
   return response.json();
 };
