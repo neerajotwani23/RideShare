@@ -1,9 +1,12 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, Image } from 'react-native';
+import React, { useState, useRef, useEffect } from 'react';
+import { View, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, Image, ActivityIndicator, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Text, TextInput, IconButton } from 'react-native-paper';
+import { Text, IconButton } from 'react-native-paper';
 import { TouchableOpacity } from 'react-native';
 import { COLORS } from '../../constants/colors';
+import groqService from '../../services/groqService';
+import { api } from '../../services/api';
+import { useNavigation } from '@react-navigation/native';
 
 interface Message {
   id: number;
@@ -14,57 +17,178 @@ interface Message {
 }
 
 const ChatBotScreen = () => {
+  const navigation = useNavigation();
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 1,
-      text: "Hello! I'm your RideShare assistant. How can I help you today?",
+      text: "Hello there! 👋 It's nice to meet you!",
+      isUser: false,
+      timestamp: new Date(),
+    },
+    {
+      id: 2,
+      text: "What brings you here today? Please use the navigation below or ask me anything about RideShare. 📝",
       isUser: false,
       timestamp: new Date(),
     },
   ]);
   const [inputText, setInputText] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [userData, setUserData] = useState<any>(null);
+  const [showQuickQuestions, setShowQuickQuestions] = useState(true);
+  const scrollViewRef = useRef<ScrollView>(null);
 
-  const sendMessage = () => {
-    if (inputText.trim()) {
+  const handleInputChange = (text: string) => {
+    console.log('Input changed:', text);
+    setInputText(text);
+  };
+
+  const sendMessage = async () => {
+    const messageText = inputText.trim();
+    if (messageText && !isLoading) {
+      // Hide quick questions after first user message
+      setShowQuickQuestions(false);
+      
       const userMessage: Message = {
         id: messages.length + 1,
-        text: inputText,
+        text: messageText,
         isUser: true,
         timestamp: new Date(),
       };
       
       setMessages(prev => [...prev, userMessage]);
+      setIsLoading(true);
       
-      // Simulate bot response
-      setTimeout(() => {
+      try {
+        // Get AI response from Groq
+        const aiResponse = await groqService.sendMessage(messageText);
+        
         const botResponse: Message = {
           id: messages.length + 2,
-          text: "Thanks for your message! I'm here to help with any ride-related questions.",
+          text: aiResponse,
           isUser: false,
           timestamp: new Date(),
         };
+        
         setMessages(prev => [...prev, botResponse]);
-      }, 1000);
-      
-      setInputText('');
+        
+        // Save conversation history
+        await groqService.saveConversationHistory();
+      } catch (error) {
+        console.error('Error getting AI response:', error);
+        const errorMessage: Message = {
+          id: messages.length + 2,
+          text: "Sorry, I'm having trouble connecting right now. Please try again later.",
+          isUser: false,
+          timestamp: new Date(),
+        };
+        setMessages(prev => [...prev, errorMessage]);
+      } finally {
+        setIsLoading(false);
+        setInputText('');
+      }
     }
   };
 
-  const handleSuggestion = (suggestion: string) => {
-    setInputText(suggestion);
+  const handleSuggestion = async (suggestion: string) => {
+    if (!isLoading) {
+      // Hide quick questions after first user message
+      setShowQuickQuestions(false);
+      
+      const userMessage: Message = {
+        id: messages.length + 1,
+        text: suggestion,
+        isUser: true,
+        timestamp: new Date(),
+      };
+      
+      setMessages(prev => [...prev, userMessage]);
+      setIsLoading(true);
+      
+      try {
+        // Get AI response from Groq
+        const aiResponse = await groqService.sendMessage(suggestion);
+        
+        const botResponse: Message = {
+          id: messages.length + 2,
+          text: aiResponse,
+          isUser: false,
+          timestamp: new Date(),
+        };
+        
+        setMessages(prev => [...prev, botResponse]);
+        
+        // Save conversation history
+        await groqService.saveConversationHistory();
+      } catch (error) {
+        console.error('Error getting AI response:', error);
+        const errorMessage: Message = {
+          id: messages.length + 2,
+          text: "Sorry, I'm having trouble connecting right now. Please try again later.",
+          isUser: false,
+          timestamp: new Date(),
+        };
+        setMessages(prev => [...prev, errorMessage]);
+      } finally {
+        setIsLoading(false);
+      }
+    }
   };
 
   const quickQuestions = [
-    "Where are you?",
-    "I'm running late",
-    "Change pickup location",
-    "Cancel ride"
+    "What's my current balance?",
+    "How do I book a ride?",
+    "How do I post a ride as a driver?",
+    "How do I cancel a ride?",
+    "What's my rating?"
   ];
 
+  // Auto-scroll to bottom when new messages arrive
+  useEffect(() => {
+    if (scrollViewRef.current) {
+      setTimeout(() => {
+        scrollViewRef.current?.scrollToEnd({ animated: true });
+      }, 100);
+    }
+  }, [messages]);
+
+  // Load conversation history and user data on component mount
+  useEffect(() => {
+    groqService.loadConversationHistory();
+    loadUserData();
+  }, []);
+
+  const loadUserData = async () => {
+    try {
+      const user = await api.getCurrentUser();
+      setUserData(user);
+      // Update Groq service with user context
+      groqService.setUserContext(user);
+    } catch (error) {
+      console.error('Error loading user data:', error);
+    }
+  };
+
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
-        <Text style={styles.title}>RideShare Assistant</Text>
+        <View style={styles.headerCenter}>
+          <View style={styles.avatarContainer}>
+            <View style={styles.avatar}>
+              <IconButton
+                icon="robot"
+                size={32}
+                iconColor="#FFFFFF"
+                style={styles.robotIcon}
+              />
+            </View>
+            <View style={styles.onlineIndicator} />
+          </View>
+          <View style={styles.headerText}>
+            <Text style={styles.title}>ChatBot</Text>
+            <Text style={styles.subtitle}>Online</Text>
+          </View>
+        </View>
       </View>
 
       <KeyboardAvoidingView 
@@ -72,6 +196,7 @@ const ChatBotScreen = () => {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
         <ScrollView 
+          ref={scrollViewRef}
           style={styles.messagesContainer}
           contentContainerStyle={styles.messagesContent}
           showsVerticalScrollIndicator={false}
@@ -87,7 +212,7 @@ const ChatBotScreen = () => {
               {!message.isUser && (
                 <View style={styles.avatarContainer}>
                   <View style={[styles.avatar, styles.botAvatar]}>
-                    <Text style={styles.avatarText}>R</Text>
+                    <Text style={styles.avatarText}>C</Text>
                   </View>
                 </View>
               )}
@@ -117,7 +242,7 @@ const ChatBotScreen = () => {
               {message.isUser && (
                 <View style={styles.avatarContainer}>
                   <View style={[styles.avatar, styles.userAvatar]}>
-                    <Text style={styles.avatarText}>Y</Text>
+                    <Text style={styles.avatarText}>U</Text>
                   </View>
                 </View>
               )}
@@ -125,52 +250,54 @@ const ChatBotScreen = () => {
           ))}
         </ScrollView>
 
+        {/* Loading Indicator */}
+        {isLoading && (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="small" color={COLORS.primary} />
+            <Text style={styles.loadingText}>AI is thinking...</Text>
+          </View>
+        )}
+
         {/* Quick Questions */}
-        <View style={styles.quickQuestionsContainer}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.quickQuestionsScroll}>
+        {showQuickQuestions && (
+          <View style={styles.quickQuestionsContainer}>
             {quickQuestions.map((question, index) => (
               <TouchableOpacity 
                 key={index} 
                 style={styles.quickQuestionChip}
                 onPress={() => handleSuggestion(question)}
+                disabled={isLoading}
               >
                 <Text style={styles.quickQuestionText}>{question}</Text>
               </TouchableOpacity>
             ))}
-          </ScrollView>
-        </View>
+          </View>
+        )}
 
         {/* Input Container */}
         <View style={styles.inputContainer}>
-          <TouchableOpacity style={styles.micButton}>
-            <IconButton
-              icon="microphone"
-              size={26}
-              iconColor={COLORS.textSecondary}
-              style={styles.micIconButton}
-            />
-          </TouchableOpacity>
           <View style={styles.inputWrapper}>
             <TextInput
               style={styles.textInput}
               value={inputText}
-              onChangeText={setInputText}
-              placeholder="Start typing..."
-              multiline
+              onChangeText={handleInputChange}
+              placeholder="Type your message here"
               placeholderTextColor={COLORS.textSecondary}
-              underlineColor="transparent"
-              activeUnderlineColor="transparent"
-              outlineColor="transparent"
-              activeOutlineColor="transparent"
-              mode="flat"
-              contentStyle={styles.inputContent}
+              multiline={false}
+              editable={true}
+              blurOnSubmit={true}
+              onSubmitEditing={sendMessage}
             />
           </View>
-          <TouchableOpacity style={styles.sendButton} onPress={sendMessage}>
+          <TouchableOpacity 
+            style={[styles.sendButton, isLoading && styles.sendButtonDisabled]} 
+            onPress={sendMessage}
+            disabled={isLoading || !inputText.trim()}
+          >
             <IconButton
               icon="send"
               size={20}
-              iconColor={COLORS.primary}
+              iconColor="#FFFFFF"
             />
           </TouchableOpacity>
         </View>
@@ -192,17 +319,46 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.lightGray,
   },
   header: {
+    flexDirection: 'row',
+    justifyContent: 'flex-start',
+    alignItems: 'center',
     padding: 16,
     paddingVertical: 20,
     backgroundColor: COLORS.primary,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.border,
+  },
+  headerCenter: {
+    flexDirection: 'row',
     alignItems: 'center',
   },
   title: {
     fontSize: 18,
     fontFamily: 'Montserrat-SemiBold',
     color: COLORS.secondary,
+  },
+  subtitle: {
+    fontSize: 12,
+    fontFamily: 'Montserrat-Regular',
+    color: COLORS.textSecondary,
+  },
+  headerText: {
+    marginLeft: 12,
+  },
+  onlineIndicator: {
+    position: 'absolute',
+    bottom: 2,
+    right: 2,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#4CAF50',
+    borderWidth: 1,
+    borderColor: COLORS.primary,
+  },
+  robotIcon: {
+    margin: 0,
+    padding: 0,
   },
   chatContainer: {
     flex: 1,
@@ -256,13 +412,14 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   avatarContainer: {
-    width: 30,
-    height: 30,
+    width: 48,
+    height: 48,
   },
   avatar: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#0A80ED',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -279,21 +436,24 @@ const styles = StyleSheet.create({
   },
   quickQuestionsContainer: {
     paddingHorizontal: 16,
-    paddingVertical: 8,
-  },
-  quickQuestionsScroll: {
-    flexGrow: 0,
+    paddingVertical: 16,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
   },
   quickQuestionChip: {
-    backgroundColor: '#0A80ED',
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: '#0A80ED',
     paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingVertical: 12,
     borderRadius: 20,
-    marginRight: 8,
+    marginBottom: 8,
+    minWidth: '48%',
   },
   aiWarningContainer: {
     paddingHorizontal: 16,
-    paddingVertical: 4,
+    paddingVertical: 2,
     backgroundColor: COLORS.primary,
   },
   aiWarningText: {
@@ -303,25 +463,27 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   quickQuestionText: {
-    color: '#FFFFFF',
+    color: '#0A80ED',
     fontSize: 14,
     fontFamily: 'Montserrat-Medium',
+    textAlign: 'center',
   },
   inputContainer: {
     flexDirection: 'row',
     padding: 16,
+    paddingBottom: 8,
     backgroundColor: COLORS.primary,
     alignItems: 'center',
   },
   inputWrapper: {
     flex: 1,
     flexDirection: 'row',
-    backgroundColor: '#D3D3D3',
+    backgroundColor: '#F5F5F5',
     borderRadius: 24,
-    paddingHorizontal: 8,
+    paddingHorizontal: 16,
     paddingVertical: 6,
     marginRight: 12,
-    height: 40,
+    height: 48,
     alignItems: 'center',
   },
   textInput: {
@@ -336,20 +498,29 @@ const styles = StyleSheet.create({
     paddingHorizontal: 0,
     paddingVertical: 0,
   },
-  micButton: {
-    marginRight: 8,
-  },
-  micIconButton: {
-    margin: 0,
-    padding: 0,
-  },
   sendButton: {
-    backgroundColor: COLORS.secondary,
+    backgroundColor: '#0A80ED',
     borderRadius: 24,
-    width: 40,
-    height: 40,
+    width: 48,
+    height: 48,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  sendButtonDisabled: {
+    backgroundColor: COLORS.lightGray,
+  },
+  loadingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+  },
+  loadingText: {
+    marginLeft: 8,
+    fontSize: 14,
+    fontFamily: 'Montserrat-Regular',
+    color: COLORS.textSecondary,
   },
 });
 
