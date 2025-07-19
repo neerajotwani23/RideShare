@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, TouchableOpacity, Animated, Alert } from 'react-native';
+import { View, StyleSheet, ScrollView, TouchableOpacity, Animated, Alert, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Text, Card, Divider, ActivityIndicator } from 'react-native-paper';
 import { COLORS } from '../../constants/colors';
@@ -18,7 +18,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useApp } from '../../context/AppContext';
 
 const ProfileScreen = ({ navigation }: any) => {
-  const [currentRole, setCurrentRole] = useState<'driver' | 'passenger'>('passenger');
+  const [currentRole, setCurrentRole] = useState<'driver' | 'passenger' | null>(null);
   const [animatedValue] = useState(new Animated.Value(0));
   const { logout, user } = useAuth();
   const { 
@@ -28,6 +28,7 @@ const ProfileScreen = ({ navigation }: any) => {
     refreshUserProfile, 
     refreshReviews, 
     refreshMyRides,
+    updateUserRole,
     isLoading,
     isRefreshing 
   } = useApp();
@@ -42,24 +43,46 @@ const ProfileScreen = ({ navigation }: any) => {
   // Set current role based on user data
   useEffect(() => {
     if (userProfile?.user_type) {
-      setCurrentRole(userProfile.user_type);
+      // Convert database role to lowercase for local state
+      const role = userProfile.user_type.toLowerCase();
+      console.log('Setting role from database:', userProfile.user_type, '->', role);
+      setCurrentRole(role as 'driver' | 'passenger');
       Animated.timing(animatedValue, {
-        toValue: userProfile.user_type === 'driver' ? 1 : 0,
+        toValue: role === 'driver' ? 1 : 0,
         duration: 300,
         useNativeDriver: false,
       }).start();
     }
   }, [userProfile]);
 
-  const handleRoleSwitch = () => {
-    const newRole = currentRole === 'driver' ? 'passenger' : 'driver';
-    setCurrentRole(newRole);
+  const handleRoleSwitch = async () => {
+    // Don't allow switching if we're still loading or if there's no current role
+    if (!currentRole || isRefreshing) {
+      return;
+    }
     
-    Animated.timing(animatedValue, {
-      toValue: newRole === 'driver' ? 1 : 0,
-      duration: 300,
-      useNativeDriver: false,
-    }).start();
+    const newRole = currentRole === 'driver' ? 'passenger' : 'driver';
+    console.log('Switching role from:', currentRole, 'to:', newRole);
+    
+    try {
+      // Update role in database
+      await updateUserRole(newRole);
+      
+      // The profile will be refreshed automatically by updateUserRole
+      // so we don't need to manually update local state here
+      
+      Alert.alert(
+        'Role Updated',
+        `Your account is now set to ${newRole} mode.`,
+        [{ text: 'OK' }]
+      );
+    } catch (error: any) {
+      Alert.alert(
+        'Error',
+        error.message || 'Failed to update role. Please try again.',
+        [{ text: 'OK' }]
+      );
+    }
   };
 
   const handleLogout = () => {
@@ -142,7 +165,11 @@ const ProfileScreen = ({ navigation }: any) => {
         <View style={styles.header}>
           <View style={styles.avatarContainer}>
             {userProfile?.profile_picture ? (
-              <UserIcon size={60} color="#FFFFFF" />
+              <Image 
+                source={{ uri: userProfile.profile_picture }} 
+                style={styles.profileImage}
+                resizeMode="cover"
+              />
             ) : (
               <UserIcon size={60} color="#FFFFFF" />
             )}
@@ -184,9 +211,13 @@ const ProfileScreen = ({ navigation }: any) => {
           <Text style={styles.sectionTitle}>Account Mode</Text>
           <View style={styles.roleSwitchContainer}>
             <TouchableOpacity 
-              style={styles.roleSwitch}
+              style={[
+                styles.roleSwitch,
+                (!currentRole || isRefreshing || isLoading) && styles.roleSwitchDisabled
+              ]}
               onPress={handleRoleSwitch}
               activeOpacity={0.8}
+              disabled={!currentRole || isRefreshing || isLoading}
             >
               <View style={styles.roleSwitchBackground}>
                 <View style={styles.roleSwitchTextContainer}>
@@ -196,7 +227,7 @@ const ProfileScreen = ({ navigation }: any) => {
                       { color: passengerTextColor }
                     ]}
                   >
-                    {currentRole === 'passenger' ? 'Passenger' : ''}
+                    {currentRole === 'passenger' ? 'Passenger' : (currentRole === 'driver' ? '' : 'Passenger')}
                   </Animated.Text>
                   <Animated.Text 
                     style={[
@@ -204,7 +235,7 @@ const ProfileScreen = ({ navigation }: any) => {
                       { color: driverTextColor }
                     ]}
                   >
-                    {currentRole === 'driver' ? 'Driver' : ''}
+                    {currentRole === 'driver' ? 'Driver' : (currentRole === 'passenger' ? '' : 'Driver')}
                   </Animated.Text>
                 </View>
                 <Animated.View 
@@ -218,7 +249,9 @@ const ProfileScreen = ({ navigation }: any) => {
             <Text style={styles.roleSwitchDescription}>
               {currentRole === 'driver' 
                 ? 'You can offer rides to passengers' 
-                : 'You can find and book rides'
+                : currentRole === 'passenger'
+                ? 'You can find and book rides'
+                : 'Loading...'
               }
             </Text>
           </View>
@@ -327,6 +360,12 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
+    overflow: 'hidden',
+  },
+  profileImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
   },
   name: {
     fontSize: 24,
@@ -491,6 +530,9 @@ const styles = StyleSheet.create({
     color: COLORS.textSecondary,
     textAlign: 'center',
     marginTop: 8,
+  },
+  roleSwitchDisabled: {
+    opacity: 0.5,
   },
   loadingContainer: {
     flex: 1,

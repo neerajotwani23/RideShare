@@ -5,16 +5,16 @@ import enum
 from .base import Base
 
 class RideStatusEnum(enum.Enum):
-    PENDING = "pending"
-    ACTIVE = "active"
-    CONFIRMED = "confirmed"
-    COMPLETED = "completed"
-    CANCELLED = "cancelled"
+    PENDING = "PENDING"
+    ACTIVE = "ACTIVE"
+    CONFIRMED = "CONFIRMED"
+    COMPLETED = "COMPLETED"
+    CANCELLED = "CANCELLED"
 
 class GenderPreferenceEnum(enum.Enum):
-    ANY = "any"
-    MALE = "male"
-    FEMALE = "female"
+    ANY = "ANY"
+    MALE = "MALE"
+    FEMALE = "FEMALE"
 
 class Ride(Base):
     __tablename__ = "ride"

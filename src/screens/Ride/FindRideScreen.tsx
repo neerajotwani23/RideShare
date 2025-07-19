@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, TouchableOpacity, Dimensions, Platform, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { api } from '../../services/api';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 import { Text, Card, Divider, Chip, TextInput, Switch } from 'react-native-paper';
@@ -41,7 +42,7 @@ const mockResults = [
   },
 ];
 
-const FindRideScreen = ({ navigation }: any) => {
+const FindRideScreen = ({ navigation, route }: any) => {
   const [source, setSource] = useState('');
   const [destination, setDestination] = useState('');
   const [rideType, setRideType] = useState<'now' | 'schedule'>('now');
@@ -52,6 +53,32 @@ const FindRideScreen = ({ navigation }: any) => {
   const [ac, setAc] = useState(false);
   const [music, setMusic] = useState(false);
   const [smoking, setSmoking] = useState(false);
+
+  // Handle parameters passed from chatbot
+  useEffect(() => {
+    if (route?.params?.searchParams) {
+      const { searchParams, userPreferences } = route.params;
+      
+      if (searchParams.source) {
+        setSource(searchParams.source);
+      }
+      if (searchParams.destination) {
+        setDestination(searchParams.destination);
+      }
+      
+      if (userPreferences) {
+        if (userPreferences.ac !== undefined) {
+          setAc(userPreferences.ac);
+        }
+        if (userPreferences.music !== undefined) {
+          setMusic(userPreferences.music);
+        }
+        if (userPreferences.smoking !== undefined) {
+          setSmoking(userPreferences.smoking);
+        }
+      }
+    }
+  }, [route?.params]);
 
   const handleTimeChange = (event: any, selectedTime?: Date) => {
     setShowTimePicker(Platform.OS === 'ios');
@@ -79,8 +106,48 @@ const FindRideScreen = ({ navigation }: any) => {
     });
   };
 
-  const handleSearch = () => {
-    navigation.navigate('SuggestedRides');
+  const handleSearch = async () => {
+    try {
+      // Prepare search parameters with user preferences
+      const searchParams: any = {};
+      
+      if (source.trim()) {
+        searchParams.source = source.trim();
+      }
+      if (destination.trim()) {
+        searchParams.destination = destination.trim();
+      }
+      
+      // Add date and time for scheduled rides
+      if (rideType === 'schedule') {
+        const searchDate = date.toISOString().split('T')[0]; // YYYY-MM-DD format
+        searchParams.date = searchDate;
+      }
+      
+      // Add user preferences for smart sorting
+      if (ac) searchParams.ac = true;
+      if (music) searchParams.music = true;
+      if (!smoking) searchParams.smoking = false; // No smoking preference
+      
+      // Navigate to SuggestedRides with search parameters
+      navigation.navigate('SuggestedRides', { 
+        searchParams,
+        userPreferences: {
+          ac,
+          music,
+          smoking: !smoking, // Convert to smoking preference
+          preferred_time: rideType === 'schedule' ? time.toLocaleTimeString('en-US', { 
+            hour: '2-digit', 
+            minute: '2-digit',
+            hour12: false 
+          }) : undefined
+        }
+      });
+    } catch (error) {
+      console.error('Error preparing search:', error);
+      // Fallback to basic navigation
+      navigation.navigate('SuggestedRides');
+    }
   };
 
   return (

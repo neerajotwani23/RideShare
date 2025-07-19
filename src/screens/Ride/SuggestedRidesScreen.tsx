@@ -5,7 +5,7 @@ import { Icon, RideCard, RideFilters } from '../../components';
 import { COLORS } from '../../constants/colors';
 import { useApp } from '../../context/AppContext';
 
-const SuggestedRidesScreen = ({ navigation }: any) => {
+const SuggestedRidesScreen = ({ navigation, route }: any) => {
   const [showFilters, setShowFilters] = useState(false);
   const [activeFilters, setActiveFilters] = useState({
     priceRange: [0, 1000],
@@ -21,10 +21,18 @@ const SuggestedRidesScreen = ({ navigation }: any) => {
     isRefreshing 
   } = useApp();
 
+  // Get search parameters and user preferences from route
+  const searchParams = route?.params?.searchParams || {};
+  const userPreferences = route?.params?.userPreferences || {};
+
   useEffect(() => {
-    // Fetch available rides when component mounts
-    refreshAvailableRides();
-  }, []);
+    // Fetch available rides with search parameters and user preferences
+    if (Object.keys(searchParams).length > 0) {
+      refreshAvailableRides(searchParams, userPreferences);
+    } else {
+      refreshAvailableRides();
+    }
+  }, [searchParams, userPreferences]);
 
   const handleRemove = (id: string) => {
     // This would typically remove from favorites or hide the ride

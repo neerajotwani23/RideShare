@@ -34,7 +34,7 @@ interface AppContextType {
   refreshUserProfile: () => Promise<void>;
   refreshWalletBalance: () => Promise<void>;
   refreshMyRides: () => Promise<void>;
-  refreshAvailableRides: (searchParams?: any) => Promise<void>;
+  refreshAvailableRides: (searchParams?: any, userPreferences?: any) => Promise<void>;
   refreshUpcomingRides: () => Promise<void>;
   refreshPastRides: () => Promise<void>;
   refreshMyRideRequests: () => Promise<void>;
@@ -60,6 +60,7 @@ interface AppContextType {
   createVehicle: (vehicleData: any) => Promise<any>;
   updateVehicle: (vehicleId: number, vehicleData: any) => Promise<any>;
   deleteVehicle: (vehicleId: number) => Promise<any>;
+  getMyVehicles: () => Promise<any[]>;
   
   // Rating Actions
   createRating: (ratingData: any) => Promise<any>;
@@ -70,6 +71,7 @@ interface AppContextType {
   // Profile Actions
   updateProfile: (profileData: any) => Promise<any>;
   changePassword: (passwordData: any) => Promise<any>;
+  updateUserRole: (role: 'driver' | 'passenger') => Promise<any>;
   
   // Utility
   clearAllData: () => void;
@@ -78,7 +80,7 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { isAuthenticated, user, currentRole } = useAuth();
+  const { isAuthenticated, user, currentRole, updateCurrentRole } = useAuth();
   
   // State
   const [userProfile, setUserProfile] = useState<any>(null);
@@ -127,10 +129,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   }, [isAuthenticated]);
 
-  const refreshAvailableRides = useCallback(async (searchParams?: any) => {
+  const refreshAvailableRides = useCallback(async (searchParams?: any, userPreferences?: any) => {
     if (!isAuthenticated) return;
     try {
-      const rides = await api.searchRides(searchParams || {});
+      // Combine search parameters with user preferences for enhanced sorting
+      const enhancedParams = {
+        ...searchParams,
+        ...userPreferences
+      };
+      const rides = await api.searchRides(enhancedParams || {});
       setAvailableRides(rides);
     } catch (error) {
       console.error('Failed to refresh available rides:', error);
@@ -174,6 +181,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setMyVehicles(vehicles);
     } catch (error) {
       console.error('Failed to refresh vehicles:', error);
+    }
+  }, [isAuthenticated, currentRole]);
+
+  const getMyVehicles = useCallback(async () => {
+    if (!isAuthenticated || currentRole !== 'driver') return [];
+    try {
+      const vehicles = await api.getMyVehicles();
+      setMyVehicles(vehicles);
+      return vehicles;
+    } catch (error) {
+      console.error('Failed to get vehicles:', error);
+      return [];
     }
   }, [isAuthenticated, currentRole]);
 
@@ -387,6 +406,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   }, []);
 
+  const updateUserRole = useCallback(async (role: 'driver' | 'passenger') => {
+    setIsLoading(true);
+    try {
+      const result = await api.selectRole({ user_type: role.toUpperCase() });
+      await refreshUserProfile(); // Refresh profile after role update
+      
+      // Update the current role in AuthContext to trigger navigation change
+      updateCurrentRole(role);
+      
+      return result;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [refreshUserProfile, updateCurrentRole]);
+
   const clearAllData = useCallback(() => {
     setUserProfile(null);
     setWalletBalance(0);
@@ -467,10 +501,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       createVehicle,
       updateVehicle,
       deleteVehicle,
+      getMyVehicles,
       createRating,
       addMoneyToWallet,
       updateProfile,
       changePassword,
+      updateUserRole,
       clearAllData,
     }}>
       {children}

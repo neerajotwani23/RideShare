@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, Platform, TouchableOpacity, Alert, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Text, TextInput, Button, Switch, HelperText, Card } from 'react-native-paper';
@@ -9,7 +9,7 @@ import { useApp } from '../../context/AppContext';
 
 const { height: screenHeight } = Dimensions.get('window');
 
-const PostRideScreen = ({ navigation }: any) => {
+const PostRideScreen = ({ navigation, route }: any) => {
   const [source, setSource] = useState('');
   const [destination, setDestination] = useState('');
   const [rideType, setRideType] = useState('now'); // 'now' or 'schedule'
@@ -25,6 +25,24 @@ const PostRideScreen = ({ navigation }: any) => {
   const [error, setError] = useState('');
 
   const { createRide, isLoading } = useApp();
+
+  // Handle parameters passed from chatbot
+  useEffect(() => {
+    if (route?.params) {
+      const { source: paramSource, destination: paramDestination, fare: paramFare, seats: paramSeats, preferences } = route.params;
+      
+      if (paramSource) setSource(paramSource);
+      if (paramDestination) setDestination(paramDestination);
+      if (paramFare) setFare(paramFare.toString());
+      if (paramSeats) setSeats(paramSeats.toString());
+      
+      if (preferences) {
+        if (preferences.ac !== undefined) setAc(preferences.ac);
+        if (preferences.music !== undefined) setMusic(preferences.music);
+        if (preferences.smoking !== undefined) setSmoking(preferences.smoking);
+      }
+    }
+  }, [route?.params]);
 
   const handlePost = async () => {
     if (!source || !destination || !seats || !fare) {

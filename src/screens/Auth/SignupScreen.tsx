@@ -141,7 +141,7 @@ const SignupScreen = ({ navigation }: any) => {
       last_name: lastName,
       email,
       password,
-      user_type: selectedRoleForSignup,
+      user_type: selectedRoleForSignup?.toUpperCase(),
       phone_no: `${selectedCountry.callingCode}${phoneNumber}`,
       cnic,
     };

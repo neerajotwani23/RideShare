@@ -22,7 +22,7 @@ def get_db():
 SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key-here")
 # SECRET_KEY = "123ABCDEFGHIJKLMNOPQRSTWYZIKLUHHBJH"
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+ACCESS_TOKEN_EXPIRE_MINUTES = 1440  # 24 hours for development
 
 security = HTTPBearer()
 

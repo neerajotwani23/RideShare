@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, TouchableOpacity, Alert, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Text, TextInput, Button, IconButton, ActivityIndicator } from 'react-native-paper';
@@ -15,9 +15,50 @@ const VehicleDetailsScreen = ({ navigation }: any) => {
   const [drivingLicenseBack, setDrivingLicenseBack] = useState<string | null>(null);
   const [vehicleRegistration, setVehicleRegistration] = useState<string | null>(null);
   const [errors, setErrors] = useState<{[key: string]: string}>({});
+  const [isLoadingData, setIsLoadingData] = useState(true);
+  const [existingVehicle, setExistingVehicle] = useState<any>(null);
   
   const { completeVehicleDetails, logout } = useAuth();
-  const { createVehicle, isLoading } = useApp();
+  const { createVehicle, updateVehicle, getMyVehicles, isLoading } = useApp();
+
+  // Load existing vehicle data on component mount
+  useEffect(() => {
+    loadExistingVehicle();
+  }, []);
+
+  const loadExistingVehicle = async () => {
+    try {
+      setIsLoadingData(true);
+      const vehicles = await getMyVehicles();
+      console.log('Vehicles loaded:', vehicles);
+      if (vehicles && vehicles.length > 0) {
+        const vehicle = vehicles[0]; // Get the first vehicle
+        console.log('Vehicle data:', vehicle);
+        setExistingVehicle(vehicle);
+        
+        // Populate form with existing data
+        const make = vehicle.name_make || '';
+        const plate = vehicle.no_plate || '';
+        console.log('Setting make:', make, 'plate:', plate);
+        setVehicleMake(make);
+        setVehicleModel(vehicle.model || '');
+        setVehicleColor(vehicle.color || '');
+        setLicensePlate(plate);
+        setDrivingLicenseFront(null); // Not available in current schema
+        setDrivingLicenseBack(null); // Not available in current schema
+        setVehicleRegistration(vehicle.registration || null);
+        
+        // Check if vehicle data is incomplete
+        if (!make || !plate) {
+          console.log('Vehicle data is incomplete - missing make or plate');
+        }
+      }
+    } catch (error) {
+      console.error('Error loading vehicle data:', error);
+    } finally {
+      setIsLoadingData(false);
+    }
+  };
 
   const handleDocumentUpload = (documentType: 'licenseFront' | 'licenseBack' | 'vehicleReg') => {
     Alert.alert(
@@ -74,9 +115,8 @@ const VehicleDetailsScreen = ({ navigation }: any) => {
     if (!vehicleModel.trim()) newErrors.vehicleModel = 'Vehicle model is required';
     if (!vehicleColor.trim()) newErrors.vehicleColor = 'Vehicle color is required';
     if (!licensePlate.trim()) newErrors.licensePlate = 'License plate is required';
-    if (!drivingLicenseFront) newErrors.drivingLicenseFront = 'Driving license front photo is required';
-    if (!drivingLicenseBack) newErrors.drivingLicenseBack = 'Driving license back photo is required';
-    if (!vehicleRegistration) newErrors.vehicleRegistration = 'Vehicle registration document is required';
+    // Note: Driving license fields are not required in current schema
+    // if (!vehicleRegistration) newErrors.vehicleRegistration = 'Vehicle registration document is required';
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -88,27 +128,36 @@ const VehicleDetailsScreen = ({ navigation }: any) => {
     }
 
     try {
-      // Create vehicle in backend
       const vehicleData = {
-        make: vehicleMake.trim(),
+        name_make: vehicleMake.trim(),
         model: vehicleModel.trim(),
         color: vehicleColor.trim(),
-        license_plate: licensePlate.trim(),
-        driving_license_front: drivingLicenseFront,
-        driving_license_back: drivingLicenseBack,
-        vehicle_registration: vehicleRegistration,
+        no_plate: licensePlate.trim(),
+        registration: vehicleRegistration,
       };
 
-      await createVehicle(vehicleData);
+      if (existingVehicle) {
+        // Update existing vehicle
+        await updateVehicle(existingVehicle.id, vehicleData);
+        Alert.alert(
+          'Vehicle Updated!',
+          'Your vehicle details have been updated successfully!',
+          [{ text: 'OK' }]
+        );
+      } else {
+        // Create new vehicle
+        await createVehicle(vehicleData);
+        
+        // Complete vehicle details setup (only for new vehicles)
+        await completeVehicleDetails();
+        
+        Alert.alert(
+          'Vehicle Setup Complete!',
+          'Your vehicle details have been saved successfully. You can now start posting rides and earning money!',
+          [{ text: 'OK' }]
+        );
+      }
       
-      // Complete vehicle details setup
-      await completeVehicleDetails();
-      
-      Alert.alert(
-        'Success',
-        'Vehicle details saved successfully! Your account will be reviewed and activated within 24 hours.',
-        [{ text: 'OK' }]
-      );
       // Navigation will be handled automatically by AppNavigator
     } catch (error: any) {
       Alert.alert('Error', error.message || 'Failed to save vehicle details. Please try again.');
@@ -169,12 +218,26 @@ const VehicleDetailsScreen = ({ navigation }: any) => {
 
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         <View style={styles.content}>
-          <View style={styles.infoContainer}>
-            <Text style={styles.infoTitle}>Driver Verification Required</Text>
-            <Text style={styles.infoText}>
-              Please provide your vehicle details and upload required documents for verification.
-            </Text>
-          </View>
+          {isLoadingData ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color={COLORS.accent} />
+              <Text style={styles.loadingText}>Loading vehicle details...</Text>
+            </View>
+          ) : (
+            <View style={styles.infoContainer}>
+              <Text style={styles.infoTitle}>
+                {existingVehicle ? 'Update Vehicle Details' : 'Vehicle Setup Required'}
+              </Text>
+              <Text style={styles.infoText}>
+                {existingVehicle 
+                  ? existingVehicle.name_make && existingVehicle.no_plate
+                    ? 'Update your vehicle details and documents. Changes will be reflected immediately.'
+                    : 'Your vehicle details are incomplete. Please fill in the missing information below.'
+                  : 'As a driver, you need to add your vehicle details and upload required documents. This is a one-time setup to verify your account.'
+                }
+              </Text>
+            </View>
+          )}
 
           <View style={styles.inputContainer}>
             <Text style={styles.inputLabel}>Vehicle Make *</Text>
@@ -322,10 +385,15 @@ const VehicleDetailsScreen = ({ navigation }: any) => {
           style={styles.saveButton}
           contentStyle={styles.buttonContent}
           labelStyle={styles.buttonLabel}
-          disabled={isLoading}
+          disabled={isLoading || isLoadingData}
           loading={isLoading}
         >
-          Save & Complete Setup
+          {existingVehicle 
+            ? existingVehicle.name_make && existingVehicle.no_plate
+              ? 'Update Vehicle'
+              : 'Complete Vehicle Details'
+            : 'Save & Complete Setup'
+          }
         </Button>
       </View>
     </SafeAreaView>
@@ -382,6 +450,17 @@ const styles = StyleSheet.create({
     fontFamily: 'Montserrat-Regular',
     color: COLORS.textSecondary,
     lineHeight: 20,
+  },
+  loadingContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 40,
+  },
+  loadingText: {
+    fontSize: 16,
+    fontFamily: 'Montserrat-Regular',
+    color: COLORS.textSecondary,
+    marginTop: 16,
   },
   inputContainer: {
     marginBottom: 20,

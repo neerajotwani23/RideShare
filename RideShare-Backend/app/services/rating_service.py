@@ -40,8 +40,10 @@ class RatingService:
     
     def get_reviews_received_by_user(self, user_id: int) -> List[RatingsReviews]:
         """Get all ratings/reviews received by a user"""
-        return self.db.query(RatingsReviews).filter(RatingsReviews.user_id == user_id).all()
+        # For now, return empty list since the current schema doesn't support this
+        # The schema needs to be updated to include a reviewee_id column
+        return []
     
-    def get_reviews_given_by_user(self, rated_by_user_id: int) -> List[RatingsReviews]:
+    def get_reviews_given_by_user(self, user_id: int) -> List[RatingsReviews]:
         """Get all ratings/reviews given by a user"""
-        return self.db.query(RatingsReviews).filter(RatingsReviews.rated_by_user_id == rated_by_user_id).all() 
+        return self.db.query(RatingsReviews).filter(RatingsReviews.user_id == user_id).all() 

@@ -6,8 +6,8 @@ from decimal import Decimal
 
 # Enums matching the database models
 class UserTypeEnum(str, Enum):
-    DRIVER = "driver"
-    PASSENGER = "passenger"
+    DRIVER = "DRIVER"
+    PASSENGER = "PASSENGER"
 
 class TransactionType(str, Enum):
     DEBIT = "debit"
@@ -106,18 +106,18 @@ class AddMoney(BaseModel):
 
 # ============== VEHICLE SCHEMAS ==============
 class VehicleBase(BaseModel):
+    name_make: Optional[str] = None  # matches database column
     model: Optional[str] = None
-    name_make: Optional[str] = None
     color: Optional[str] = None
-    no_plate: Optional[str] = None
-    registration: Optional[str] = None
+    no_plate: Optional[str] = None  # matches database column
+    registration: Optional[str] = None  # matches database column
 
 class VehicleCreate(VehicleBase):
     user_id: Optional[int] = None  # Will be set by controller
 
 class VehicleUpdate(BaseModel):
-    model: Optional[str] = None
     name_make: Optional[str] = None
+    model: Optional[str] = None
     color: Optional[str] = None
     no_plate: Optional[str] = None
     registration: Optional[str] = None
@@ -127,8 +127,9 @@ class VehicleResponse(VehicleBase):
     user_id: int
     created_at: datetime
     
-    class Config:
-        from_attributes = True
+    model_config = {
+        'from_attributes': True
+    }
 
 # ============== RIDE SCHEMAS ==============
 class RideBase(BaseModel):

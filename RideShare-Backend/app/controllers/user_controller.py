@@ -145,9 +145,14 @@ class UserController:
         db: Session = Depends(get_db)
     ):
         """Get all reviews given by current user"""
-        from ..services import RatingService
-        rating_service = RatingService(db)
-        return rating_service.get_reviews_given_by_user(current_user.id)
+        try:
+            from ..services import RatingService
+            rating_service = RatingService(db)
+            return rating_service.get_reviews_given_by_user(current_user.id)
+        except Exception as e:
+            # Return empty list if there's any database issue
+            print(f"Error getting reviews given: {e}")
+            return []
     
     def get_reviews_received(
         self,
@@ -155,9 +160,14 @@ class UserController:
         db: Session = Depends(get_db)
     ):
         """Get all reviews received by current user"""
-        from ..services import RatingService
-        rating_service = RatingService(db)
-        return rating_service.get_reviews_received_by_user(current_user.id)
+        try:
+            from ..services import RatingService
+            rating_service = RatingService(db)
+            return rating_service.get_reviews_received_by_user(current_user.id)
+        except Exception as e:
+            # Return empty list if there's any database issue
+            print(f"Error getting reviews received: {e}")
+            return []
     
     def search_users(
         self,

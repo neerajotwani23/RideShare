@@ -146,12 +146,12 @@ const ProfileSetupScreen = ({ navigation, route }: any) => {
 
         <View style={styles.infoContainer}>
           <Text style={styles.infoTitle}>
-            {userRole === 'driver' ? 'Complete Your Profile' : 'Complete Your Profile Later'}
+            {userRole === 'driver' ? 'Welcome! Complete Your Profile' : 'Welcome! Set Up Your Profile'}
           </Text>
           <Text style={styles.infoText}>
             {userRole === 'driver' 
-              ? 'As a driver, you need to complete your profile before proceeding to vehicle details.'
-              : 'You can add more details like preferences and settings from your profile page anytime.'
+              ? 'As a driver, please complete your profile with a photo and bio. This helps passengers trust you. You\'ll then be asked to add your vehicle details.'
+              : 'Add a profile photo and bio to help other users recognize you. You can always update these later from your profile settings.'
             }
           </Text>
         </View>

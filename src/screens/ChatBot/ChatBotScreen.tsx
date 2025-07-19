@@ -136,11 +136,11 @@ const ChatBotScreen = () => {
   };
 
   const quickQuestions = [
-    "What's my current balance?",
     "How do I book a ride?",
-    "How do I post a ride as a driver?",
-    "How do I cancel a ride?",
-    "What's my rating?"
+    "Find available rides",
+    "Post a ride from Islamabad to Lahore",
+    "Create a ride with AC and music",
+    "How do I check my wallet balance?"
   ];
 
   // Auto-scroll to bottom when new messages arrive
@@ -156,7 +156,16 @@ const ChatBotScreen = () => {
   useEffect(() => {
     groqService.loadConversationHistory();
     loadUserData();
-  }, []);
+    
+    // Set up navigation callback for ride search and posting
+    groqService.setNavigationCallback((screen: string, params?: any) => {
+      if (screen === 'FindRide') {
+        (navigation as any).navigate('FindRide', params);
+      } else if (screen === 'PostRide') {
+        (navigation as any).navigate('PostRide', params);
+      }
+    });
+  }, [navigation]);
 
   const loadUserData = async () => {
     try {

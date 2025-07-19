@@ -10,8 +10,8 @@ load_dotenv()
 # Default to SQLite for development, but can be overridden for MySQL
 #DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./sobia.db")
 
-# For MySQL, use this format:
-DATABASE_URL = "mysql+pymysql://root:zoha@localhost:3306/rideshare2"
+# For PostgreSQL (Neon DB), use this format:
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://neondb_owner:npg_SaTLjA8DHoG7@ep-snowy-night-a1y5r19x-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require")
 
 print(f"🔗 Connecting to database: {DATABASE_URL.split('@')[0] if '@' in DATABASE_URL else DATABASE_URL}")
 
@@ -23,7 +23,7 @@ if "sqlite" in DATABASE_URL:
         connect_args={"check_same_thread": False}
     )
 else:
-    # MySQL specific configuration  
+    # PostgreSQL specific configuration  
     engine = create_engine(
         DATABASE_URL,
         pool_pre_ping=True,
@@ -45,7 +45,10 @@ def setup_database_schema():
         # Check if tables already exist
         with engine.connect() as connection:
             try:
-                result = connection.execute(text("SHOW TABLES"))
+                if "sqlite" in DATABASE_URL:
+                    result = connection.execute(text("SELECT name FROM sqlite_master WHERE type='table'"))
+                else:
+                    result = connection.execute(text("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'"))
                 existing_tables = [row[0] for row in result]
                 
                 if existing_tables:

@@ -11,14 +11,15 @@ class VehicleRepository:
     
     def create(self, vehicle: schemas.VehicleCreate) -> Vehicle:
         # Check if plate number already exists
-        existing_vehicle = self.db.query(Vehicle).filter(
-            Vehicle.no_plate == vehicle.no_plate
-        ).first()
-        if existing_vehicle:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Vehicle with this plate number already exists"
-            )
+        if vehicle.no_plate:
+            existing_vehicle = self.db.query(Vehicle).filter(
+                Vehicle.no_plate == vehicle.no_plate
+            ).first()
+            if existing_vehicle:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Vehicle with this license plate already exists"
+                )
         
         db_vehicle = Vehicle(**vehicle.dict())
         self.db.add(db_vehicle)

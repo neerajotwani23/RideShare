@@ -5,8 +5,8 @@ import enum
 from .base import Base
 
 class UserTypeEnum(enum.Enum):
-    DRIVER = "driver"
-    PASSENGER = "passenger"
+    DRIVER = "DRIVER"
+    PASSENGER = "PASSENGER"
 
 class User(Base):
     __tablename__ = "user"

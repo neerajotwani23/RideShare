@@ -1,9 +1,22 @@
+import { GROQ_API_KEY } from '@env';
+
 // Groq API Configuration
 // IMPORTANT: Never commit your actual API key to version control!
 // Use environment variables or secure storage instead.
 
+// Check if API key is properly configured
+const getApiKey = () => {
+  const apiKey = GROQ_API_KEY || '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';
+  if (apiKey === 'your-groq-api-key-here') {
+    console.warn('⚠️  GROQ_API_KEY not configured! Please set a valid API key.');
+    console.warn('📝 Get your API key from: https://console.groq.com/');
+    console.warn('🔧 Set it in your environment variables or .env file');
+  }
+  return apiKey;
+};
+
 export const GROQ_CONFIG = {
-  API_KEY: process.env.GROQ_API_KEY || 'your-groq-api-key-here', // Set via environment variable
+  API_KEY: getApiKey(),
   MODEL: 'llama3-8b-8192', // Using Llama 3.1 8B model
   MAX_TOKENS: 1000,
   TEMPERATURE: 0.7,

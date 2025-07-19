@@ -18,6 +18,8 @@ interface AuthContextType {
   completeProfileSetup: () => void;
   completeVehicleDetails: () => void;
   skipProfileSetup: () => void;
+  isFirstTimeUser: () => boolean;
+  updateCurrentRole: (role: 'driver' | 'passenger') => void;
   logout: () => Promise<void>;
 }
 
@@ -48,8 +50,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setIsAuthenticated(true);
           setCurrentRole(parsedUser.user_type);
           setRoleSelected(true);
-          setProfileSetupComplete(profileSetup === 'true');
-          setVehicleDetailsComplete(vehicleDetails === 'true');
+          
+          // For existing users, assume profile setup is complete unless explicitly marked as incomplete
+          // Only show profile setup if it's explicitly set to 'false' (new users)
+          const isProfileComplete = profileSetup !== 'false';
+          const isVehicleComplete = vehicleDetails === 'true' || vehicleDetails === null;
+          
+          setProfileSetupComplete(isProfileComplete);
+          setVehicleDetailsComplete(isVehicleComplete);
         }
       } catch (error) {
         console.error('Failed to load auth state', error);
@@ -68,15 +76,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await AsyncStorage.setItem('accessToken', data.access_token);
       await AsyncStorage.setItem('user', JSON.stringify(data.user));
       setUser(data.user);
-    setIsAuthenticated(true);
+      setIsAuthenticated(true);
       setCurrentRole(data.user.user_type);
       setRoleSelected(true);
       
-      // Check if user has completed onboarding
+      // Check if user has completed onboarding (only check once per session)
       const profileSetup = await AsyncStorage.getItem('profileSetupComplete');
       const vehicleDetails = await AsyncStorage.getItem('vehicleDetailsComplete');
-      setProfileSetupComplete(profileSetup === 'true');
-      setVehicleDetailsComplete(vehicleDetails === 'true');
+      
+      // For existing users, assume profile setup is complete if not explicitly set
+      const isProfileComplete = profileSetup === 'true' || profileSetup === null;
+      const isVehicleComplete = vehicleDetails === 'true' || vehicleDetails === null;
+      
+      setProfileSetupComplete(isProfileComplete);
+      setVehicleDetailsComplete(isVehicleComplete);
     } catch (error) {
       logout()
       throw error;
@@ -89,6 +102,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsLoading(true);
     try {
       const data = await api.register(userData);
+      
+      // For new users, set up initial state
+      if (data.user) {
+        // New users need to complete profile setup
+        setProfileSetupComplete(false);
+        setVehicleDetailsComplete(false);
+        
+        // Explicitly mark new users as needing profile setup
+        await AsyncStorage.setItem('profileSetupComplete', 'false');
+        await AsyncStorage.removeItem('vehicleDetailsComplete');
+      }
+      
       return data;
     } catch (error) {
       throw error;
@@ -113,6 +138,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await AsyncStorage.setItem('profileSetupComplete', 'true');
   };
 
+  const isFirstTimeUser = () => {
+    // Check if this is a first-time user (needs profile setup)
+    return !profileSetupComplete;
+  };
+
   const completeVehicleDetails = async () => {
     setVehicleDetailsComplete(true);
     await AsyncStorage.setItem('vehicleDetailsComplete', 'true');
@@ -123,6 +153,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (currentRole === 'passenger') {
       setProfileSetupComplete(true);
       await AsyncStorage.setItem('profileSetupComplete', 'true');
+    }
+  };
+
+  const updateCurrentRole = (role: 'driver' | 'passenger') => {
+    setCurrentRole(role);
+    // Update user data in AsyncStorage with new role
+    if (user) {
+      const updatedUser = { ...user as any, user_type: role.toUpperCase() };
+      setUser(updatedUser);
+      AsyncStorage.setItem('user', JSON.stringify(updatedUser));
     }
   };
 
@@ -165,6 +205,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       completeProfileSetup,
       completeVehicleDetails,
       skipProfileSetup,
+      isFirstTimeUser,
+      updateCurrentRole,
       logout
     }}>
       {children}

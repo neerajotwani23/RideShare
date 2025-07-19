@@ -69,9 +69,10 @@ class RideController:
         gender_preference: Optional[str] = Query(None, description="Gender preference: any, male, female"),
         skip: int = Query(0, description="Number of records to skip"),
         limit: int = Query(10, description="Number of records to return"),
+        current_user: User = Depends(AuthController.get_current_user),
         db: Session = Depends(get_db)
     ):
-        """Search for available rides (Find Ride functionality)"""
+        """Search for available rides (Find Ride functionality) with smart sorting"""
         search_params = schemas.RideSearchParams(
             source=source,
             destination=destination,
@@ -84,8 +85,20 @@ class RideController:
             music=music,
             gender_preference=gender_preference
         )
+        
+        # Get user preferences for smart sorting
+        user_preferences = {}
+        if ac is not None:
+            user_preferences['ac'] = ac
+        if smoking is not None:
+            user_preferences['smoking'] = smoking
+        if music is not None:
+            user_preferences['music'] = music
+        if gender_preference:
+            user_preferences['gender_preference'] = gender_preference
+        
         ride_service = RideService(db)
-        return ride_service.search_rides(search_params, skip, limit)
+        return ride_service.search_rides(search_params, skip, limit, user_preferences)
     
     def get_my_rides(
         self,
