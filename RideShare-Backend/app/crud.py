@@ -79,7 +79,7 @@ def update_user_rating(db: Session, user_id: int):
     
     db_user = get_user(db, user_id)
     if db_user:
-        db_user.average_rating = float(avg_rating) if avg_rating else 0.0
+        db_user.average_rating = float(avg_rating) if avg_rating else 5.0
         db.commit()
         db.refresh(db_user)
     return db_user

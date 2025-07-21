@@ -1,7 +1,10 @@
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const BASE_URL = Platform.OS === 'android' ? 'http://10.210.3.60:8000' : 'http://127.0.0.1:8000';
+// For Android emulator: use 10.0.2.2
+// For physical Android device: use your computer's IP address (e.g., 192.168.1.100)
+// For iOS simulator: use 127.0.0.1
+const BASE_URL = Platform.OS === 'android' ? 'http://10.0.2.2:8000' : 'http://127.0.0.1:8000';
 
 // Helper function to get auth headers
 const getAuthHeaders = async () => {
@@ -17,10 +20,21 @@ const handleResponse = async (response: Response) => {
   if (!response.ok) {
     try {
       const errorData = await response.json();
+      console.log('Error response data:', errorData);
       
       // Handle different error response formats
       if (errorData.detail) {
-        throw new Error(errorData.detail);
+        // Handle validation errors (detail is an array) or simple error messages
+        if (Array.isArray(errorData.detail)) {
+          const errorMessages = errorData.detail.map((err: any) => 
+            err.msg || err.message || `${err.loc?.join('.')}: ${err.msg || err.message}`
+          ).join(', ');
+          console.log('Validation error messages:', errorMessages);
+          throw new Error(errorMessages);
+        } else {
+          console.log('Simple error detail:', errorData.detail);
+          throw new Error(errorData.detail);
+        }
       } else if (errorData.message) {
         throw new Error(errorData.message);
       } else if (errorData.error) {
@@ -41,6 +55,18 @@ const handleResponse = async (response: Response) => {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
     } catch (parseError) {
+      console.error('Error parsing response:', parseError);
+      console.error('Response status:', response.status);
+      console.error('Response status text:', response.statusText);
+      
+      // Try to get the raw text response for debugging
+      try {
+        const rawText = await response.text();
+        console.error('Raw response text:', rawText);
+      } catch (textError) {
+        console.error('Could not read response text:', textError);
+      }
+      
       // If JSON parsing fails, throw generic error
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }
@@ -67,6 +93,11 @@ export const api = {
 
   register: async (userData: any) => {
     try {
+      console.log('Platform:', Platform.OS);
+      console.log('BASE_URL:', BASE_URL);
+      console.log('Attempting to register user with data:', userData);
+      console.log('API URL:', `${BASE_URL}/auth/register`);
+      
       const response = await fetch(`${BASE_URL}/auth/register`, {
         method: 'POST',
         headers: {
@@ -74,8 +105,18 @@ export const api = {
         },
         body: JSON.stringify(userData),
       });
+      
+      console.log('Response status:', response.status);
+      console.log('Response headers:', response.headers);
+      
       return handleResponse(response);
     } catch (error) {
+      console.error('Registration error:', error);
+      console.error('Error type:', typeof error);
+      if (error instanceof Error) {
+        console.error('Error message:', error.message);
+        console.error('Error stack:', error.stack);
+      }
       throw error;
     }
   },
@@ -120,13 +161,28 @@ export const api = {
 
   updateProfile: async (profileData: any) => {
     try {
+      console.log('Attempting to update profile with data:', profileData);
+      console.log('API URL:', `${BASE_URL}/users/profile`);
+      
+      const headers = await getAuthHeaders();
+      console.log('Request headers:', headers);
+      
       const response = await fetch(`${BASE_URL}/users/profile`, {
         method: 'PUT',
-        headers: await getAuthHeaders(),
+        headers,
         body: JSON.stringify(profileData),
       });
+      
+      console.log('Update profile response status:', response.status);
+      console.log('Update profile response headers:', response.headers);
+      
       return handleResponse(response);
     } catch (error) {
+      console.error('Update profile error:', error);
+      if (error instanceof Error) {
+        console.error('Error message:', error.message);
+        console.error('Error stack:', error.stack);
+      }
       throw error;
     }
   },
@@ -159,13 +215,28 @@ export const api = {
 
   changePassword: async (passwordData: any) => {
     try {
+      console.log('Attempting to change password with data:', passwordData);
+      console.log('API URL:', `${BASE_URL}/users/change-password`);
+      
+      const headers = await getAuthHeaders();
+      console.log('Request headers:', headers);
+      
       const response = await fetch(`${BASE_URL}/users/change-password`, {
         method: 'PUT',
-        headers: await getAuthHeaders(),
+        headers,
         body: JSON.stringify(passwordData),
       });
+      
+      console.log('Change password response status:', response.status);
+      console.log('Change password response headers:', response.headers);
+      
       return handleResponse(response);
     } catch (error) {
+      console.error('Change password error:', error);
+      if (error instanceof Error) {
+        console.error('Error message:', error.message);
+        console.error('Error stack:', error.stack);
+      }
       throw error;
     }
   },
@@ -532,11 +603,13 @@ export const api = {
   // Health Check
   healthCheck: async () => {
     try {
+      console.log('Testing health check at:', `${BASE_URL}/health`);
       const response = await fetch(`${BASE_URL}/health`, {
         method: 'GET',
       });
       return handleResponse(response);
     } catch (error) {
+      console.error('Health check failed:', error);
       throw error;
     }
   },

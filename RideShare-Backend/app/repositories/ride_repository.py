@@ -12,6 +12,25 @@ class RideRepository:
         self.db = db
     
     def create(self, ride: schemas.RideCreate) -> Ride:
+        # Additional business logic validations
+        if ride.source.lower() == ride.destination.lower():
+            raise HTTPException(
+                status_code=400,
+                detail="Source and destination cannot be the same"
+            )
+        
+        # Check if user already has an active ride
+        existing_active_ride = self.db.query(Ride).filter(
+            Ride.user_id == ride.user_id,
+            Ride.status.in_(["PENDING", "ACTIVE", "CONFIRMED"])
+        ).first()
+        
+        if existing_active_ride:
+            raise HTTPException(
+                status_code=400,
+                detail="You already have an active ride. Please cancel it before creating a new one."
+            )
+        
         db_ride = Ride(**ride.dict())
         self.db.add(db_ride)
         self.db.commit()

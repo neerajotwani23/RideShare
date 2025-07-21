@@ -60,6 +60,19 @@ class UserRepository:
             raise HTTPException(status_code=404, detail="User not found")
         
         update_data = user_update.dict(exclude_unset=True)
+        
+        # Check if email is being updated and if it already exists for another user
+        if 'email' in update_data and update_data['email']:
+            existing_user = self.db.query(User).filter(
+                User.email == update_data['email'],
+                User.id != user_id
+            ).first()
+            if existing_user:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Email already registered by another user"
+                )
+        
         for field, value in update_data.items():
             setattr(db_user, field, value)
         
@@ -72,7 +85,15 @@ class UserRepository:
         if not db_user:
             raise HTTPException(status_code=404, detail="User not found")
         
-        db_user.wallet += amount
+        # Validate wallet balance won't go negative
+        new_balance = db_user.wallet + amount
+        if new_balance < 0:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Insufficient wallet balance"
+            )
+        
+        db_user.wallet = new_balance
         self.db.commit()
         self.db.refresh(db_user)
         return db_user
@@ -87,7 +108,21 @@ class UserRepository:
         
         db_user = self.get_by_id(user_id)
         if db_user:
-            db_user.average_rating = float(avg_rating) if avg_rating else 0.0
+            db_user.average_rating = float(avg_rating) if avg_rating else 5.0
             self.db.commit()
             self.db.refresh(db_user)
+        return db_user
+    
+    def update_password(self, user_id: int, new_password: str) -> User:
+        """Update user password"""
+        db_user = self.get_by_id(user_id)
+        if not db_user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        # Hash the new password
+        hashed_password = self.get_password_hash(new_password)
+        db_user.password = hashed_password
+        
+        self.db.commit()
+        self.db.refresh(db_user)
         return db_user 

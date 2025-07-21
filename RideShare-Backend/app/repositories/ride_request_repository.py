@@ -1,4 +1,5 @@
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from typing import List, Optional
 from fastapi import HTTPException
 
@@ -12,8 +13,18 @@ class RideRequestRepository:
     def create(self, ride_request: schemas.RideRequestCreate) -> RideRequest:
         # Check if ride exists and is active
         ride = self.db.query(Ride).filter(Ride.id == ride_request.ride_id).first()
-        if not ride or ride.status != "active":
-            raise HTTPException(status_code=404, detail="Ride not found or not active")
+        if not ride:
+            raise HTTPException(status_code=404, detail="Ride not found")
+        
+        if ride.status not in ["PENDING", "ACTIVE", "CONFIRMED"]:
+            raise HTTPException(status_code=400, detail="Ride is not available for requests")
+        
+        # Check if user is trying to request their own ride
+        if ride.user_id == ride_request.user_id:
+            raise HTTPException(
+                status_code=400,
+                detail="You cannot request your own ride"
+            )
         
         # Check if user already has a pending request for this ride
         existing_request = self.db.query(RideRequest).filter(
@@ -26,6 +37,18 @@ class RideRequestRepository:
             raise HTTPException(
                 status_code=400, 
                 detail="You already have a pending request for this ride"
+            )
+        
+        # Check if ride has enough available seats
+        total_requested_seats = self.db.query(RideRequest).filter(
+            RideRequest.ride_id == ride_request.ride_id,
+            RideRequest.status.in_(["pending", "accepted"])
+        ).with_entities(func.sum(RideRequest.seats)).scalar() or 0
+        
+        if total_requested_seats + ride_request.seats > ride.seats_offered:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Not enough seats available. Only {ride.seats_offered - total_requested_seats} seats left."
             )
         
         db_request = RideRequest(**ride_request.dict())

@@ -11,8 +11,7 @@ load_dotenv()
 #DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./sobia.db")
 
 # For PostgreSQL (Neon DB), use this format:
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://neondb_owner:npg_SaTLjA8DHoG7@ep-snowy-night-a1y5r19x-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require")
-
+DATABASE_URL = os.getenv("DATABASE_URL", 'postgresql://neondb_owner:npg_8jPJKnTNUi9L@ep-snowy-night-a1y5r19x-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require')
 print(f"🔗 Connecting to database: {DATABASE_URL.split('@')[0] if '@' in DATABASE_URL else DATABASE_URL}")
 
 # Engine configuration

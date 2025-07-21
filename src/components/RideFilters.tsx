@@ -32,7 +32,7 @@ const RideFilters: React.FC<RideFiltersProps> = ({
     priceRange: [0, 1000],
     carType: [],
     amenities: [],
-    rating: 0,
+    rating: 5,
   });
 
   const amenitiesList = ['AC', 'Music OK', 'No Smoking', 'Pet Friendly'];

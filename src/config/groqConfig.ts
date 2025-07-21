@@ -6,8 +6,8 @@ import { GROQ_API_KEY } from '@env';
 
 // Check if API key is properly configured
 const getApiKey = () => {
-  const apiKey = GROQ_API_KEY || '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';
-  if (apiKey === 'your-groq-api-key-here') {
+  const apiKey = GROQ_API_KEY ;
+  if (apiKey === 'GROQ_API_KEY') {
     console.warn('⚠️  GROQ_API_KEY not configured! Please set a valid API key.');
     console.warn('📝 Get your API key from: https://console.groq.com/');
     console.warn('🔧 Set it in your environment variables or .env file');

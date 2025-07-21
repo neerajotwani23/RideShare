@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session
 from typing import List
 from fastapi import HTTPException
 
-from ..models import RatingsReviews, Ride
+from ..models import RatingsReviews
 from .. import schemas
 
 class RatingRepository:
@@ -10,27 +10,23 @@ class RatingRepository:
         self.db = db
     
     def create(self, rating: schemas.RatingCreate) -> RatingsReviews:
-        # Check if user already rated this ride
+        # Check if user already rated this specific user
         existing_rating = self.db.query(RatingsReviews).filter(
-            RatingsReviews.user_id == rating.user_id,
-            RatingsReviews.ride_id == rating.ride_id
+            RatingsReviews.reviewer_id == rating.reviewer_id,
+            RatingsReviews.reviewee_id == rating.reviewee_id
         ).first()
         
         if existing_rating:
             raise HTTPException(
                 status_code=400,
-                detail="You have already rated this ride"
+                detail="You have already rated this user"
             )
         
-        # Check if ride exists and is completed
-        ride = self.db.query(Ride).filter(Ride.id == rating.ride_id).first()
-        if not ride:
-            raise HTTPException(status_code=404, detail="Ride not found")
-        
-        if ride.status != "completed":
+        # Prevent self-rating
+        if rating.reviewer_id == rating.reviewee_id:
             raise HTTPException(
                 status_code=400,
-                detail="You can only rate completed rides"
+                detail="You cannot rate yourself"
             )
         
         db_rating = RatingsReviews(**rating.dict())
@@ -39,8 +35,19 @@ class RatingRepository:
         self.db.refresh(db_rating)
         return db_rating
     
+    def get_by_reviewer_id(self, reviewer_id: int) -> List[RatingsReviews]:
+        """Get all ratings given by a specific user"""
+        return self.db.query(RatingsReviews).filter(RatingsReviews.reviewer_id == reviewer_id).all()
+    
+    def get_by_reviewee_id(self, reviewee_id: int) -> List[RatingsReviews]:
+        """Get all ratings received by a specific user"""
+        return self.db.query(RatingsReviews).filter(RatingsReviews.reviewee_id == reviewee_id).all()
+    
     def get_by_ride_id(self, ride_id: int) -> List[RatingsReviews]:
-        return self.db.query(RatingsReviews).filter(RatingsReviews.ride_id == ride_id).all()
+        """Get all ratings for a specific ride (if ride_id is added to the model later)"""
+        # For now, return empty list since ride_id is not in the current model
+        return []
     
     def get_by_user_id(self, user_id: int) -> List[RatingsReviews]:
-        return self.db.query(RatingsReviews).filter(RatingsReviews.user_id == user_id).all() 
+        """Get all ratings given by a user (deprecated, use get_by_reviewer_id)"""
+        return self.get_by_reviewer_id(user_id) 

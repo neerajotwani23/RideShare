@@ -139,7 +139,7 @@ const ProfileScreen = ({ navigation }: any) => {
   };
 
   const getAverageRating = () => {
-    if (reviewsReceived.length === 0) return 0;
+    if (reviewsReceived.length === 0) return '5.0';
     const totalRating = reviewsReceived.reduce((sum, review) => sum + review.rating, 0);
     return (totalRating / reviewsReceived.length).toFixed(1);
   };

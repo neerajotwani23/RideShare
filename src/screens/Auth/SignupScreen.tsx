@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, TouchableOpacity, Image, Dimensions, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Text, TextInput, Button, IconButton, Menu, Card, ActivityIndicator } from 'react-native-paper';
@@ -15,6 +15,7 @@ const SignupScreen = ({ navigation }: any) => {
   const [email, setEmail] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [cnic, setCnic] = useState('');
+  const [gender, setGender] = useState(''); // Reset to empty string
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -28,6 +29,12 @@ const SignupScreen = ({ navigation }: any) => {
   const [phoneError, setPhoneError] = useState('');
   const [showCountryMenu, setShowCountryMenu] = useState(false);
   const [cnicError, setCnicError] = useState('');
+  const [showGenderMenu, setShowGenderMenu] = useState(false);
+
+  useEffect(() => {
+    console.log('Gender state changed to:', gender);
+  }, [gender]);
+
   const [formError, setFormError] = useState('');
 
   const { signup, isLoading, selectedRoleForSignup } = useAuth();
@@ -41,11 +48,36 @@ const SignupScreen = ({ navigation }: any) => {
     { code: 'IN', callingCode: '+91', flag: 'IN', name: 'India' },
   ];
 
+  const genderOptions = [
+    { value: 'male', label: 'Male' },
+    { value: 'female', label: 'Female' },
+  ];
+  
+  console.log('Gender options:', genderOptions);
+  console.log('Current gender state:', gender);
+
   const handleCountryChange = (country: any) => {
     setSelectedCountry(country);
     setPhoneNumber('');
     setPhoneError('');
     setShowCountryMenu(false);
+  };
+
+  const handleGenderChange = (selectedGender: string) => {
+    console.log('Selected gender:', selectedGender);
+    setGender(selectedGender);
+    setShowGenderMenu(false);
+  };
+
+  const getGenderLabel = (genderValue: string) => {
+    const option = genderOptions.find(g => g.value === genderValue);
+    return option ? option.label : genderValue;
+  };
+
+  const handleOutsidePress = () => {
+    if (showGenderMenu) {
+      setShowGenderMenu(false);
+    }
   };
 
   const formatPhoneNumber = (text: string, countryCode: string) => {
@@ -117,6 +149,7 @@ const SignupScreen = ({ navigation }: any) => {
       firstName.trim() &&
       lastName.trim() &&
       email.trim() &&
+      gender.trim() &&
       password.trim() &&
       confirmPassword.trim() &&
       !phoneError &&
@@ -144,6 +177,7 @@ const SignupScreen = ({ navigation }: any) => {
       user_type: selectedRoleForSignup?.toUpperCase(),
       phone_no: `${selectedCountry.callingCode}${phoneNumber}`,
       cnic,
+      gender,
     };
     
       setFormError('');
@@ -192,7 +226,11 @@ const SignupScreen = ({ navigation }: any) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        contentContainerStyle={styles.scrollContent} 
+        showsVerticalScrollIndicator={false}
+        onTouchStart={handleOutsidePress}
+      >
         {/* Logo Section */}
         <View style={styles.logoSection}>
           <TouchableOpacity 
@@ -318,43 +356,107 @@ const SignupScreen = ({ navigation }: any) => {
             />
             {cnicError ? <Text style={styles.errorText}>{cnicError}</Text> : null}
 
-            {/* Password */}
-            <TextInput
-              label="Password"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry={!showPassword}
-              style={styles.input}
-              mode="outlined"
-              outlineColor={COLORS.border}
-              activeOutlineColor={COLORS.secondary}
-              contentStyle={styles.inputContent}
-              right={
-                <TextInput.Icon
-                  icon={showPassword ? "eye-off-outline" : "eye-outline"}
-                  onPress={() => setShowPassword(!showPassword)}
+            {/* Gender */}
+            <View style={styles.genderContainer}>
+              <TouchableOpacity
+                style={styles.genderSelector}
+                onPress={() => setShowGenderMenu(!showGenderMenu)}
+              >
+                <Text style={[styles.genderText, !gender && styles.placeholderText]}>
+                  {gender === 'male' ? 'Male' : 
+                   gender === 'female' ? 'Female' : 
+                   'Select Gender'}
+                </Text>
+                <IconButton 
+                  icon={showGenderMenu ? "chevron-up" : "chevron-down"} 
+                  size={20} 
+                  iconColor={COLORS.textSecondary} 
+                  style={styles.chevronIcon} 
                 />
-              }
-            />
+              </TouchableOpacity>
+              
+              {showGenderMenu && (
+                <View style={styles.genderDropdown}>
+                  <TouchableOpacity
+                    style={[
+                      styles.genderOption,
+                      gender === 'male' && styles.genderOptionSelected
+                    ]}
+                    onPress={() => {
+                      setGender('male');
+                      setShowGenderMenu(false);
+                    }}
+                  >
+                    <Text style={[
+                      styles.genderOptionText,
+                      gender === 'male' && styles.genderOptionTextSelected
+                    ]}>
+                      Male
+                    </Text>
+                  </TouchableOpacity>
+                  
+                  <TouchableOpacity
+                    style={[
+                      styles.genderOption,
+                      gender === 'female' && styles.genderOptionSelected
+                    ]}
+                    onPress={() => {
+                      setGender('female');
+                      setShowGenderMenu(false);
+                    }}
+                  >
+                    <Text style={[
+                      styles.genderOptionText,
+                      gender === 'female' && styles.genderOptionTextSelected
+                    ]}>
+                      Female
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+            </View>
+
+            {/* Password */}
+            <View style={styles.passwordContainer}>
+              <TextInput
+                label="Password"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry={!showPassword}
+                style={styles.input}
+                mode="outlined"
+                outlineColor={COLORS.border}
+                activeOutlineColor={COLORS.secondary}
+                contentStyle={styles.inputContent}
+                right={
+                  <TextInput.Icon
+                    icon={showPassword ? "eye-off-outline" : "eye-outline"}
+                    onPress={() => setShowPassword(!showPassword)}
+                  />
+                }
+              />
+            </View>
 
             {/* Confirm Password */}
-            <TextInput
-              label="Confirm password"
-              value={confirmPassword}
-              onChangeText={setConfirmPassword}
-              secureTextEntry={!showConfirmPassword}
-              style={styles.input}
-              mode="outlined"
-              outlineColor={COLORS.border}
-              activeOutlineColor={COLORS.secondary}
-              contentStyle={styles.inputContent}
-              right={
-                <TextInput.Icon
-                  icon={showConfirmPassword ? "eye-off-outline" : "eye-outline"}
-                  onPress={() => setShowConfirmPassword(!showConfirmPassword)}
-                />
-              }
-            />
+            <View style={styles.passwordContainer}>
+              <TextInput
+                label="Confirm password"
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+                secureTextEntry={!showConfirmPassword}
+                style={styles.input}
+                mode="outlined"
+                outlineColor={COLORS.border}
+                activeOutlineColor={COLORS.secondary}
+                contentStyle={styles.inputContent}
+                right={
+                  <TextInput.Icon
+                    icon={showConfirmPassword ? "eye-off-outline" : "eye-outline"}
+                    onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                  />
+                }
+              />
+            </View>
 
             {/* Sign Up Button */}
             {isLoading ? (
@@ -507,6 +609,38 @@ const styles = StyleSheet.create({
     color: COLORS.secondary,
     borderRadius: 16,
   },
+  genderContainer: {
+    position: 'relative',
+    zIndex: 10,
+    marginBottom: 12,
+  },
+  passwordContainer: {
+    position: 'relative',
+    zIndex: 1,
+    marginBottom: 12,
+  },
+
+  genderSelector: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 5,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    borderRadius: 16,
+    backgroundColor: COLORS.primary,
+    minHeight: 56,
+  },
+  genderText: {
+    fontSize: 16,
+    color: COLORS.secondary,
+    fontFamily: 'Montserrat-Regular',
+    flex: 1,
+  },
+  placeholderText: {
+    color: COLORS.textSecondary,
+  },
   errorText: {
     color: COLORS.error,
     fontSize: 13,
@@ -574,6 +708,41 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     textAlign: 'center',
     fontFamily: 'Montserrat-Bold',
+  },
+  genderDropdown: {
+    position: 'absolute',
+    top: '100%',
+    left: 0,
+    right: 0,
+    backgroundColor: COLORS.primary,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    borderRadius: 12,
+    marginTop: 4,
+    elevation: 8,
+    shadowColor: COLORS.secondary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    zIndex: 1000,
+  },
+  genderOption: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
+  },
+  genderOptionSelected: {
+    backgroundColor: COLORS.lightGray,
+  },
+  genderOptionText: {
+    fontSize: 16,
+    color: COLORS.secondary,
+    fontFamily: 'Montserrat-Regular',
+  },
+  genderOptionTextSelected: {
+    color: COLORS.accent,
+    fontFamily: 'Montserrat-SemiBold',
   },
 });
 

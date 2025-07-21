@@ -36,4 +36,12 @@ class UserService:
     
     def recalculate_user_rating(self, user_id: int) -> User:
         """Recalculate and update user's average rating"""
-        return self.user_repo.update_rating(user_id) 
+        return self.user_repo.update_rating(user_id)
+    
+    def verify_password(self, plain_password: str, hashed_password: str) -> bool:
+        """Verify a password against its hash"""
+        return self.user_repo.verify_password(plain_password, hashed_password)
+    
+    def update_password(self, user_id: int, new_password: str) -> User:
+        """Update user password"""
+        return self.user_repo.update_password(user_id, new_password) 

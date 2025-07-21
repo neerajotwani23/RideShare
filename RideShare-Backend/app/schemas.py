@@ -9,6 +9,11 @@ class UserTypeEnum(str, Enum):
     DRIVER = "DRIVER"
     PASSENGER = "PASSENGER"
 
+class GenderEnum(str, Enum):
+    MALE = "male"
+    FEMALE = "female"
+    OTHER = "other"
+
 class TransactionType(str, Enum):
     DEBIT = "debit"
     CREDIT = "credit"
@@ -46,7 +51,7 @@ class UserBase(BaseModel):
     profile_picture: Optional[str] = None
     bio: Optional[str] = None
     driving_license: Optional[str] = None
-    gender: Optional[str] = None
+    gender: Optional[GenderEnum] = None
 
 class UserCreate(UserBase):
     password: str
@@ -55,13 +60,14 @@ class UserCreate(UserBase):
 class UserUpdate(BaseModel):
     first_name: Optional[str] = None
     last_name: Optional[str] = None
+    email: Optional[EmailStr] = None
     phone_no: Optional[str] = None
     user_type: Optional[UserTypeEnum] = None
     cnic: Optional[str] = None
     profile_picture: Optional[str] = None
     bio: Optional[str] = None
     driving_license: Optional[str] = None
-    gender: Optional[str] = None
+    gender: Optional[GenderEnum] = None
 
 class UserLogin(BaseModel):
     email: EmailStr
@@ -80,7 +86,7 @@ class UserResponse(UserBase):
 class ProfileSetup(BaseModel):
     bio: Optional[str] = None
     profile_picture: Optional[str] = None
-    gender: Optional[str] = None
+    gender: Optional[GenderEnum] = None
 
 class RoleSelection(BaseModel):
     user_type: UserTypeEnum

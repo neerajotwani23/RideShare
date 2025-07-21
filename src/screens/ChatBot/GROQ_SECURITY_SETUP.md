@@ -16,7 +16,7 @@ touch .env
 ### 2. Add Your API Key
 Add this line to your `.env` file:
 ```env
-GROQ_API_KEY=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
+GROQ_API_KEY=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
 ```
 
 ### 3. Verify .gitignore

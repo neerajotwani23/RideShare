@@ -27,16 +27,31 @@ const EditProfileScreen = ({ navigation }: any) => {
     }
   }, [userProfile]);
 
+  // Clear any existing about errors when component mounts
+  useEffect(() => {
+    if (errors.about) {
+      setErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors.about;
+        return newErrors;
+      });
+    }
+  }, []);
+
   const validateEmail = (email: string) => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   };
 
   const validatePhone = (phone: string) => {
-    return /^\+92\s?3[0-9]{2}\s?[0-9]{7}$/.test(phone);
+    // More flexible phone validation for Pakistani numbers
+    const cleaned = phone.replace(/\s/g, '');
+    return /^\+92[0-9]{10}$/.test(cleaned) || /^\+92\s[0-9]{10}$/.test(cleaned);
   };
 
   const validateCNIC = (cnic: string) => {
-    return /^\d{5}-\d{7}-\d{1}$/.test(cnic);
+    // More flexible CNIC validation
+    const cleaned = cnic.replace(/[^0-9]/g, '');
+    return cleaned.length === 13;
   };
 
   const formatCNIC = (text: string) => {
@@ -83,9 +98,8 @@ const EditProfileScreen = ({ navigation }: any) => {
       newErrors.cnic = 'Please enter a valid CNIC (12345-1234567-1)';
     }
 
-    if (!about.trim()) {
-      newErrors.about = 'About section cannot be empty';
-    }
+    // About section is optional, so no validation needed
+    // The newErrors object will not include 'about', so any existing about errors will be cleared
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -214,15 +228,26 @@ const EditProfileScreen = ({ navigation }: any) => {
               <TextInput
               style={[styles.input, styles.textArea]}
                 mode="outlined"
-              label="About"
+              label="About (Optional)"
               value={about}
-              onChangeText={setAbout}
+              onChangeText={(text) => {
+                setAbout(text);
+                // Clear any existing about errors when user starts typing
+                if (errors.about) {
+                  setErrors(prev => {
+                    const newErrors = { ...prev };
+                    delete newErrors.about;
+                    return newErrors;
+                  });
+                }
+              }}
               multiline
               numberOfLines={4}
               outlineColor={COLORS.border}
               activeOutlineColor={COLORS.accent}
               theme={{ roundness: 12 }}
               error={!!errors.about}
+              placeholder="Tell us about yourself (optional)"
             />
             {errors.about ? <Text style={styles.errorText}>{errors.about}</Text> : null}
 

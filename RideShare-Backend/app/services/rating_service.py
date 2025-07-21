@@ -16,8 +16,8 @@ class RatingService:
         """Create a new rating and update user's average rating"""
         db_rating = self.rating_repo.create(rating)
         
-        # Update the user's average rating
-        self.user_repo.update_rating(rating.user_id)
+        # Update the reviewee's average rating
+        self.user_repo.update_rating(rating.reviewee_id)
         
         return db_rating
     
@@ -31,19 +31,24 @@ class RatingService:
     
     def calculate_user_average_rating(self, user_id: int) -> Optional[float]:
         """Calculate the average rating for a user"""
-        ratings = self.db.query(RatingsReviews).filter(RatingsReviews.user_id == user_id).all()
+        ratings = self.db.query(RatingsReviews).filter(RatingsReviews.reviewee_id == user_id).all()
         if not ratings:
-            return None
+            return 5.0  # Default rating if no reviews
         
-        total_rating = sum(rating.rating for rating in ratings)
+        total_rating = sum(rating.stars for rating in ratings)
         return round(total_rating / len(ratings), 2)
     
     def get_reviews_received_by_user(self, user_id: int) -> List[RatingsReviews]:
         """Get all ratings/reviews received by a user"""
-        # For now, return empty list since the current schema doesn't support this
-        # The schema needs to be updated to include a reviewee_id column
-        return []
+        return self.db.query(RatingsReviews).filter(RatingsReviews.reviewee_id == user_id).all()
     
     def get_reviews_given_by_user(self, user_id: int) -> List[RatingsReviews]:
         """Get all ratings/reviews given by a user"""
-        return self.db.query(RatingsReviews).filter(RatingsReviews.user_id == user_id).all() 
+        return self.db.query(RatingsReviews).filter(RatingsReviews.reviewer_id == user_id).all()
+    
+    def verify_ride_participation(self, user_id: int, other_user_id: int, ride_id: int) -> bool:
+        """Verify that both users participated in the same ride"""
+        # This is a placeholder implementation
+        # In a real app, you would check the ride requests/participants table
+        # For now, we'll allow rating (you can implement proper verification later)
+        return True 

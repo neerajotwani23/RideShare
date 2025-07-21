@@ -51,7 +51,7 @@ class User(Base):
     wallet = Column(Float, default=0.0)
     driving_license = Column(String(100), nullable=True)
     gender = Column(String(10), nullable=True)
-    average_rating = Column(Float, default=0.0)
+    average_rating = Column(Float, default=5.0)
     
     # Relationships
     vehicles = relationship("Vehicle", back_populates="owner", cascade="all, delete-orphan")

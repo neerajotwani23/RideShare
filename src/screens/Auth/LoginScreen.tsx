@@ -1,4 +1,4 @@
-import { React, useState } from 'react';
+import React, { useState } from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Text, HelperText, Divider, TextInput, ActivityIndicator } from 'react-native-paper';
@@ -10,6 +10,7 @@ import { CustomTextInput, CustomButton, FormCard, Icon } from '../../components'
 const LoginScreen = ({ navigation }: any) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const { login, isLoading } = useAuth();
 
@@ -33,10 +34,28 @@ const LoginScreen = ({ navigation }: any) => {
   const handleLogin = async () => {
     if (validate()) {
       try {
-        await login({ email, password });
+        await login({ email: email.trim().toLowerCase(), password });
         // Navigation will be handled by AuthContext state change
       } catch (e: any) {
-        setError(e.message || 'An error occurred during login.');
+        let message = 'An error occurred during login.';
+        if (typeof e === 'string') {
+          message = e;
+        } else if (e && typeof e === 'object') {
+          if (e.message) {
+            message = e.message;
+          } else if (e.detail) {
+            message = e.detail;
+          } else if (Array.isArray(e) && e[0]?.msg) {
+            message = e[0].msg;
+          } else {
+            try {
+              message = JSON.stringify(e);
+            } catch {
+              message = 'An error occurred during login.';
+            }
+          }
+        }
+        setError(message);
       }
     }
   };
@@ -56,7 +75,10 @@ const LoginScreen = ({ navigation }: any) => {
           <CustomTextInput
             label="Email Address"
               value={email}
-              onChangeText={setEmail}
+              onChangeText={(text) => {
+                setEmail(text);
+                if (error) setError('');
+              }}
               keyboardType="email-address"
               autoCapitalize="none"
             left={<TextInput.Icon icon={() => <Icon name="email-outline" size={22} color={COLORS.textSecondary} />} />}
@@ -65,9 +87,19 @@ const LoginScreen = ({ navigation }: any) => {
           <CustomTextInput
               label="Password"
               value={password}
-              onChangeText={setPassword}
-              secureTextEntry
+              onChangeText={(text) => {
+                setPassword(text);
+                if (error) setError('');
+              }}
+              secureTextEntry={!showPassword}
+              autoCapitalize="none"
             left={<TextInput.Icon icon={() => <Icon name="lock-outline" size={22} color={COLORS.textSecondary} />} />}
+            right={
+              <TextInput.Icon
+                icon={showPassword ? "eye-off-outline" : "eye-outline"}
+                onPress={() => setShowPassword(!showPassword)}
+              />
+            }
             />
 
             <TouchableOpacity style={styles.forgotPassword} onPress={() => navigation.navigate('ResetPassword')}>
@@ -77,11 +109,12 @@ const LoginScreen = ({ navigation }: any) => {
             {error ? <HelperText type="error" visible style={styles.errorText}>{error}</HelperText> : null}
 
           {isLoading ? (
-            <ActivityIndicator animating={true} color={COLORS.primary} style={styles.loginButton} />
+            <ActivityIndicator animating={true} color={COLORS.accent} style={styles.loginButton} />
           ) : (
             <CustomButton 
                 onPress={handleLogin} 
                 style={styles.loginButton}
+                disabled={isLoading}
               >
                 Log In
             </CustomButton>

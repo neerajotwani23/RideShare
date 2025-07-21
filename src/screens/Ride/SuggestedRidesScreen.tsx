@@ -11,7 +11,7 @@ const SuggestedRidesScreen = ({ navigation, route }: any) => {
     priceRange: [0, 1000],
     carType: [],
     amenities: [],
-    rating: 0,
+    rating: 5,
   });
 
   const { 
@@ -53,7 +53,7 @@ const SuggestedRidesScreen = ({ navigation, route }: any) => {
   const formatRideData = (ride: any) => ({
     id: ride.id?.toString() || ride.id,
     driver: ride.driver?.name || ride.driver_name || 'Unknown Driver',
-    rating: ride.driver?.rating || ride.rating || 0,
+    rating: ride.driver?.rating || ride.rating || 5,
     from: ride.source || ride.from,
     to: ride.destination || ride.to,
     departureTime: ride.scheduled_time || ride.departure_time || 'Now',

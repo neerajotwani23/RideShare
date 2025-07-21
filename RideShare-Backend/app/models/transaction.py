@@ -1,6 +1,6 @@
 import enum
-from sqlalchemy import Column, Integer, DateTime, ForeignKey, Enum as SQLEnum, Numeric
-from sqlalchemy.orm import relationship
+from sqlalchemy import Column, Integer, DateTime, ForeignKey, Enum as SQLEnum, Numeric, CheckConstraint
+from sqlalchemy.orm import relationship, validates
 from sqlalchemy.sql import func
 from .base import Base
 
@@ -18,7 +18,28 @@ class Transaction(Base):
     datetime = Column(DateTime, default=func.now())
     amount = Column(Numeric(10, 2), nullable=False)
     
+    # Database-level constraints
+    __table_args__ = (
+        CheckConstraint('amount > 0', name='check_amount_positive'),
+        CheckConstraint('amount <= 100000', name='check_amount_max'),
+    )
+    
     # Relationships
     user = relationship("User", back_populates="transaction")
     ride = relationship("Ride", back_populates="transaction")
-    payment = relationship("Payment", back_populates="transaction", uselist=False) 
+    payment = relationship("Payment", back_populates="transaction", uselist=False)
+    
+    # Validation methods
+    @validates('amount')
+    def validate_amount(self, key, amount):
+        if amount <= 0:
+            raise ValueError("Transaction amount must be greater than 0")
+        if amount > 100000:
+            raise ValueError("Transaction amount cannot exceed 100,000")
+        return round(amount, 2)
+    
+    @validates('type')
+    def validate_type(self, key, type):
+        if type not in TransactionTypeEnum:
+            raise ValueError("Invalid transaction type")
+        return type 
