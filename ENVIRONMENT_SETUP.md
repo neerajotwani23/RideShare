@@ -26,7 +26,7 @@ Create or update the `.env` file in the project root:
 # This file contains sensitive API keys and should never be committed to version control
 
 # GROQ API Configuration
-GROQ_API_KEY=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
+GROQ_API_KEY=
 
 # Backend API Configuration
 API_BASE_URL=http://10.0.2.2:8000
@@ -38,7 +38,7 @@ Create or update the `.env` file in the `RideShare-Backend/` directory:
 
 ```env
 # Backend Environment Variables
-DATABASE_URL='postgresql://neondb_owner:npg_8jPJKnTNUi9L@ep-snowy-night-a1y5r19x-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require'
+DATABASE_URL=
 SECRET_KEY=your-super-secret-key-change-this-in-production
 ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=30
