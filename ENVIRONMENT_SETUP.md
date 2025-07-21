@@ -21,28 +21,11 @@ RideShare/
 
 Create or update the `.env` file in the project root:
 
-```env
-# React Native Environment Variables
-# This file contains sensitive API keys and should never be committed to version control
-
-# GROQ API Configuration
-GROQ_API_KEY=
-
-# Backend API Configuration
-API_BASE_URL=http://10.0.2.2:8000
-```
 
 ### 2. Backend (.env in RideShare-Backend/)
 
 Create or update the `.env` file in the `RideShare-Backend/` directory:
 
-```env
-# Backend Environment Variables
-DATABASE_URL=
-SECRET_KEY=your-super-secret-key-change-this-in-production
-ALGORITHM=HS256
-ACCESS_TOKEN_EXPIRE_MINUTES=30
-```
 
 ## 🛡️ Security Measures Implemented
 
