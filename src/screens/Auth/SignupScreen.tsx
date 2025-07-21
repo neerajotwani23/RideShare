@@ -418,44 +418,44 @@ const SignupScreen = ({ navigation }: any) => {
 
             {/* Password */}
             <View style={styles.passwordContainer}>
-              <TextInput
-                label="Password"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry={!showPassword}
-                style={styles.input}
-                mode="outlined"
-                outlineColor={COLORS.border}
-                activeOutlineColor={COLORS.secondary}
-                contentStyle={styles.inputContent}
-                right={
-                  <TextInput.Icon
-                    icon={showPassword ? "eye-off-outline" : "eye-outline"}
-                    onPress={() => setShowPassword(!showPassword)}
-                  />
-                }
-              />
+            <TextInput
+              label="Password"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry={!showPassword}
+              style={styles.input}
+              mode="outlined"
+              outlineColor={COLORS.border}
+              activeOutlineColor={COLORS.secondary}
+              contentStyle={styles.inputContent}
+              right={
+                <TextInput.Icon
+                  icon={showPassword ? "eye-off-outline" : "eye-outline"}
+                  onPress={() => setShowPassword(!showPassword)}
+                />
+              }
+            />
             </View>
 
             {/* Confirm Password */}
             <View style={styles.passwordContainer}>
-              <TextInput
-                label="Confirm password"
-                value={confirmPassword}
-                onChangeText={setConfirmPassword}
-                secureTextEntry={!showConfirmPassword}
-                style={styles.input}
-                mode="outlined"
-                outlineColor={COLORS.border}
-                activeOutlineColor={COLORS.secondary}
-                contentStyle={styles.inputContent}
-                right={
-                  <TextInput.Icon
-                    icon={showConfirmPassword ? "eye-off-outline" : "eye-outline"}
-                    onPress={() => setShowConfirmPassword(!showConfirmPassword)}
-                  />
-                }
-              />
+            <TextInput
+              label="Confirm password"
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
+              secureTextEntry={!showConfirmPassword}
+              style={styles.input}
+              mode="outlined"
+              outlineColor={COLORS.border}
+              activeOutlineColor={COLORS.secondary}
+              contentStyle={styles.inputContent}
+              right={
+                <TextInput.Icon
+                  icon={showConfirmPassword ? "eye-off-outline" : "eye-outline"}
+                  onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                />
+              }
+            />
             </View>
 
             {/* Sign Up Button */}

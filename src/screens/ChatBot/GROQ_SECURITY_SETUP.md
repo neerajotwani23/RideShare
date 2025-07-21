@@ -1,66 +1,65 @@
-# 🔐 Groq API Security Setup
+# GROQ API Security Setup
 
-## 🚨 IMPORTANT: Security Issue Resolved
-
-The hardcoded API key has been removed from the codebase. Follow these steps to set up the API key securely.
-
-## 📋 Setup Instructions for Team Members
+## 🔐 Environment Variable Configuration
 
 ### 1. Create Environment File
 Create a `.env` file in your project root:
+
 ```bash
-# In your project root directory
+# For Windows
+echo GROQ_API_KEY=your_api_key_here > .env
+
+# For macOS/Linux
 touch .env
 ```
 
-### 2. Add Your API Key
+### 2. Add API Key
 Add this line to your `.env` file:
+
 ```env
-GROQ_API_KEY=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
+GROQ_API_KEY=your_actual_api_key_here
 ```
+
+**⚠️ IMPORTANT:** Replace `your_actual_api_key_here` with your real GROQ API key.
 
 ### 3. Verify .gitignore
 Make sure `.env` is in your `.gitignore` file (it should be there now).
 
-### 4. Install Environment Support (if needed)
+### 4. Restart Development Server
+After creating the `.env` file, restart your development server:
+
 ```bash
-npm install react-native-dotenv
+npx react-native start --reset-cache
 ```
 
-## 🔒 Security Best Practices
+## 🛡️ Security Best Practices
 
-### ✅ DO:
-- Use environment variables for API keys
-- Keep `.env` files out of version control
-- Share API keys securely (password managers, secure channels)
-- Rotate API keys regularly
+- ✅ Keep `.env` files out of version control
+- ✅ Never commit API keys to Git
+- ✅ Use environment variables for sensitive data
+- ✅ Share API keys securely with teammates (not via code)
+- ✅ Rotate API keys regularly
 
-### ❌ DON'T:
-- Commit API keys to Git
-- Share API keys in code comments
-- Use hardcoded keys in source code
-- Post API keys in public repositories
-
-## 🚀 For Development
+## 🔧 Configuration
 
 The chatbot will now use the API key from your `.env` file. If no environment variable is found, it will show a placeholder message.
 
-## 📞 Team Communication
+## 📝 Troubleshooting
 
-**Share the API key securely with your teammates via:**
-- Password managers (1Password, LastPass, etc.)
-- Secure messaging apps
-- Team documentation systems
-- **NOT via code or GitHub issues**
+### If you see "GROQ_API_KEY not configured":
+1. Check that your `.env` file exists in the project root
+2. Verify the API key is correctly set
+3. Restart the development server
+4. Check that `.env` is not being ignored by your IDE
 
-## 🔄 If You Need a New API Key
+### If the chatbot doesn't work:
+1. Verify your GROQ API key is valid
+2. Check your internet connection
+3. Ensure you have sufficient API credits
+4. Check the console for error messages
 
-1. Go to [Groq Console](https://console.groq.com/)
-2. Navigate to API Keys section
-3. Create a new key
-4. Update your `.env` file
-5. Share the new key securely with the team
+## 🔄 Updating API Key
 
-## ✅ Verification
-
-After setup, the chatbot should work normally. The API key is now secure and won't be exposed in version control. 
+1. Get a new API key from [GROQ Console](https://console.groq.com/)
+2. Update your `.env` file
+3. Restart the development server 

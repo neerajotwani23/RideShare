@@ -54,7 +54,7 @@ class User(Base):
     reviews_given = relationship("RatingsReviews", foreign_keys="RatingsReviews.reviewer_id", back_populates="reviewer", cascade="all, delete-orphan")
     reviews_received = relationship("RatingsReviews", foreign_keys="RatingsReviews.reviewee_id", back_populates="reviewee", cascade="all, delete-orphan")
     payments_sent = relationship("Payment", foreign_keys="Payment.from_user_id", back_populates="sender")
-    payments_received = relationship("Payment", foreign_keys="Payment.to_user_id", back_populates="receiver")
+    payments_received = relationship("Payment", foreign_keys="Payment.to_user_id", back_populates="receiver") 
     
     # Validation methods
     @validates('first_name')

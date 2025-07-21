@@ -123,6 +123,6 @@ class UserRepository:
         hashed_password = self.get_password_hash(new_password)
         db_user.password = hashed_password
         
-        self.db.commit()
-        self.db.refresh(db_user)
+            self.db.commit()
+            self.db.refresh(db_user)
         return db_user 

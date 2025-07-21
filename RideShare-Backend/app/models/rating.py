@@ -22,7 +22,7 @@ class RatingsReviews(Base):
     
     # Relationships
     reviewer = relationship("User", foreign_keys=[reviewer_id], back_populates="reviews_given")
-    reviewee = relationship("User", foreign_keys=[reviewee_id], back_populates="reviews_received")
+    reviewee = relationship("User", foreign_keys=[reviewee_id], back_populates="reviews_received") 
     
     # Validation methods
     @validates('stars')
