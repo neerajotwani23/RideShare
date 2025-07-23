@@ -86,6 +86,10 @@ yarn-error.log
 src/config/env.ts
 src/config/env.ts.example
 
+# Firebase configuration files
+android/app/google-services.json
+ios/RideShare/GoogleService-Info.plist
+
 # Debug and test files
 src/services/debug*.ts
 src/utils/test*.ts
