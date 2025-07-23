@@ -3,15 +3,16 @@ import { View, StyleSheet, TouchableOpacity, Alert, ScrollView } from 'react-nat
 import { Text, TextInput, Button, Avatar, IconButton } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../context/AuthContext';
-import { useApp } from '../../context/AppContext';
-import COLORS from '../../constants/colors';
+import { COLORS } from '../../constants/colors';
+import { api } from '../../services/api';
+import { navigationDebugService } from '../../services/debugNavigation';
 
 const ProfileSetupScreen = ({ navigation, route }: any) => {
   const [bio, setBio] = useState('');
   const [userRole, setUserRole] = useState<string>('');
+  const [isLoading, setIsLoading] = useState(false);
 
   const { completeProfileSetup, skipProfileSetup, currentRole, logout } = useAuth();
-  const { updateProfile, isLoading } = useApp();
 
   useEffect(() => {
     // Get user role from context or route params
@@ -33,15 +34,18 @@ const ProfileSetupScreen = ({ navigation, route }: any) => {
 
   const handleSave = async () => {
     try {
+      setIsLoading(true);
       // Update profile with bio if provided
       if (bio.trim()) {
-        await updateProfile({ bio: bio.trim() });
+        await api.updateProfile({ bio: bio.trim() });
       }
       
       completeProfileSetup();
       // Navigation will be handled automatically by AppNavigator based on auth state
     } catch (error: any) {
       Alert.alert('Error', error.message || 'Failed to save profile. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -91,6 +95,19 @@ const ProfileSetupScreen = ({ navigation, route }: any) => {
     }
   };
 
+  const handleDebugNavigation = async () => {
+    try {
+      await navigationDebugService.logNavigationDebugInfo();
+      Alert.alert(
+        'Debug Info',
+        'Navigation debug information has been logged to the console. Check the console for details.',
+        [{ text: 'OK' }]
+      );
+    } catch (error) {
+      Alert.alert('Debug Error', `Failed to get debug info: ${error}`);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
     <ScrollView contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled">
@@ -103,11 +120,19 @@ const ProfileSetupScreen = ({ navigation, route }: any) => {
           style={styles.backButton}
         />
         <Text style={styles.headerTitle}>Profile Setup</Text>
-        {userRole === 'passenger' && (
-          <TouchableOpacity onPress={handleSkip}>
-            <Text style={styles.skipButton}>Skip</Text>
-          </TouchableOpacity>
-        )}
+        <View style={styles.headerRight}>
+          <IconButton
+            icon="bug"
+            size={20}
+            iconColor="#000000"
+            onPress={handleDebugNavigation}
+          />
+          {userRole === 'passenger' && (
+            <TouchableOpacity onPress={handleSkip}>
+              <Text style={styles.skipButton}>Skip</Text>
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
 
       <View style={styles.content}>
@@ -150,9 +175,12 @@ const ProfileSetupScreen = ({ navigation, route }: any) => {
           </Text>
           <Text style={styles.infoText}>
             {userRole === 'driver' 
-              ? 'As a driver, please complete your profile with a photo and bio. This helps passengers trust you. You\'ll then be asked to add your vehicle details.'
-              : 'Add a profile photo and bio to help other users recognize you. You can always update these later from your profile settings.'
+              ? 'As a driver, please add either a profile photo OR bio (or both). This helps passengers trust you. You\'ll then be asked to add your vehicle details.'
+              : 'Add either a profile photo OR bio (or both) to help other users recognize you. You can always update these later from your profile settings.'
             }
+          </Text>
+          <Text style={styles.requirementText}>
+            💡 Tip: You only need to add one of these (photo or bio) to continue
           </Text>
         </View>
       </View>
@@ -190,6 +218,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderBottomWidth: 1,
     borderBottomColor: '#E5E7EB',
+  },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   backButton: {
     margin: 0,
@@ -290,6 +322,13 @@ const styles = StyleSheet.create({
     fontFamily: 'Montserrat-Regular',
     color: '#666666',
     lineHeight: 20,
+  },
+  requirementText: {
+    fontSize: 12,
+    fontFamily: 'Montserrat-Medium',
+    color: '#248CFE',
+    marginTop: 8,
+    fontStyle: 'italic',
   },
   buttonContainer: {
     paddingHorizontal: 24,

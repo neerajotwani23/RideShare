@@ -3,8 +3,8 @@ import { View, StyleSheet, ScrollView, TouchableOpacity, Image, Dimensions, Aler
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Text, TextInput, Button, IconButton, Menu, Card, ActivityIndicator } from 'react-native-paper';
 
-import { isValidPhoneNumber } from 'libphonenumber-js';
 import { useAuth } from '../../context/AuthContext';
+import { PhoneNumberInput, GoogleSignInButton } from '../../components';
 import { COLORS } from '../../constants/colors';
 
 const { width: screenWidth } = Dimensions.get('window');
@@ -20,14 +20,6 @@ const SignupScreen = ({ navigation }: any) => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [selectedCountry, setSelectedCountry] = useState({
-    code: 'PK',
-    callingCode: '+92',
-    flag: 'PK',
-    name: 'Pakistan'
-  });
-  const [phoneError, setPhoneError] = useState('');
-  const [showCountryMenu, setShowCountryMenu] = useState(false);
   const [cnicError, setCnicError] = useState('');
   const [showGenderMenu, setShowGenderMenu] = useState(false);
 
@@ -37,16 +29,7 @@ const SignupScreen = ({ navigation }: any) => {
 
   const [formError, setFormError] = useState('');
 
-  const { signup, isLoading, selectedRoleForSignup } = useAuth();
-
-  const countries = [
-    { code: 'PK', callingCode: '+92', flag: 'PK', name: 'Pakistan' },
-    { code: 'US', callingCode: '+1', flag: 'US', name: 'United States' },
-    { code: 'GB', callingCode: '+44', flag: 'GB', name: 'United Kingdom' },
-    { code: 'CA', callingCode: '+1', flag: 'CA', name: 'Canada' },
-    { code: 'AU', callingCode: '+61', flag: 'AU', name: 'Australia' },
-    { code: 'IN', callingCode: '+91', flag: 'IN', name: 'India' },
-  ];
+  const { storePendingSignupData, signupWithGoogle, isLoading } = useAuth();
 
   const genderOptions = [
     { value: 'male', label: 'Male' },
@@ -55,13 +38,6 @@ const SignupScreen = ({ navigation }: any) => {
   
   console.log('Gender options:', genderOptions);
   console.log('Current gender state:', gender);
-
-  const handleCountryChange = (country: any) => {
-    setSelectedCountry(country);
-    setPhoneNumber('');
-    setPhoneError('');
-    setShowCountryMenu(false);
-  };
 
   const handleGenderChange = (selectedGender: string) => {
     console.log('Selected gender:', selectedGender);
@@ -77,46 +53,6 @@ const SignupScreen = ({ navigation }: any) => {
   const handleOutsidePress = () => {
     if (showGenderMenu) {
       setShowGenderMenu(false);
-    }
-  };
-
-  const formatPhoneNumber = (text: string, countryCode: string) => {
-    const cleaned = text.replace(/\D/g, '');
-    
-    switch (countryCode) {
-      case 'US':
-      case 'CA':
-        if (cleaned.length <= 3) return cleaned;
-        if (cleaned.length <= 6) return `${cleaned.slice(0, 3)} ${cleaned.slice(3)}`;
-        return `${cleaned.slice(0, 3)} ${cleaned.slice(3, 6)} ${cleaned.slice(6, 10)}`;
-      case 'PK':
-        if (cleaned.length <= 3) return cleaned;
-        return `${cleaned.slice(0, 3)} ${cleaned.slice(3, 10)}`;
-      default:
-        return cleaned;
-    }
-  };
-
-  const handlePhoneNumberChange = (text: string) => {
-    const formatted = formatPhoneNumber(text, selectedCountry.code);
-    setPhoneNumber(formatted);
-    
-    if (text.length > 0) {
-      try {
-        const fullNumber = `${selectedCountry.callingCode}${text.replace(/\D/g, '')}`;
-        const isValid = isValidPhoneNumber(fullNumber);
-        if (!isValid && text.replace(/\D/g, '').length > 3) {
-          setPhoneError('Invalid phone number format');
-        } else {
-          setPhoneError('');
-        }
-      } catch (error) {
-        if (text.replace(/\D/g, '').length > 3) {
-          setPhoneError('Invalid phone number format');
-        }
-      }
-    } else {
-      setPhoneError('');
     }
   };
 
@@ -152,7 +88,6 @@ const SignupScreen = ({ navigation }: any) => {
       gender.trim() &&
       password.trim() &&
       confirmPassword.trim() &&
-      !phoneError &&
       !cnicError &&
       password === confirmPassword
     );
@@ -164,49 +99,33 @@ const SignupScreen = ({ navigation }: any) => {
       return;
     }
 
-    if (!selectedRoleForSignup) {
-      setFormError('Please select a role first.');
-      return;
-    }
-
-    const userData = {
+    // Store signup data in context and navigate to role selection
+    const signupData = {
       first_name: firstName,
       last_name: lastName,
       email,
       password,
-      user_type: selectedRoleForSignup?.toUpperCase(),
-      phone_no: `${selectedCountry.callingCode}${phoneNumber}`,
+      phone_no: phoneNumber,
       cnic,
       gender,
     };
-    
-      setFormError('');
 
+    // Store the signup data in context for later use
+    storePendingSignupData(signupData);
+    navigation.navigate('RoleSelection');
+  };
+
+  const handleGoogleSignup = async () => {
     try {
-      await signup(userData);
-      Alert.alert(
-        'Signup Successful',
-        'Your account has been created. Please log in.',
-        [{ text: 'OK', onPress: () => navigation.navigate('Login') }]
-      );
+      // For Google signup, we'll navigate to role selection first
+      // Then complete the signup with Google data
+      navigation.navigate('RoleSelection', { isGoogleSignup: true });
     } catch (e: any) {
-      let message = 'An error occurred during signup.';
+      let message = 'An error occurred during Google sign up.';
       if (typeof e === 'string') {
         message = e;
-      } else if (e && typeof e === 'object') {
-        if (e.message) {
-          message = e.message;
-        } else if (e.detail) {
-          message = e.detail;
-        } else if (Array.isArray(e) && e[0]?.msg) {
-          message = e[0].msg;
-    } else {
-          try {
-            message = JSON.stringify(e);
-          } catch {
-            message = 'An error occurred during signup.';
-          }
-        }
+      } else if (e && typeof e === 'object' && e.message) {
+        message = e.message;
       }
       setFormError(message);
     }
@@ -235,7 +154,7 @@ const SignupScreen = ({ navigation }: any) => {
         <View style={styles.logoSection}>
           <TouchableOpacity 
             style={styles.backButton}
-            onPress={() => navigation.navigate('RoleSelection')}
+            onPress={() => navigation.navigate('Login')}
           >
             <IconButton
               icon="arrow-left"
@@ -301,44 +220,12 @@ const SignupScreen = ({ navigation }: any) => {
             />
 
             {/* Phone Number */}
-            <View style={styles.phoneContainer}>
-              <Menu
-                visible={showCountryMenu}
-                onDismiss={() => setShowCountryMenu(false)}
-                anchor={
-                  <TouchableOpacity
-                    style={styles.countrySelector}
-                    onPress={() => setShowCountryMenu(true)}
-                  >
-                    <Text style={styles.countryCode}>{selectedCountry.flag} {selectedCountry.callingCode}</Text>
-                    <IconButton icon="chevron-down" size={20} iconColor={COLORS.textSecondary} style={styles.chevronIcon} />
-                  </TouchableOpacity>
-                }
-              >
-                {countries.map((country) => (
-                  <Menu.Item
-                    key={country.code}
-                    onPress={() => handleCountryChange(country)}
-                    title={`${country.flag} ${country.name} ${country.callingCode}`}
-                  />
-                ))}
-              </Menu>
-              
-              <TextInput
-                label="Phone number"
-                value={phoneNumber}
-                onChangeText={handlePhoneNumberChange}
-                keyboardType="phone-pad"
-                style={styles.phoneInput}
-                mode="outlined"
-                outlineColor={COLORS.border}
-                activeOutlineColor={COLORS.secondary}
-                placeholder={getPhonePlaceholder(selectedCountry.code)}
-                error={!!phoneError}
-                contentStyle={styles.inputContent}
-              />
-            </View>
-            {phoneError ? <Text style={styles.errorText}>{phoneError}</Text> : null}
+            <PhoneNumberInput
+              value={phoneNumber}
+              onChangeText={setPhoneNumber}
+              label="Phone number"
+              contentStyle={styles.inputContent}
+            />
 
             {/* CNIC */}
             <TextInput
@@ -480,15 +367,17 @@ const SignupScreen = ({ navigation }: any) => {
               <View style={styles.divider} />
             </View>
 
-            <Button 
-              mode="outlined" 
-              onPress={() => console.log('Google Sign-Up pressed')}
-              style={styles.googleButton}
-              contentStyle={styles.buttonContent}
-              labelStyle={styles.googleButtonLabel}
-            >
-              Continue with Google
-            </Button>
+            <GoogleSignInButton
+              mode="signup"
+              role="passenger"
+              onSuccess={(result) => {
+                console.log('Google signup successful:', result);
+                // The AuthContext will handle the navigation
+              }}
+              onError={(error) => {
+                setFormError(error);
+              }}
+            />
           </Card.Content>
         </Card>
 
@@ -579,40 +468,14 @@ const styles = StyleSheet.create({
   inputContent: {
     color: COLORS.secondary,
   },
-  phoneContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  countrySelector: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 8,
-    paddingVertical: 6,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    borderRadius: 16,
-    marginRight: 8,
-    backgroundColor: COLORS.primary,
-  },
-  countryCode: {
-    fontSize: 16,
-    color: COLORS.secondary,
-    marginRight: 4,
-  },
-  chevronIcon: {
-    marginLeft: 0,
-  },
-  phoneInput: {
-    flex: 1,
-    backgroundColor: COLORS.primary,
-    color: COLORS.secondary,
-    borderRadius: 16,
-  },
+
   genderContainer: {
     position: 'relative',
     zIndex: 10,
     marginBottom: 12,
+  },
+  chevronIcon: {
+    marginLeft: 0,
   },
   passwordContainer: {
     position: 'relative',

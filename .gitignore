@@ -81,3 +81,20 @@ yarn-error.log
 .env.production
 *.key
 *.pem
+
+# Sensitive configuration files
+src/config/env.ts
+src/config/env.ts.example
+
+# Debug and test files
+src/services/debug*.ts
+src/utils/test*.ts
+src/components/ApiTestButton.tsx
+
+# Backend sensitive files
+RideShare-Backend/.env
+RideShare-Backend/venv/
+RideShare-Backend/*.db
+RideShare-Backend/test_*.py
+RideShare-Backend/check_*.py
+RideShare-Backend/setup_database.py

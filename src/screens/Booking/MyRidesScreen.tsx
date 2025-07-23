@@ -7,6 +7,7 @@ import { COLORS } from '../../constants/colors';
 import { scale, verticalScale, moderateScale } from 'react-native-size-matters';
 import { Dimensions } from 'react-native';
 import { I18nManager } from 'react-native';
+import { useOptimizedNavigationSync } from '../../hooks/useOptimizedNavigationSync';
 
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
@@ -96,6 +97,9 @@ const mockPast = [
 ];
 
 const MyRidesScreen = ({ navigation }: any) => {
+  // Navigation sync hook
+  useOptimizedNavigationSync();
+  
   const [tab, setTab] = useState('upcoming');
   const [filterModalVisible, setFilterModalVisible] = useState(false);
   const [statusFilters, setStatusFilters] = useState({ Confirmed: true, Active: true, Pending: true });

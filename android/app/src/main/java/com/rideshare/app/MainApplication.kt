@@ -1,4 +1,4 @@
-package com.rideshare
+package com.rideshare.app
 
 import android.app.Application
 import com.facebook.react.PackageList
@@ -22,10 +22,10 @@ class MainApplication : Application(), ReactApplication {
 
         override fun getJSMainModuleName(): String = "index"
 
-        override fun getUseDeveloperSupport(): Boolean = BuildConfig.DEBUG
+        override fun getUseDeveloperSupport(): Boolean = true
 
-        override val isNewArchEnabled: Boolean = BuildConfig.IS_NEW_ARCHITECTURE_ENABLED
-        override val isHermesEnabled: Boolean = BuildConfig.IS_HERMES_ENABLED
+        override val isNewArchEnabled: Boolean = false
+        override val isHermesEnabled: Boolean = true
       }
 
   override val reactHost: ReactHost

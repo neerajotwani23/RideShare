@@ -7,6 +7,7 @@ import { COLORS } from '../../constants/colors';
 import groqService from '../../services/groqService';
 import { api } from '../../services/api';
 import { useNavigation } from '@react-navigation/native';
+import { useNavigationSync } from '../../hooks/useNavigationSync';
 
 interface Message {
   id: number;
@@ -17,6 +18,9 @@ interface Message {
 }
 
 const ChatBotScreen = () => {
+  // Navigation sync hook
+  useNavigationSync();
+  
   const navigation = useNavigation();
   const [messages, setMessages] = useState<Message[]>([
     {

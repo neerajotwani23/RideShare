@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, TouchableOpacity, Dimensions, Platform, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { api } from '../../services/api';
+import { useOptimizedNavigationSync } from '../../hooks/useOptimizedNavigationSync';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 import { Text, Card, Divider, Chip, TextInput, Switch } from 'react-native-paper';
@@ -43,6 +44,9 @@ const mockResults = [
 ];
 
 const FindRideScreen = ({ navigation, route }: any) => {
+  // Navigation sync hook
+  useOptimizedNavigationSync();
+  
   const [source, setSource] = useState('');
   const [destination, setDestination] = useState('');
   const [rideType, setRideType] = useState<'now' | 'schedule'>('now');

@@ -1,4 +1,4 @@
-package com.rideshare
+package com.rideshare.app
 
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate

@@ -5,14 +5,14 @@ import { Text, HelperText, Divider, TextInput, ActivityIndicator } from 'react-n
 
 import { useAuth } from '../../context/AuthContext';
 import { COLORS } from '../../constants/colors';
-import { CustomTextInput, CustomButton, FormCard, Icon } from '../../components';
+import { CustomTextInput, CustomButton, FormCard, Icon, GoogleSignInButton } from '../../components';
 
 const LoginScreen = ({ navigation }: any) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
-  const { login, isLoading } = useAuth();
+  const { login, loginWithGoogle, isLoading } = useAuth();
 
   const validate = () => {
     if (!email.trim()) {
@@ -60,9 +60,19 @@ const LoginScreen = ({ navigation }: any) => {
     }
   };
 
-  const handleGoogleSignIn = () => {
-    // Handle Google sign in
-    console.log('Google sign in');
+  const handleGoogleSignIn = async () => {
+    try {
+      await loginWithGoogle();
+      // Navigation will be handled by AuthContext state change
+    } catch (e: any) {
+      let message = 'An error occurred during Google sign in.';
+      if (typeof e === 'string') {
+        message = e;
+      } else if (e && typeof e === 'object' && e.message) {
+        message = e.message;
+      }
+      setError(message);
+    }
   };
 
   return (
@@ -126,25 +136,25 @@ const LoginScreen = ({ navigation }: any) => {
             <Divider style={styles.divider} />
             </View>
 
-          <CustomButton 
-              mode="outlined" 
-              onPress={handleGoogleSignIn}
-              style={styles.googleButton}
-              labelStyle={styles.googleButtonLabel}
-            icon={() => (
-              <Icon name="google" size={20} color="#4285F4" style={{ marginRight: 8 }} />
-            )}
-            >
-              Continue with Google
-          </CustomButton>
+          <GoogleSignInButton
+            mode="login"
+            onSuccess={(result) => {
+              console.log('Google login successful:', result);
+              // The AuthContext will handle the navigation
+            }}
+            onError={(error) => {
+              setError(error);
+            }}
+          />
         </FormCard>
 
         <View style={styles.signupSection}>
           <Text style={styles.signupText}>Don't have an account? </Text>
-          <TouchableOpacity onPress={() => navigation && navigation.navigate('RoleSelection')}>
+          <TouchableOpacity onPress={() => navigation && navigation.navigate('Signup')}>
             <Text style={styles.signupLink}>Sign up</Text>
           </TouchableOpacity>
         </View>
+
       </View>
     </SafeAreaView>
   );

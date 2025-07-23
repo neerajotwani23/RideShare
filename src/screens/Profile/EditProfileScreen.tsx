@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, Alert } from 'react-native';
+import { View, StyleSheet, ScrollView, Alert, Image, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Text, TextInput, Button, Card, IconButton, ActivityIndicator } from 'react-native-paper';
+import { Text, TextInput, Button, Card, IconButton, ActivityIndicator, Avatar } from 'react-native-paper';
 import { COLORS } from '../../constants/colors';
 import Icon from '../../components/Icon';
+import { PhoneNumberInput } from '../../components';
 import { useApp } from '../../context/AppContext';
 
 const EditProfileScreen = ({ navigation }: any) => {
@@ -11,7 +12,9 @@ const EditProfileScreen = ({ navigation }: any) => {
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [cnic, setCnic] = useState('');
+  const [gender, setGender] = useState('');
   const [about, setAbout] = useState('');
+  const [profilePicture, setProfilePicture] = useState('');
   const [errors, setErrors] = useState<{[key: string]: string}>({});
   
   const { userProfile, updateProfile, isLoading, isRefreshing } = useApp();
@@ -23,83 +26,16 @@ const EditProfileScreen = ({ navigation }: any) => {
       setEmail(userProfile.email || '');
       setPhone(userProfile.phone_no || '');
       setCnic(userProfile.cnic || '');
+      setGender(userProfile.gender || '');
       setAbout(userProfile.bio || '');
+      setProfilePicture(userProfile.profile_picture || '');
     }
   }, [userProfile]);
 
-  // Clear any existing about errors when component mounts
-  useEffect(() => {
-    if (errors.about) {
-      setErrors(prev => {
-        const newErrors = { ...prev };
-        delete newErrors.about;
-        return newErrors;
-      });
-    }
-  }, []);
 
-  const validateEmail = (email: string) => {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  };
-
-  const validatePhone = (phone: string) => {
-    // More flexible phone validation for Pakistani numbers
-    const cleaned = phone.replace(/\s/g, '');
-    return /^\+92[0-9]{10}$/.test(cleaned) || /^\+92\s[0-9]{10}$/.test(cleaned);
-  };
-
-  const validateCNIC = (cnic: string) => {
-    // More flexible CNIC validation
-    const cleaned = cnic.replace(/[^0-9]/g, '');
-    return cleaned.length === 13;
-  };
-
-  const formatCNIC = (text: string) => {
-    const cleaned = text.replace(/[^0-9]/g, '');
-    if (cleaned.length <= 5) {
-      return cleaned;
-    } else if (cleaned.length <= 12) {
-      return `${cleaned.slice(0, 5)}-${cleaned.slice(5)}`;
-    } else {
-      return `${cleaned.slice(0, 5)}-${cleaned.slice(5, 12)}-${cleaned.slice(12, 13)}`;
-    }
-  };
-
-  const formatPhone = (text: string) => {
-    const cleaned = text.replace(/[^0-9+]/g, '');
-    if (!cleaned.startsWith('+92')) {
-      if (cleaned.startsWith('92')) {
-        return '+' + cleaned;
-      } else if (cleaned.startsWith('3')) {
-        return '+92 ' + cleaned;
-      } else {
-        return '+92 ' + cleaned;
-      }
-    }
-    return cleaned;
-  };
 
   const validateForm = () => {
     const newErrors: {[key: string]: string} = {};
-
-    if (!fullName.trim()) {
-      newErrors.fullName = 'Full name is required';
-    }
-
-    if (!validateEmail(email)) {
-      newErrors.email = 'Please enter a valid email address';
-    }
-
-    if (!validatePhone(phone)) {
-      newErrors.phone = 'Please enter a valid Pakistani phone number';
-    }
-
-    if (!validateCNIC(cnic)) {
-      newErrors.cnic = 'Please enter a valid CNIC (12345-1234567-1)';
-    }
-
-    // About section is optional, so no validation needed
-    // The newErrors object will not include 'about', so any existing about errors will be cleared
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -111,15 +47,8 @@ const EditProfileScreen = ({ navigation }: any) => {
     }
 
     try {
-      const [firstName, ...lastNameParts] = fullName.trim().split(' ');
-      const lastName = lastNameParts.join(' ') || '';
-
       const profileData = {
-        first_name: firstName,
-        last_name: lastName,
-        email,
         phone_no: phone,
-        cnic,
         bio: about,
       };
 
@@ -138,6 +67,28 @@ const EditProfileScreen = ({ navigation }: any) => {
     navigation.navigate('ChangePassword');
   };
 
+  const handleChangeProfilePicture = () => {
+    // TODO: Implement image picker functionality
+    Alert.alert(
+      'Change Profile Picture',
+      'Profile picture change functionality will be implemented soon.',
+      [{ text: 'OK' }]
+    );
+  };
+
+  const getGenderDisplay = (gender: string) => {
+    if (!gender) return 'Not specified';
+    // Ensure gender is either 'male' or 'female'
+    if (gender.toLowerCase() === 'male') {
+      return 'Male';
+    } else if (gender.toLowerCase() === 'female') {
+      return 'Female';
+    }
+    return 'Not specified';
+  };
+
+
+
   if (isRefreshing) {
     return (
       <SafeAreaView style={styles.container}>
@@ -153,103 +104,120 @@ const EditProfileScreen = ({ navigation }: any) => {
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         {/* Header */}
-      <View style={styles.header}>
-        <IconButton
-          icon="arrow-left"
-          size={24}
-          iconColor={COLORS.secondary}
-          onPress={() => navigation.goBack()}
+        <View style={styles.header}>
+          <IconButton
+            icon="arrow-left"
+            size={24}
+            iconColor={COLORS.secondary}
+            onPress={() => navigation.goBack()}
             style={styles.backButton}
-        />
-        <Text style={styles.headerTitle}>Edit Profile</Text>
+          />
+          <Text style={styles.headerTitle}>Edit Profile</Text>
           <View style={{ width: 48 }} />
-      </View>
+        </View>
 
+        {/* Profile Picture Section */}
         <Card style={styles.card}>
           <Card.Content style={styles.cardContent}>
-            <Text style={styles.sectionTitle}>Personal Information</Text>
+            <Text style={styles.sectionTitle}>Profile Picture</Text>
+            <View style={styles.profilePictureContainer}>
+              <TouchableOpacity onPress={() => handleChangeProfilePicture()}>
+                {profilePicture ? (
+                  <Avatar.Image 
+                    size={100} 
+                    source={{ uri: profilePicture }} 
+                    style={styles.profilePicture}
+                  />
+                ) : (
+                  <Avatar.Icon 
+                    size={100} 
+                    icon="account" 
+                    style={styles.profilePicture}
+                    color={COLORS.secondary}
+                  />
+                )}
+                <View style={styles.changePictureOverlay}>
+                  <Icon name="camera" size={24} color={COLORS.primary} />
+                </View>
+              </TouchableOpacity>
+              <Text style={styles.profilePictureText}>
+                Tap to change profile picture
+              </Text>
+            </View>
+          </Card.Content>
+        </Card>
+
+        {/* Personal Information - Locked Fields */}
+        <Card style={styles.card}>
+          <Card.Content style={styles.cardContent}>
+            <Text style={styles.sectionTitle}>Personal Information (Locked)</Text>
             
-              <TextInput
-              style={styles.input}
-              mode="outlined"
-              label="Full Name"
-                value={fullName}
-                onChangeText={setFullName}
-              outlineColor={COLORS.border}
-              activeOutlineColor={COLORS.accent}
-              theme={{ roundness: 12 }}
-              error={!!errors.fullName}
-              />
-              {errors.fullName ? <Text style={styles.errorText}>{errors.fullName}</Text> : null}
+            <View style={styles.lockedFieldContainer}>
+              <Text style={styles.lockedFieldLabel}>Full Name</Text>
+              <View style={styles.lockedFieldValue}>
+                <Text style={styles.lockedFieldText}>{fullName || 'Not specified'}</Text>
+                <Icon name="lock" size={16} color={COLORS.textSecondary} />
+              </View>
+            </View>
 
-              <TextInput
-              style={styles.input}
-                mode="outlined"
-              label="Email Address"
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              outlineColor={COLORS.border}
-              activeOutlineColor={COLORS.accent}
-              theme={{ roundness: 12 }}
-              error={!!errors.email}
-            />
-            {errors.email ? <Text style={styles.errorText}>{errors.email}</Text> : null}
+            <View style={styles.lockedFieldContainer}>
+              <Text style={styles.lockedFieldLabel}>Email Address</Text>
+              <View style={styles.lockedFieldValue}>
+                <Text style={styles.lockedFieldText}>{email || 'Not specified'}</Text>
+                <Icon name="lock" size={16} color={COLORS.textSecondary} />
+              </View>
+            </View>
 
-              <TextInput
-              style={styles.input}
-                mode="outlined"
-              label="Phone Number"
+            <View style={styles.lockedFieldContainer}>
+              <Text style={styles.lockedFieldLabel}>CNIC</Text>
+              <View style={styles.lockedFieldValue}>
+                <Text style={styles.lockedFieldText}>{cnic || 'Not specified'}</Text>
+                <Icon name="lock" size={16} color={COLORS.textSecondary} />
+              </View>
+            </View>
+
+            <View style={styles.lockedFieldContainer}>
+              <Text style={styles.lockedFieldLabel}>Gender</Text>
+              <View style={styles.lockedFieldValue}>
+                <Text style={styles.lockedFieldText}>{getGenderDisplay(gender)}</Text>
+                <Icon name="lock" size={16} color={COLORS.textSecondary} />
+              </View>
+            </View>
+
+
+          </Card.Content>
+        </Card>
+
+        {/* Editable Information */}
+        <Card style={styles.card}>
+          <Card.Content style={styles.cardContent}>
+            <Text style={styles.sectionTitle}>Editable Information</Text>
+            
+            <PhoneNumberInput
               value={phone}
-              onChangeText={(text) => setPhone(formatPhone(text))}
-              keyboardType="phone-pad"
-                outlineColor={COLORS.border}
-                activeOutlineColor={COLORS.accent}
+              onChangeText={setPhone}
+              label="Phone Number"
+              outlineColor={COLORS.border}
+              activeOutlineColor={COLORS.accent}
               theme={{ roundness: 12 }}
-              error={!!errors.phone}
+              error={errors.phone}
             />
-            {errors.phone ? <Text style={styles.errorText}>{errors.phone}</Text> : null}
 
-              <TextInput
-              style={styles.input}
-              mode="outlined"
-              label="CNIC"
-                value={cnic}
-                onChangeText={(text) => setCnic(formatCNIC(text))}
-              keyboardType="numeric"
-                outlineColor={COLORS.border}
-                activeOutlineColor={COLORS.accent}
-              theme={{ roundness: 12 }}
-              error={!!errors.cnic}
-            />
-            {errors.cnic ? <Text style={styles.errorText}>{errors.cnic}</Text> : null}
-
-              <TextInput
+            <TextInput
               style={[styles.input, styles.textArea]}
-                mode="outlined"
+              mode="outlined"
               label="About (Optional)"
               value={about}
-              onChangeText={(text) => {
-                setAbout(text);
-                // Clear any existing about errors when user starts typing
-                if (errors.about) {
-                  setErrors(prev => {
-                    const newErrors = { ...prev };
-                    delete newErrors.about;
-                    return newErrors;
-                  });
-                }
-              }}
+              onChangeText={setAbout}
               multiline
               numberOfLines={4}
               outlineColor={COLORS.border}
               activeOutlineColor={COLORS.accent}
               theme={{ roundness: 12 }}
-              error={!!errors.about}
               placeholder="Tell us about yourself (optional)"
             />
-            {errors.about ? <Text style={styles.errorText}>{errors.about}</Text> : null}
+
+
 
             <Button
               mode="contained"
@@ -265,19 +233,20 @@ const EditProfileScreen = ({ navigation }: any) => {
           </Card.Content>
         </Card>
 
+        {/* Security Section */}
         <Card style={styles.card}>
           <Card.Content style={styles.cardContent}>
             <Text style={styles.sectionTitle}>Security</Text>
             
-              <Button
-                mode="outlined"
-                onPress={handleChangePassword}
-                style={styles.changePasswordButton}
+            <Button
+              mode="outlined"
+              onPress={handleChangePassword}
+              style={styles.changePasswordButton}
               contentStyle={styles.buttonContent}
               labelStyle={[styles.buttonLabel, { color: COLORS.accent }]}
-              >
+            >
               Change Password
-              </Button>
+            </Button>
           </Card.Content>
         </Card>
       </ScrollView>
@@ -305,13 +274,13 @@ const styles = StyleSheet.create({
     fontFamily: 'Montserrat-SemiBold',
     color: COLORS.secondary,
   },
-  headerRight: {
+  backButton: {
     width: 48,
   },
   scrollView: {
     flex: 1,
   },
-  formCard: {
+  card: {
     margin: 16,
     marginBottom: 8,
     borderRadius: 16,
@@ -330,88 +299,89 @@ const styles = StyleSheet.create({
     color: COLORS.secondary,
     marginBottom: 16,
   },
-  inputContainer: {
+  profilePictureContainer: {
+    alignItems: 'center',
+    paddingVertical: 10,
+  },
+  profilePicture: {
+    marginBottom: 12,
+  },
+  changePictureOverlay: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    backgroundColor: COLORS.accent,
+    borderRadius: 20,
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 3,
+    borderColor: COLORS.primary,
+  },
+  profilePictureText: {
+    fontSize: 14,
+    fontFamily: 'Montserrat-Regular',
+    color: COLORS.textSecondary,
+    textAlign: 'center',
+  },
+  lockedFieldContainer: {
     marginBottom: 16,
   },
-  inputLabel: {
+  lockedFieldLabel: {
     fontSize: 14,
     fontFamily: 'Montserrat-Medium',
-    color: COLORS.secondary,
+    color: COLORS.textSecondary,
     marginBottom: 8,
   },
-  textInput: {
-    backgroundColor: COLORS.primary,
-    borderRadius: 16,
+  lockedFieldValue: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: COLORS.lightGray,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
-  inputContent: {
-    fontFamily: 'Montserrat-Regular',
+  lockedFieldText: {
     fontSize: 16,
+    fontFamily: 'Montserrat-Regular',
     color: COLORS.secondary,
+    flex: 1,
+  },
+  input: {
+    marginBottom: 16,
+    backgroundColor: COLORS.primary,
+    borderRadius: 12,
+  },
+  textArea: {
+    minHeight: 100,
+    textAlignVertical: 'top',
   },
   errorText: {
     fontSize: 12,
     fontFamily: 'Montserrat-Regular',
     color: COLORS.error,
-    marginTop: 4,
-  },
-
-  passwordSection: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 8,
-  },
-  passwordInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  passwordIcon: {
-    marginRight: 12,
-  },
-  passwordTextContainer: {
-    flex: 1,
-  },
-  passwordLabel: {
-    fontSize: 16,
-    fontFamily: 'Montserrat-Medium',
-    color: COLORS.secondary,
-  },
-  passwordDescription: {
-    fontSize: 13,
-    fontFamily: 'Montserrat-Regular',
-    color: COLORS.textSecondary,
-    marginTop: 2,
-  },
-  changePasswordButton: {
-    borderColor: COLORS.secondary,
-    borderRadius: 8,
-  },
-  changePasswordLabel: {
-    fontSize: 14,
-    fontFamily: 'Montserrat-Medium',
-    color: COLORS.secondary,
-  },
-  changePasswordContent: {
-    paddingHorizontal: 16,
-    paddingVertical: 4,
-  },
-  actionButtons: {
-    padding: 16,
-    paddingTop: 8,
-    paddingBottom: 32,
+    marginTop: -12,
+    marginBottom: 16,
   },
   saveButton: {
-    backgroundColor: COLORS.secondary,
+    backgroundColor: COLORS.accent,
+    borderRadius: 12,
+    marginTop: 8,
+  },
+  changePasswordButton: {
+    borderColor: COLORS.accent,
     borderRadius: 12,
   },
-  saveButtonLabel: {
+  buttonContent: {
+    paddingVertical: 12,
+  },
+  buttonLabel: {
     fontSize: 16,
     fontFamily: 'Montserrat-SemiBold',
-    color: COLORS.primary,
-  },
-  saveButtonContent: {
-    paddingVertical: 12,
   },
   loadingContainer: {
     flex: 1,
@@ -424,35 +394,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: 'Montserrat-Medium',
     color: COLORS.secondary,
-  },
-  backButton: {
-    width: 48,
-  },
-  card: {
-    margin: 16,
-    marginBottom: 8,
-    borderRadius: 16,
-    backgroundColor: COLORS.primary,
-    elevation: 2,
-    shadowColor: COLORS.secondary,
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-  },
-  input: {
-    marginBottom: 16,
-    backgroundColor: COLORS.primary,
-    borderRadius: 12,
-  },
-  textArea: {
-    minHeight: 100,
-    textAlignVertical: 'top',
-  },
-  buttonContent: {
-    paddingVertical: 12,
-  },
-  buttonLabel: {
-    fontSize: 16,
-    fontFamily: 'Montserrat-SemiBold',
   },
 });
 

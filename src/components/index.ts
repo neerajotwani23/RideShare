@@ -7,4 +7,6 @@ export { default as Icon } from './Icon';
 export { default as Logo } from './Logo';
 export { default as RideCard } from './RideCard';
 export { default as RideFilters } from './RideFilters';
-export { default as ToggleButton } from './ToggleButton'; 
+export { default as ToggleButton } from './ToggleButton';
+export { default as PhoneNumberInput } from './PhoneNumberInput';
+export { default as GoogleSignInButton } from './GoogleSignInButton'; 

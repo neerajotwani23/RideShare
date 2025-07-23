@@ -22,7 +22,8 @@ def get_db():
 SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key-here")
 # SECRET_KEY = "123ABCDEFGHIJKLMNOPQRSTWYZIKLUHHBJH"
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 1440  # 24 hours for development
+ACCESS_TOKEN_EXPIRE_DAYS = 30  # 30 days (1 month)
+REFRESH_TOKEN_EXPIRE_DAYS = 60  # 60 days (2 months) for refresh tokens
 
 security = HTTPBearer()
 
@@ -34,6 +35,8 @@ class AuthController:
     def _setup_routes(self):
         self.router.add_api_route("/register", self.register_user, methods=["POST"], response_model=schemas.UserResponse)
         self.router.add_api_route("/login", self.login_user, methods=["POST"])
+        self.router.add_api_route("/google-login", self.google_login, methods=["POST"])
+        self.router.add_api_route("/refresh", self.refresh_token, methods=["POST"])
         self.router.add_api_route("/me", self.get_current_user_info, methods=["GET"], response_model=schemas.UserResponse)
         self.router.add_api_route("/me", self.update_current_user, methods=["PUT"], response_model=schemas.UserResponse)
     
@@ -43,8 +46,19 @@ class AuthController:
         if expires_delta:
             expire = datetime.utcnow() + expires_delta
         else:
-            expire = datetime.utcnow() + timedelta(minutes=15)
+            expire = datetime.utcnow() + timedelta(days=ACCESS_TOKEN_EXPIRE_DAYS)
         to_encode.update({"exp": expire})
+        encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+        return encoded_jwt
+    
+    @staticmethod
+    def create_refresh_token(data: dict, expires_delta: timedelta = None):
+        to_encode = data.copy()
+        if expires_delta:
+            expire = datetime.utcnow() + expires_delta
+        else:
+            expire = datetime.utcnow() + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
+        to_encode.update({"exp": expire, "type": "refresh"})
         encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
         return encoded_jwt
     
@@ -104,16 +118,68 @@ class AuthController:
                 detail="Invalid email or password"
             )
         
-        access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+        access_token_expires = timedelta(days=ACCESS_TOKEN_EXPIRE_DAYS)
+        refresh_token_expires = timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
+        
         access_token = self.create_access_token(
             data={"sub": str(user.id)}, expires_delta=access_token_expires
+        )
+        refresh_token = self.create_refresh_token(
+            data={"sub": str(user.id)}, expires_delta=refresh_token_expires
         )
         
         return {
             "access_token": access_token,
+            "refresh_token": refresh_token,
             "token_type": "bearer",
             "user": schemas.UserResponse.from_orm(user)
         }
+    
+    def refresh_token(self, token_data: schemas.RefreshToken, db: Session = Depends(get_db)):
+        """Refresh access token using refresh token"""
+        try:
+            # Decode the refresh token
+            payload = jwt.decode(token_data.refresh_token, SECRET_KEY, algorithms=[ALGORITHM])
+            
+            # Check if it's a refresh token
+            if payload.get("type") != "refresh":
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Invalid token type"
+                )
+            
+            user_id: int = int(payload.get("sub"))
+            if user_id is None:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Could not validate credentials"
+                )
+            
+            # Verify user exists
+            user_service = UserService(db)
+            user = user_service.get_user_by_id(user_id)
+            if user is None:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="User not found"
+                )
+            
+            # Create new access token
+            access_token_expires = timedelta(days=ACCESS_TOKEN_EXPIRE_DAYS)
+            access_token = self.create_access_token(
+                data={"sub": str(user.id)}, expires_delta=access_token_expires
+            )
+            
+            return {
+                "access_token": access_token,
+                "token_type": "bearer"
+            }
+            
+        except JWTError:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Could not validate refresh token"
+            )
     
     def get_current_user_info(self, current_user: User = Depends(get_current_user)):
         """Get current user information"""
@@ -127,4 +193,73 @@ class AuthController:
     ):
         """Update current user information"""
         user_service = UserService(db)
-        return user_service.update_user(current_user.id, user_update) 
+        return user_service.update_user(current_user.id, user_update)
+    
+    def google_login(self, google_data: dict, db: Session = Depends(get_db)):
+        """Login or register user with Google"""
+        try:
+            user_service = UserService(db)
+            
+            # Extract Google user data
+            email = google_data.get("email")
+            google_id = google_data.get("google_id")
+            access_token = google_data.get("access_token")
+            
+            if not email or not google_id:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Missing required Google data"
+                )
+            
+            # Check if user exists
+            user = user_service.get_user_by_email(email)
+            
+            if user:
+                # User exists, verify Google ID matches
+                if user.google_id != google_id:
+                    raise HTTPException(
+                        status_code=status.HTTP_401_UNAUTHORIZED,
+                        detail="Google account mismatch"
+                    )
+            else:
+                # Create new user with Google data
+                user_data = schemas.UserCreate(
+                    email=email,
+                    google_id=google_id,
+                    auth_provider="google",
+                    user_type="PASSENGER",  # Default to passenger, can be changed later
+                    first_name=google_data.get("first_name", ""),
+                    last_name=google_data.get("last_name", ""),
+                    profile_picture=google_data.get("profile_picture", ""),
+                    password="",  # No password for Google users
+                    phone_no="",
+                    cnic="",
+                    gender=""
+                )
+                user = user_service.create_user(user_data)
+            
+            # Create tokens
+            access_token_expires = timedelta(days=ACCESS_TOKEN_EXPIRE_DAYS)
+            refresh_token_expires = timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
+            
+            access_token = self.create_access_token(
+                data={"sub": str(user.id)}, expires_delta=access_token_expires
+            )
+            refresh_token = self.create_refresh_token(
+                data={"sub": str(user.id)}, expires_delta=refresh_token_expires
+            )
+            
+            return {
+                "access_token": access_token,
+                "refresh_token": refresh_token,
+                "token_type": "bearer",
+                "user": schemas.UserResponse.from_orm(user)
+            }
+            
+        except HTTPException as e:
+            raise e
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="An error occurred during Google authentication"
+            ) 

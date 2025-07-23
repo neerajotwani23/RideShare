@@ -1,11 +1,9 @@
 import React, { useEffect, useRef } from 'react';
 import { View, StyleSheet, Image, Dimensions, Animated } from 'react-native';
-import { useAuth } from '../../context/AuthContext';
 
 const { width: screenWidth } = Dimensions.get('window');
 
 const SplashScreen = ({ navigation }: any) => {
-  const { isAuthenticated, roleSelected, profileSetupComplete, vehicleDetailsComplete, currentRole } = useAuth();
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.8)).current;
 
@@ -26,36 +24,20 @@ const SplashScreen = ({ navigation }: any) => {
     ]).start();
 
     const timer = setTimeout(() => {
-      // Fade out animation before navigation
+      // Fade out animation and navigate to Login
       Animated.timing(fadeAnim, {
         toValue: 0,
         duration: 500,
         useNativeDriver: true,
       }).start(() => {
-        // Navigate based on authentication state and onboarding completion
-        if (isAuthenticated && roleSelected && profileSetupComplete) {
-          if (currentRole === 'driver' && !vehicleDetailsComplete) {
-            // Driver needs to complete vehicle details
-            navigation.replace('VehicleDetails');
-          } else {
-            // User has completed all required onboarding
-            navigation.replace('MainTabs');
-          }
-        } else if (isAuthenticated && roleSelected && !profileSetupComplete) {
-          // User needs to complete profile setup
-          navigation.replace('ProfileSetup');
-        } else if (isAuthenticated && !roleSelected) {
-          // User needs to select role
-          navigation.replace('RoleSelection');
-        } else {
-          // User is not authenticated
-          navigation.replace('Login');
-        }
+        // The AppNavigator will handle the routing based on auth state
+        // We just need to navigate to Login as the default
+        navigation.replace('Login');
       });
     }, 2500);
 
     return () => clearTimeout(timer);
-  }, [navigation, isAuthenticated, roleSelected, profileSetupComplete, vehicleDetailsComplete, currentRole, fadeAnim, scaleAnim]);
+  }, [navigation, fadeAnim, scaleAnim]);
 
   return (
     <View style={styles.container}>

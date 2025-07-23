@@ -2,24 +2,25 @@ import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, TouchableOpacity, Alert, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Text, TextInput, Button, IconButton, ActivityIndicator } from 'react-native-paper';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuth } from '../../context/AuthContext';
-import { useApp } from '../../context/AppContext';
 import { COLORS } from '../../constants/colors';
+import { api } from '../../services/api';
+import { authDebugService } from '../../services/debugAuth';
 
 const VehicleDetailsScreen = ({ navigation }: any) => {
   const [vehicleMake, setVehicleMake] = useState('');
   const [vehicleModel, setVehicleModel] = useState('');
   const [vehicleColor, setVehicleColor] = useState('');
   const [licensePlate, setLicensePlate] = useState('');
-  const [drivingLicenseFront, setDrivingLicenseFront] = useState<string | null>(null);
-  const [drivingLicenseBack, setDrivingLicenseBack] = useState<string | null>(null);
   const [vehicleRegistration, setVehicleRegistration] = useState<string | null>(null);
+  const [drivingLicense, setDrivingLicense] = useState<string | null>(null);
   const [errors, setErrors] = useState<{[key: string]: string}>({});
   const [isLoadingData, setIsLoadingData] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
   const [existingVehicle, setExistingVehicle] = useState<any>(null);
   
   const { completeVehicleDetails, logout } = useAuth();
-  const { createVehicle, updateVehicle, getMyVehicles, isLoading } = useApp();
 
   // Load existing vehicle data on component mount
   useEffect(() => {
@@ -28,59 +29,83 @@ const VehicleDetailsScreen = ({ navigation }: any) => {
 
   const loadExistingVehicle = async () => {
     try {
+      console.log('🔄 Starting to load existing vehicle and user data...');
       setIsLoadingData(true);
-      const vehicles = await getMyVehicles();
-      console.log('Vehicles loaded:', vehicles);
+      
+      // Check if user is authenticated
+      const token = await AsyncStorage.getItem('accessToken');
+      console.log('🔑 Token available:', !!token);
+      
+      // Load both vehicle and user data
+      const [vehicles, userProfile] = await Promise.all([
+        api.getMyVehicles(),
+        api.getProfile()
+      ]);
+      
+      console.log('🚗 Vehicles loaded:', vehicles);
+      console.log('👤 User profile loaded:', userProfile);
+      console.log('📊 Vehicles array length:', vehicles?.length);
+      
+      // Set user driving license from profile
+      if (userProfile?.driving_license) {
+        setDrivingLicense(userProfile.driving_license);
+        console.log('🪪 User driving license:', userProfile.driving_license);
+      }
+      
       if (vehicles && vehicles.length > 0) {
         const vehicle = vehicles[0]; // Get the first vehicle
-        console.log('Vehicle data:', vehicle);
+        console.log('🚗 Vehicle data:', vehicle);
         setExistingVehicle(vehicle);
         
-        // Populate form with existing data
+        // Populate form with existing data using correct field names
         const make = vehicle.name_make || '';
         const plate = vehicle.no_plate || '';
-        console.log('Setting make:', make, 'plate:', plate);
+        console.log('🔧 Setting make:', make, 'plate:', plate);
         setVehicleMake(make);
         setVehicleModel(vehicle.model || '');
         setVehicleColor(vehicle.color || '');
         setLicensePlate(plate);
-        setDrivingLicenseFront(null); // Not available in current schema
-        setDrivingLicenseBack(null); // Not available in current schema
         setVehicleRegistration(vehicle.registration || null);
+        
+        // Also load driving license from user profile if not already set
+        if (!drivingLicense && userProfile?.driving_license) {
+          setDrivingLicense(userProfile.driving_license);
+        }
         
         // Check if vehicle data is incomplete
         if (!make || !plate) {
-          console.log('Vehicle data is incomplete - missing make or plate');
+          console.log('⚠️ Vehicle data is incomplete - missing make or plate');
+        } else {
+          console.log('✅ Vehicle data loaded successfully');
         }
+      } else {
+        console.log('ℹ️ No existing vehicles found - this is normal for new users');
       }
     } catch (error) {
-      console.error('Error loading vehicle data:', error);
+      console.error('❌ Error loading vehicle data:', error);
+      console.error('❌ Error details:', error instanceof Error ? error.message : 'Unknown error');
     } finally {
       setIsLoadingData(false);
+      console.log('🏁 Finished loading vehicle data');
     }
   };
 
-  const handleDocumentUpload = (documentType: 'licenseFront' | 'licenseBack' | 'vehicleReg') => {
+  const handleDocumentUpload = (documentType: 'vehicleReg' | 'drivingLicense') => {
+    const documentName = documentType === 'vehicleReg' ? 'Vehicle Registration' : 'Driving License';
     Alert.alert(
-      'Upload Document',
-      'Choose how you want to upload your document',
+      `Upload ${documentName}`,
+      `Choose how you want to upload your ${documentName.toLowerCase()} document`,
       [
         { 
           text: 'Camera', 
           onPress: () => {
             console.log(`Camera selected for ${documentType}`);
             // Simulate document upload
-            const mockImageUri = 'https://via.placeholder.com/300x200/007AFF/FFFFFF?text=Document';
-            switch (documentType) {
-              case 'licenseFront':
-                setDrivingLicenseFront(mockImageUri);
-                break;
-              case 'licenseBack':
-                setDrivingLicenseBack(mockImageUri);
-                break;
-              case 'vehicleReg':
-                setVehicleRegistration(mockImageUri);
-                break;
+            const mockImageUri = `https://via.placeholder.com/300x200/007AFF/FFFFFF?text=${documentName.replace(' ', '+')}`;
+            if (documentType === 'vehicleReg') {
+              setVehicleRegistration(mockImageUri);
+            } else {
+              setDrivingLicense(mockImageUri);
             }
           }
         },
@@ -89,17 +114,11 @@ const VehicleDetailsScreen = ({ navigation }: any) => {
           onPress: () => {
             console.log(`Gallery selected for ${documentType}`);
             // Simulate document upload
-            const mockImageUri = 'https://via.placeholder.com/300x200/34C759/FFFFFF?text=Document';
-            switch (documentType) {
-              case 'licenseFront':
-                setDrivingLicenseFront(mockImageUri);
-                break;
-              case 'licenseBack':
-                setDrivingLicenseBack(mockImageUri);
-                break;
-              case 'vehicleReg':
-                setVehicleRegistration(mockImageUri);
-                break;
+            const mockImageUri = `https://via.placeholder.com/300x200/34C759/FFFFFF?text=${documentName.replace(' ', '+')}`;
+            if (documentType === 'vehicleReg') {
+              setVehicleRegistration(mockImageUri);
+            } else {
+              setDrivingLicense(mockImageUri);
             }
           }
         },
@@ -115,8 +134,8 @@ const VehicleDetailsScreen = ({ navigation }: any) => {
     if (!vehicleModel.trim()) newErrors.vehicleModel = 'Vehicle model is required';
     if (!vehicleColor.trim()) newErrors.vehicleColor = 'Vehicle color is required';
     if (!licensePlate.trim()) newErrors.licensePlate = 'License plate is required';
-    // Note: Driving license fields are not required in current schema
-    // if (!vehicleRegistration) newErrors.vehicleRegistration = 'Vehicle registration document is required';
+    if (!drivingLicense) newErrors.drivingLicense = 'Driving license document is required';
+    if (!vehicleRegistration) newErrors.vehicleRegistration = 'Vehicle registration document is required';
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -128,6 +147,9 @@ const VehicleDetailsScreen = ({ navigation }: any) => {
     }
 
     try {
+      setIsSaving(true);
+      
+      // Update vehicle data
       const vehicleData = {
         name_make: vehicleMake.trim(),
         model: vehicleModel.trim(),
@@ -136,24 +158,37 @@ const VehicleDetailsScreen = ({ navigation }: any) => {
         registration: vehicleRegistration,
       };
 
+      // Update user profile with driving license if it has changed
+      if (drivingLicense) {
+        try {
+          await api.updateProfile({
+            driving_license: drivingLicense
+          });
+          console.log('✅ Driving license updated in user profile');
+        } catch (profileError) {
+          console.error('❌ Failed to update driving license in profile:', profileError);
+          // Don't fail the entire save operation if profile update fails
+        }
+      }
+
       if (existingVehicle) {
         // Update existing vehicle
-        await updateVehicle(existingVehicle.id, vehicleData);
+        await api.updateVehicle(existingVehicle.id, vehicleData);
         Alert.alert(
           'Vehicle Updated!',
-          'Your vehicle details have been updated successfully!',
+          'Your vehicle details and documents have been updated successfully!',
           [{ text: 'OK' }]
         );
       } else {
         // Create new vehicle
-        await createVehicle(vehicleData);
+        await api.createVehicle(vehicleData);
         
         // Complete vehicle details setup (only for new vehicles)
         await completeVehicleDetails();
         
         Alert.alert(
           'Vehicle Setup Complete!',
-          'Your vehicle details have been saved successfully. You can now start posting rides and earning money!',
+          'Your vehicle details and documents have been saved successfully. You can now start posting rides and earning money!',
           [{ text: 'OK' }]
         );
       }
@@ -161,6 +196,8 @@ const VehicleDetailsScreen = ({ navigation }: any) => {
       // Navigation will be handled automatically by AppNavigator
     } catch (error: any) {
       Alert.alert('Error', error.message || 'Failed to save vehicle details. Please try again.');
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -202,6 +239,19 @@ const VehicleDetailsScreen = ({ navigation }: any) => {
     }
   };
 
+  const handleDebugAuth = async () => {
+    try {
+      await authDebugService.logAuthDebugInfo();
+      Alert.alert(
+        'Debug Info',
+        'Authentication debug information has been logged to the console. Check the console for details.',
+        [{ text: 'OK' }]
+      );
+    } catch (error) {
+      Alert.alert('Debug Error', `Failed to get debug info: ${error}`);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -213,7 +263,12 @@ const VehicleDetailsScreen = ({ navigation }: any) => {
           style={styles.backButton}
         />
         <Text style={styles.headerTitle}>Vehicle Details</Text>
-        <View style={styles.headerRight} />
+        <IconButton
+          icon="bug"
+          size={20}
+          iconColor={COLORS.secondary}
+          onPress={handleDebugAuth}
+        />
       </View>
 
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
@@ -321,40 +376,22 @@ const VehicleDetailsScreen = ({ navigation }: any) => {
           <View style={styles.documentsSection}>
             <Text style={styles.sectionTitle}>Required Documents</Text>
             
-            {/* Driving License Front */}
+            {/* Driving License Document */}
             <View style={styles.documentContainer}>
-              <Text style={styles.documentLabel}>Driving License (Front) *</Text>
+              <Text style={styles.documentLabel}>Driving License Document *</Text>
               <TouchableOpacity
                 style={styles.documentUpload}
-                onPress={() => handleDocumentUpload('licenseFront')}
+                onPress={() => handleDocumentUpload('drivingLicense')}
               >
-                {drivingLicenseFront ? (
-                  <Image source={{ uri: drivingLicenseFront }} style={styles.documentImage} />
+                {drivingLicense ? (
+                  <Image source={{ uri: drivingLicense }} style={styles.documentImage} />
                 ) : (
                   <View style={styles.uploadPlaceholder}>
-                    <Text style={styles.uploadText}>Upload Front</Text>
+                    <Text style={styles.uploadText}>Upload Driving License</Text>
                   </View>
                 )}
               </TouchableOpacity>
-              {errors.drivingLicenseFront ? <Text style={styles.errorText}>{errors.drivingLicenseFront}</Text> : null}
-            </View>
-
-            {/* Driving License Back */}
-            <View style={styles.documentContainer}>
-              <Text style={styles.documentLabel}>Driving License (Back) *</Text>
-              <TouchableOpacity
-                style={styles.documentUpload}
-                onPress={() => handleDocumentUpload('licenseBack')}
-              >
-                {drivingLicenseBack ? (
-                  <Image source={{ uri: drivingLicenseBack }} style={styles.documentImage} />
-                ) : (
-                  <View style={styles.uploadPlaceholder}>
-                    <Text style={styles.uploadText}>Upload Back</Text>
-                  </View>
-                )}
-              </TouchableOpacity>
-              {errors.drivingLicenseBack ? <Text style={styles.errorText}>{errors.drivingLicenseBack}</Text> : null}
+              {errors.drivingLicense ? <Text style={styles.errorText}>{errors.drivingLicense}</Text> : null}
             </View>
 
             {/* Vehicle Registration */}
@@ -385,8 +422,8 @@ const VehicleDetailsScreen = ({ navigation }: any) => {
           style={styles.saveButton}
           contentStyle={styles.buttonContent}
           labelStyle={styles.buttonLabel}
-          disabled={isLoading || isLoadingData}
-          loading={isLoading}
+          disabled={isLoadingData || isSaving}
+          loading={isSaving}
         >
           {existingVehicle 
             ? existingVehicle.name_make && existingVehicle.no_plate
@@ -415,6 +452,9 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primary,
   },
   backButton: {
+    margin: 0,
+  },
+  debugButton: {
     margin: 0,
   },
   headerTitle: {
@@ -576,6 +616,13 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: 'Montserrat-Regular',
     color: COLORS.textSecondary,
+  },
+  helperText: {
+    fontSize: 12,
+    fontFamily: 'Montserrat-Regular',
+    color: COLORS.textSecondary,
+    marginTop: 4,
+    fontStyle: 'italic',
   },
 });
 

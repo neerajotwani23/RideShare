@@ -12,6 +12,7 @@ import SignupScreen from '../screens/Auth/SignupScreen';
 import RoleSelectionScreen from '../screens/Auth/RoleSelectionScreen';
 import VehicleDetailsScreen from '../screens/Auth/VehicleDetailsScreen';
 import ResetPasswordScreen from '../screens/Auth/ResetPasswordScreen';
+import ProcessingScreen from '../screens/Auth/ProcessingScreen';
 
 // Profile Screens
 import ProfileSetupScreen from '../screens/Profile/ProfileSetupScreen';
@@ -248,18 +249,31 @@ const WalletIcon = ({ color, size }: { color: string; size: number }) => (
 
 // Main App Navigator
 const AppNavigator = () => {
-  const { isAuthenticated, roleSelected, profileSetupComplete, vehicleDetailsComplete, currentRole } = useAuth();
+  const { isAuthenticated, roleSelected, profileSetupComplete, vehicleDetailsComplete, currentRole, isProcessing } = useAuth();
+
+  // Debug logging
+  console.log('🧭 Navigation state:', {
+    isAuthenticated,
+    roleSelected,
+    profileSetupComplete,
+    vehicleDetailsComplete,
+    currentRole,
+    isProcessing
+  });
 
   return (
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
-        {!isAuthenticated ? (
+        {isProcessing ? (
+          // Processing Screen (shown after login while determining navigation)
+          <Stack.Screen name="Processing" component={ProcessingScreen} />
+        ) : !isAuthenticated ? (
           // Auth Flow
           <>
             <Stack.Screen name="Splash" component={SplashScreen} />
             <Stack.Screen name="Login" component={LoginScreen} />
-            <Stack.Screen name="RoleSelection" component={RoleSelectionScreen} />
             <Stack.Screen name="Signup" component={SignupScreen} />
+            <Stack.Screen name="RoleSelection" component={RoleSelectionScreen} />
             <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
           </>
         ) : !roleSelected ? (

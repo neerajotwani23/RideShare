@@ -1,17 +1,49 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Text, Button } from 'react-native-paper';
 import { useAuth } from '../../context/AuthContext';
-import COLORS from '../../constants/colors';
-import { Colors } from 'react-native/Libraries/NewAppScreen';
+import { COLORS } from '../../constants/colors';
 
-const RoleSelectionScreen = ({ navigation }: any) => {
-  const { selectRoleForSignup } = useAuth();
+const RoleSelectionScreen = ({ navigation, route }: any) => {
+  const { completeSignup, signupWithGoogle, pendingSignupData, isLoading } = useAuth();
+  const isGoogleSignup = route?.params?.isGoogleSignup;
 
-  const handleRoleSelection = (role: 'driver' | 'passenger') => {
-    selectRoleForSignup(role);
-    navigation.navigate('Signup');
+  // If no pending signup data and not Google signup, redirect to signup
+  React.useEffect(() => {
+    if (!pendingSignupData && !isGoogleSignup) {
+      navigation.navigate('Signup');
+    }
+  }, [pendingSignupData, isGoogleSignup, navigation]);
+
+  const handleRoleSelection = async (role: 'driver' | 'passenger') => {
+    try {
+      if (isGoogleSignup) {
+        // Handle Google signup
+        await signupWithGoogle(role);
+        // Navigate to login after successful signup
+        navigation.navigate('Login');
+      } else {
+        // Handle regular signup
+        if (!pendingSignupData) {
+          Alert.alert('Error', 'No signup data found. Please try again.');
+          navigation.navigate('Signup');
+          return;
+        }
+
+        await completeSignup(role);
+        // Navigate to login after successful signup
+        navigation.navigate('Login');
+      }
+    } catch (error: any) {
+      // Handle error - you might want to show an alert or navigate back to signup
+      console.error('Signup failed:', error);
+      Alert.alert(
+        'Signup Failed',
+        error.message || 'An error occurred during signup. Please try again.',
+        [{ text: 'OK', onPress: () => navigation.navigate('Signup') }]
+      );
+    }
   };
 
   return (
@@ -26,6 +58,8 @@ const RoleSelectionScreen = ({ navigation }: any) => {
             style={styles.driverButton}
             contentStyle={styles.buttonContent}
             labelStyle={styles.buttonLabel}
+            disabled={isLoading}
+            loading={isLoading}
           >
             Driver
           </Button>
@@ -35,6 +69,8 @@ const RoleSelectionScreen = ({ navigation }: any) => {
             style={styles.passengerButton}
             contentStyle={styles.buttonContent}
             labelStyle={styles.passengerButtonLabel}
+            disabled={isLoading}
+            loading={isLoading}
           >
             Passenger
           </Button>

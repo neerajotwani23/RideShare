@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { api } from '../services/api';
+import { optimizedDataSyncService } from '../services/optimizedDataSyncService';
 import { useAuth } from './AuthContext';
 
 interface AppContextType {
@@ -75,6 +76,14 @@ interface AppContextType {
   
   // Utility
   clearAllData: () => void;
+  
+  // Data Sync
+  syncAllData: () => Promise<void>;
+  syncSpecificData: (dataType: string) => Promise<any>;
+  loadFromStorage: () => Promise<void>;
+  smartSync: (requiredDataTypes?: string[]) => Promise<any>;
+  forceSyncDataType: (dataType: string) => Promise<any>;
+  backgroundSync: () => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -435,6 +444,102 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setTransactions([]);
   }, []);
 
+  // Data Sync Functions
+  const syncAllData = useCallback(async () => {
+    if (!isAuthenticated) return;
+    try {
+      setIsRefreshing(true);
+      const syncData = await optimizedDataSyncService.smartSync();
+      
+      // Update state with synced data
+      if (syncData.userProfile) setUserProfile(syncData.userProfile);
+      if (syncData.walletBalance !== undefined) setWalletBalance(syncData.walletBalance);
+      if (syncData.myRides) setMyRides(syncData.myRides);
+      if (syncData.availableRides) setAvailableRides(syncData.availableRides);
+      if (syncData.upcomingRides) setUpcomingRides(syncData.upcomingRides);
+      if (syncData.pastRides) setPastRides(syncData.pastRides);
+      if (syncData.myRideRequests) setMyRideRequests(syncData.myRideRequests);
+      if (syncData.myVehicles) setMyVehicles(syncData.myVehicles);
+      if (syncData.reviewsGiven) setReviewsGiven(syncData.reviewsGiven);
+      if (syncData.reviewsReceived) setReviewsReceived(syncData.reviewsReceived);
+      if (syncData.transactions) setTransactions(syncData.transactions);
+    } catch (error) {
+      console.error('Failed to sync all data:', error);
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [isAuthenticated]);
+
+  const syncSpecificData = useCallback(async (dataType: string) => {
+    if (!isAuthenticated) return;
+    try {
+      const data = await optimizedDataSyncService.forceSyncDataType(dataType);
+      
+      // Update specific state based on data type
+      switch (dataType) {
+        case 'userProfile':
+          setUserProfile(data);
+          break;
+        case 'walletBalance':
+          setWalletBalance(data.balance);
+          break;
+        case 'myRides':
+          setMyRides(data);
+          break;
+        case 'availableRides':
+          setAvailableRides(data);
+          break;
+        case 'upcomingRides':
+          setUpcomingRides(data);
+          break;
+        case 'pastRides':
+          setPastRides(data);
+          break;
+        case 'myRideRequests':
+          setMyRideRequests(data);
+          break;
+        case 'myVehicles':
+          setMyVehicles(data);
+          break;
+        case 'reviewsGiven':
+          setReviewsGiven(data);
+          break;
+        case 'reviewsReceived':
+          setReviewsReceived(data);
+          break;
+        case 'transactions':
+          setTransactions(data);
+          break;
+      }
+      
+      return data;
+    } catch (error) {
+      console.error(`Failed to sync ${dataType}:`, error);
+      throw error;
+    }
+  }, [isAuthenticated]);
+
+  const loadFromStorage = useCallback(async () => {
+    try {
+      const storedData = await optimizedDataSyncService.loadFromStorage();
+      
+      // Update state with stored data
+      if (storedData.userProfile) setUserProfile(storedData.userProfile);
+      if (storedData.walletBalance !== undefined) setWalletBalance(storedData.walletBalance);
+      if (storedData.myRides) setMyRides(storedData.myRides);
+      if (storedData.availableRides) setAvailableRides(storedData.availableRides);
+      if (storedData.upcomingRides) setUpcomingRides(storedData.upcomingRides);
+      if (storedData.pastRides) setPastRides(storedData.pastRides);
+      if (storedData.myRideRequests) setMyRideRequests(storedData.myRideRequests);
+      if (storedData.myVehicles) setMyVehicles(storedData.myVehicles);
+      if (storedData.reviewsGiven) setReviewsGiven(storedData.reviewsGiven);
+      if (storedData.reviewsReceived) setReviewsReceived(storedData.reviewsReceived);
+      if (storedData.transactions) setTransactions(storedData.transactions);
+    } catch (error) {
+      console.error('Failed to load data from storage:', error);
+    }
+  }, []);
+
   // Initial data loading when user is authenticated
   useEffect(() => {
     if (isAuthenticated && user) {
@@ -508,6 +613,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       changePassword,
       updateUserRole,
       clearAllData,
+      syncAllData,
+      syncSpecificData,
+      loadFromStorage,
+      smartSync: optimizedDataSyncService.smartSync.bind(optimizedDataSyncService),
+      forceSyncDataType: optimizedDataSyncService.forceSyncDataType.bind(optimizedDataSyncService),
+      backgroundSync: optimizedDataSyncService.backgroundSync.bind(optimizedDataSyncService),
     }}>
       {children}
     </AppContext.Provider>

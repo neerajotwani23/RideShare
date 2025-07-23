@@ -1,28 +1,69 @@
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { tokenManager } from './tokenManager';
+import { ENV_CONFIG } from '../config/env';
 
-// For Android emulator: use 10.0.2.2
-// For physical Android device: use your computer's IP address (e.g., 192.168.1.100)
-// For iOS simulator: use 127.0.0.1
-const BASE_URL = Platform.OS === 'android' ? 'http://10.0.2.2:8000' : 'http://127.0.0.1:8000';
+// Use environment configuration for API URL
+const BASE_URL = ENV_CONFIG.API_BASE_URL;
 
-// Helper function to get auth headers
+// Log current API configuration
+console.log('🌐 API Configuration:', {
+  BASE_URL,
+  isDev: __DEV__,
+  platform: Platform.OS,
+});
+
+// Helper function to get auth headers with automatic token refresh
 const getAuthHeaders = async () => {
-  const token = await AsyncStorage.getItem('accessToken');
-  return {
-    'Content-Type': 'application/json',
-    ...(token && { 'Authorization': `Bearer ${token}` }),
-  };
+  return await tokenManager.getAuthHeaders();
+};
+
+// Helper function to handle network errors
+const handleNetworkError = (error: any, endpoint: string) => {
+  console.error(`❌ Network error for ${endpoint}:`, error);
+  
+  if (error.message?.includes('Network request failed')) {
+    console.log('🔧 Network troubleshooting:');
+    console.log('1. Check if backend server is running');
+    console.log('2. Verify IP address in src/config/env.ts');
+    console.log('3. Ensure port 8000 is accessible');
+    console.log('4. Check firewall settings');
+    console.log('5. Try restarting the app');
+    
+    throw new Error(`Network connection failed. Please check your internet connection and try again.`);
+  }
+  
+  throw error;
 };
 
 // Helper function to handle API responses
 const handleResponse = async (response: Response) => {
   if (!response.ok) {
+    // Get the response text first, then try to parse as JSON
+    let responseText = '';
+    let errorData: any = null;
+    
     try {
-      const errorData = await response.json();
-      console.log('Error response data:', errorData);
+      responseText = await response.text();
+      console.log('Raw response text:', responseText);
       
-      // Handle different error response formats
+      // Try to parse as JSON if it's not empty
+      if (responseText.trim()) {
+        try {
+          errorData = JSON.parse(responseText);
+          console.log('Error response data:', errorData);
+        } catch (jsonError) {
+          console.log('Response is not valid JSON, treating as plain text');
+          errorData = { detail: responseText };
+        }
+      }
+    } catch (textError) {
+      console.error('Could not read response text:', textError);
+      errorData = { detail: `HTTP ${response.status}: ${response.statusText}` };
+    }
+    
+    // Handle different error response formats
+    if (errorData) {
       if (errorData.detail) {
         // Handle validation errors (detail is an array) or simple error messages
         if (Array.isArray(errorData.detail)) {
@@ -51,27 +92,20 @@ const handleResponse = async (response: Response) => {
           .map(([key, value]) => `${key}: ${value}`)
           .join(', ');
         throw new Error(errorMessages);
-      } else {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
-    } catch (parseError) {
-      console.error('Error parsing response:', parseError);
-      console.error('Response status:', response.status);
-      console.error('Response status text:', response.statusText);
-      
-      // Try to get the raw text response for debugging
-      try {
-        const rawText = await response.text();
-        console.error('Raw response text:', rawText);
-      } catch (textError) {
-        console.error('Could not read response text:', textError);
-      }
-      
-      // If JSON parsing fails, throw generic error
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }
+    
+    // Fallback error
+    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
   }
-  return response.json();
+  
+  // For successful responses, try to parse as JSON
+  try {
+    return await response.json();
+  } catch (jsonError) {
+    console.error('Failed to parse successful response as JSON:', jsonError);
+    throw new Error('Invalid response format from server');
+  }
 };
 
 export const api = {
@@ -85,9 +119,16 @@ export const api = {
         },
         body: JSON.stringify(credentials),
       });
-      return handleResponse(response);
+      const result = await handleResponse(response);
+      
+      // Store both access and refresh tokens using token manager
+      if (result.access_token && result.refresh_token) {
+        await tokenManager.storeTokens(result.access_token, result.refresh_token);
+      }
+      
+      return result;
     } catch (error) {
-      throw error;
+      handleNetworkError(error, 'login');
     }
   },
 
@@ -117,6 +158,66 @@ export const api = {
         console.error('Error message:', error.message);
         console.error('Error stack:', error.stack);
       }
+      handleNetworkError(error, 'register');
+    }
+  },
+
+  loginWithGoogle: async (googleData: any) => {
+    try {
+      console.log('API: Sending Google login request to:', `${BASE_URL}/auth/google-login`);
+      console.log('API: Google data:', googleData);
+      
+      const response = await fetch(`${BASE_URL}/auth/google-login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(googleData),
+      });
+      
+      console.log('API: Response status:', response.status);
+      console.log('API: Response headers:', response.headers);
+      
+      const result = await handleResponse(response);
+      console.log('API: Response result:', result);
+      
+      // Store both access and refresh tokens using token manager
+      if (result.access_token && result.refresh_token) {
+        await tokenManager.storeTokens(result.access_token, result.refresh_token);
+        console.log('API: Tokens stored successfully');
+      }
+      
+      return result;
+    } catch (error) {
+      console.error('API: Google login error:', error);
+      handleNetworkError(error, 'google-login');
+    }
+  },
+
+  refreshToken: async () => {
+    try {
+      const refreshToken = await tokenManager.getRefreshToken();
+      if (!refreshToken) {
+        throw new Error('No refresh token available');
+      }
+
+      const response = await fetch(`${BASE_URL}/auth/refresh`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ refresh_token: refreshToken }),
+      });
+      
+      const result = await handleResponse(response);
+      
+      // Store the new access token using token manager
+      if (result.access_token) {
+        await tokenManager.storeTokens(result.access_token);
+      }
+      
+      return result;
+    } catch (error) {
       throw error;
     }
   },

@@ -16,8 +16,12 @@ import {
 } from '../../components/icons';
 import { useAuth } from '../../context/AuthContext';
 import { useApp } from '../../context/AppContext';
+import { useOptimizedNavigationSync } from '../../hooks/useOptimizedNavigationSync';
 
 const ProfileScreen = ({ navigation }: any) => {
+  // Navigation sync hook
+  useOptimizedNavigationSync();
+  
   const [currentRole, setCurrentRole] = useState<'driver' | 'passenger' | null>(null);
   const [animatedValue] = useState(new Animated.Value(0));
   const { logout, user } = useAuth();

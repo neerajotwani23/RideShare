@@ -12,7 +12,6 @@ class UserTypeEnum(enum.Enum):
 class GenderEnum(enum.Enum):
     MALE = "male"
     FEMALE = "female"
-    OTHER = "other"
 
 class User(Base):
     __tablename__ = "user"
@@ -21,16 +20,18 @@ class User(Base):
     first_name = Column(String(100), nullable=False)
     last_name = Column(String(100), nullable=False)
     email = Column(String(255), unique=True, index=True, nullable=False)
-    password = Column(String(255), nullable=False)
+    password = Column(String(255), nullable=True)  # Can be null for Google users
     phone_no = Column(String(20), nullable=True)
+    google_id = Column(String(255), nullable=True, unique=True, index=True)
+    auth_provider = Column(String(50), default="email", nullable=False)  # "email" or "google"
     user_type = Column(SQLEnum(UserTypeEnum), nullable=False)
     cnic = Column(String(20), nullable=True, unique=True)
     profile_picture = Column(String(500), nullable=True)
     bio = Column(Text, nullable=True)
     wallet = Column(Numeric(10, 2), default=0.00)
     driving_license = Column(String(100), nullable=True)
-    gender = Column(SQLEnum(GenderEnum), nullable=True)
-    average_rating = Column(Float, default=5.0)
+    gender = Column(SQLEnum(GenderEnum), nullable=False)
+    average_rating = Column(Float, default=5.0, nullable=False)
     created_at = Column(DateTime, default=func.now())
     
     # Database-level constraints
@@ -84,6 +85,8 @@ class User(Base):
     
     @validates('password')
     def validate_password(self, key, password):
+        if password is None:
+            return password  # Allow null passwords for Google users
         if not password or len(password) < 6:
             raise ValueError("Password must be at least 6 characters long")
         return password
@@ -114,6 +117,14 @@ class User(Base):
             raise ValueError("Invalid CNIC format. Use format: XXXXX-XXXXXXX-X")
         return cnic
     
+    @validates('gender')
+    def validate_gender(self, key, gender):
+        if not gender:
+            raise ValueError("Gender is required and cannot be empty")
+        if gender not in [GenderEnum.MALE.value, GenderEnum.FEMALE.value]:
+            raise ValueError("Gender must be either 'male' or 'female'")
+        return gender
+    
     @validates('bio')
     def validate_bio(self, key, bio):
         if bio is None:
@@ -133,6 +144,12 @@ class User(Base):
         if rating < 0 or rating > 5:
             raise ValueError("Average rating must be between 0 and 5")
         return round(rating, 2)
+    
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        # Ensure new users start with a rating of 5.0
+        if self.average_rating is None:
+            self.average_rating = 5.0
     
     @validates('driving_license')
     def validate_driving_license(self, key, license):

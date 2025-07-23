@@ -36,6 +36,9 @@ class UserRepository:
         user_data = user.dict()
         user_data["password"] = hashed_password
         
+        # Ensure new users start with a rating of 5.0
+        user_data["average_rating"] = 5.0
+        
         db_user = User(**user_data)
         self.db.add(db_user)
         self.db.commit()
@@ -103,7 +106,7 @@ class UserRepository:
         from ..models import RatingsReviews
         
         avg_rating = self.db.query(func.avg(RatingsReviews.stars)).filter(
-            RatingsReviews.user_id == user_id
+            RatingsReviews.reviewee_id == user_id
         ).scalar()
         
         db_user = self.get_by_id(user_id)
@@ -123,6 +126,6 @@ class UserRepository:
         hashed_password = self.get_password_hash(new_password)
         db_user.password = hashed_password
         
-            self.db.commit()
-            self.db.refresh(db_user)
+        self.db.commit()
+        self.db.refresh(db_user)
         return db_user 

@@ -4,8 +4,12 @@ import { Text, Card, Button, TextInput, ActivityIndicator } from 'react-native-p
 import { WalletIcon, CarIcon, RefreshIcon, CalendarIcon, AddIcon } from '../../components/icons';
 import { COLORS } from '../../constants/colors';
 import { useApp } from '../../context/AppContext';
+import { useOptimizedNavigationSync } from '../../hooks/useOptimizedNavigationSync';
 
 const WalletScreen = () => {
+  // Navigation sync hook
+  useOptimizedNavigationSync();
+  
   const [addAmount, setAddAmount] = useState('');
   const { 
     walletBalance, 

@@ -6,10 +6,14 @@ import Icon from '../../components/Icon';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { COLORS } from '../../constants/colors';
 import { useApp } from '../../context/AppContext';
+import { useOptimizedNavigationSync } from '../../hooks/useOptimizedNavigationSync';
 
 const { height: screenHeight } = Dimensions.get('window');
 
 const PostRideScreen = ({ navigation, route }: any) => {
+  // Navigation sync hook
+  useOptimizedNavigationSync();
+  
   const [source, setSource] = useState('');
   const [destination, setDestination] = useState('');
   const [rideType, setRideType] = useState('now'); // 'now' or 'schedule'
