@@ -29,15 +29,16 @@ try {
   // Create the .env file
   fs.writeFileSync(envPath, envExampleContent);
   
-  console.log('✅ .env file created successfully!');
-  console.log('📝 Please edit the .env file and replace the placeholder values with your actual API keys:');
-  console.log('   - GOOGLE_WEB_CLIENT_ID');
-  console.log('   - GOOGLE_API_KEY');
-  console.log('   - FIREBASE_API_KEY');
-  console.log('   - FIREBASE_PROJECT_ID');
-  console.log('   - API_BASE_URL');
-  console.log('   - SECRET_KEY');
-  console.log('\n🔒 Remember: The .env file is already in .gitignore and will not be committed to git.\n');
+           console.log('✅ .env file created successfully!');
+         console.log('📝 Please edit the .env file and replace the placeholder values with your actual API keys:');
+         console.log('   - GOOGLE_WEB_CLIENT_ID');
+         console.log('   - GOOGLE_API_KEY (This will be used in AndroidManifest.xml)');
+         console.log('   - FIREBASE_API_KEY');
+         console.log('   - FIREBASE_PROJECT_ID');
+         console.log('   - API_BASE_URL');
+         console.log('   - SECRET_KEY');
+         console.log('\n🔒 Remember: The .env file is already in .gitignore and will not be committed to git.');
+         console.log('🔧 The Android build will automatically read GOOGLE_API_KEY from your .env file.\n');
   
 } catch (error) {
   console.error('❌ Error creating .env file:', error.message);

@@ -4,6 +4,19 @@ apply plugin: "com.facebook.react"
 apply plugin: "com.google.gms.google-services"
 apply from: "../../node_modules/react-native-vector-icons/fonts.gradle"
 
+// Function to read environment variables from .env file
+def getEnvVar(String key, String defaultValue = "") {
+    def envFile = new File("../../.env")
+    if (envFile.exists()) {
+        envFile.eachLine { line ->
+            if (line.startsWith(key + "=")) {
+                return line.substring(key.length() + 1).trim()
+            }
+        }
+    }
+    return defaultValue
+}
+
 /**
  * This is the configuration block to customize your React Native Android app.
  * By default you don't need to apply any configuration, just uncomment the lines you need.
@@ -86,6 +99,10 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
         versionName "1.0"
+        
+        // Google Maps API Key from environment
+        buildConfigField "String", "GOOGLE_MAPS_API_KEY", "\"${getEnvVar('GOOGLE_API_KEY', 'AIzaSyDIj_ZDvHuIZ5bc2T9-R7RKO4WepoGr5ik')}\""
+        resValue "string", "google_maps_api_key", getEnvVar('GOOGLE_API_KEY', 'AIzaSyDIj_ZDvHuIZ5bc2T9-R7RKO4WepoGr5ik')
     }
     signingConfigs {
         debug {
