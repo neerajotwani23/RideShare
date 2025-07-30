@@ -14,9 +14,9 @@ class RideStatusEnum(enum.Enum):
     CANCELLED = "CANCELLED"
 
 class GenderPreferenceEnum(enum.Enum):
-    ANY = "ANY"
-    MALE = "MALE"
-    FEMALE = "FEMALE"
+    ANY = "any"
+    MALE = "male"
+    FEMALE = "female"
 
 class Ride(Base):
     __tablename__ = "ride"

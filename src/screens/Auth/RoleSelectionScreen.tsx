@@ -21,8 +21,8 @@ const RoleSelectionScreen = ({ navigation, route }: any) => {
       if (isGoogleSignup) {
         // Handle Google signup
         await signupWithGoogle(role);
-        // Navigate to login after successful signup
-        navigation.navigate('Login');
+        // User is now authenticated - AppNavigator will handle navigation
+        console.log('✅ Google signup completed - AppNavigator will handle navigation');
       } else {
         // Handle regular signup
         if (!pendingSignupData) {
@@ -32,8 +32,8 @@ const RoleSelectionScreen = ({ navigation, route }: any) => {
         }
 
         await completeSignup(role);
-        // Navigate to login after successful signup
-        navigation.navigate('Login');
+        // User is now authenticated - AppNavigator will handle navigation
+        console.log('✅ Regular signup completed - AppNavigator will handle navigation');
       }
     } catch (error: any) {
       // Handle error - you might want to show an alert or navigate back to signup

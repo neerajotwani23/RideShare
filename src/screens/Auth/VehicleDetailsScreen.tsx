@@ -174,11 +174,25 @@ const VehicleDetailsScreen = ({ navigation }: any) => {
       if (existingVehicle) {
         // Update existing vehicle
         await api.updateVehicle(existingVehicle.id, vehicleData);
+        
+        // Check if vehicle data is now complete and mark as complete if needed
+        const updatedVehicle = { ...existingVehicle, ...vehicleData };
+        const isComplete = updatedVehicle.name_make && updatedVehicle.no_plate && drivingLicense;
+        
+        if (isComplete) {
+          await completeVehicleDetails();
+          Alert.alert(
+            'Vehicle Setup Complete!',
+            'Your vehicle details and documents have been updated successfully. You can now start posting rides and earning money!',
+            [{ text: 'OK' }]
+          );
+        } else {
         Alert.alert(
           'Vehicle Updated!',
-          'Your vehicle details and documents have been updated successfully!',
+            'Your vehicle details have been updated. Please complete all required fields to finish setup.',
           [{ text: 'OK' }]
         );
+        }
       } else {
         // Create new vehicle
         await api.createVehicle(vehicleData);

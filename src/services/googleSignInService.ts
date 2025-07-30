@@ -2,13 +2,42 @@ import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-si
 import { api } from './api';
 import { GOOGLE_CONFIG } from '../config/googleConfig';
 
-// Configure Google Sign-In
-GoogleSignin.configure({
-  webClientId: GOOGLE_CONFIG.webClientId,
-  offlineAccess: GOOGLE_CONFIG.offlineAccess,
-  hostedDomain: GOOGLE_CONFIG.hostedDomain,
-  forceCodeForRefreshToken: GOOGLE_CONFIG.forceCodeForRefreshToken,
-});
+// Configure Google Sign-In with better error handling
+console.log('🔧 Configuring Google Sign-In...');
+console.log('Web Client ID:', GOOGLE_CONFIG.webClientId);
+
+let isConfigured = false;
+
+const configureGoogleSignIn = () => {
+  if (isConfigured) {
+    console.log('✅ Google Sign-In already configured');
+    return;
+  }
+  
+  try {
+    // Check if webClientId is valid
+    if (!GOOGLE_CONFIG.webClientId || GOOGLE_CONFIG.webClientId.includes('YOUR_')) {
+      console.error('❌ Invalid Web Client ID:', GOOGLE_CONFIG.webClientId);
+      return;
+    }
+    
+    GoogleSignin.configure({
+      webClientId: GOOGLE_CONFIG.webClientId,
+      offlineAccess: false,
+      hostedDomain: '',
+      forceCodeForRefreshToken: false,
+      scopes: ['email', 'profile'], // Add profile scope
+    });
+    isConfigured = true;
+    console.log('✅ Google Sign-In configured successfully');
+  } catch (error) {
+    console.error('❌ Failed to configure Google Sign-In:', error);
+    // Don't throw error, just log it
+  }
+};
+
+// Configure immediately
+configureGoogleSignIn();
 
 export interface GoogleUser {
   id: string;
@@ -20,6 +49,13 @@ export interface GoogleUser {
 }
 
 export class GoogleSignInService {
+  /**
+   * Check if Google Sign-In is properly configured
+   */
+  static isConfigured(): boolean {
+    return isConfigured;
+  }
+
   /**
    * Check if user is signed in
    */
@@ -65,6 +101,10 @@ export class GoogleSignInService {
   static async signIn(): Promise<GoogleUser> {
     try {
       await GoogleSignin.hasPlayServices();
+      
+      // Sign out first to ensure account selection dialog appears
+      await GoogleSignin.signOut();
+      
       const userInfo = await GoogleSignin.signIn();
       
       console.log('Google Sign-In response:', JSON.stringify(userInfo, null, 2));
@@ -72,26 +112,19 @@ export class GoogleSignInService {
       // The actual structure from @react-native-google-signin/google-signin
       const user = userInfo as any;
       
-      // Try different ways to get the Google ID
-      let googleId = '';
-      if (user.user?.id) {
-        googleId = user.user.id;
-      } else if (user.id) {
-        googleId = user.id;
-      } else if (user.user?.sub) {
-        googleId = user.user.sub;
-      } else if (user.sub) {
-        googleId = user.sub;
-      } else {
-        // If no ID found, use email as fallback (not ideal but works for testing)
-        googleId = user.user?.email || user.email || '';
-        console.warn('No Google ID found, using email as fallback');
+      // Simplified user data extraction with fallbacks
+      const email = user.user?.email || user.email || '';
+      if (!email) {
+        throw new Error('Email is required for Google Sign-In');
       }
+      
+      // Use email as ID if no Google ID is available
+      const googleId = user.user?.id || user.id || user.user?.sub || user.sub || email;
       
       const googleUser = {
         id: googleId,
-        name: user.user?.name || user.name || '',
-        email: user.user?.email || user.email || '',
+        name: user.user?.name || user.name || email.split('@')[0] || 'User', // Use email prefix as fallback name
+        email: email,
         photo: user.user?.photo || user.photo || undefined,
         familyName: user.user?.familyName || user.familyName || undefined,
         givenName: user.user?.givenName || user.givenName || undefined,
@@ -102,12 +135,23 @@ export class GoogleSignInService {
       
     } catch (error: any) {
       console.error('Google Sign-In error:', error);
+      console.error('Error code:', error.code);
+      console.error('Error message:', error.message);
+      console.error('Full error object:', JSON.stringify(error, null, 2));
+      
       if (error.code === statusCodes.SIGN_IN_CANCELLED) {
         throw new Error('Sign in was cancelled');
       } else if (error.code === statusCodes.IN_PROGRESS) {
         throw new Error('Sign in is already in progress');
       } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
         throw new Error('Play services not available');
+      } else if (error.code === 'DEVELOPER_ERROR') {
+        console.error('🔧 DEVELOPER_ERROR Solutions:');
+        console.error('1. Check OAuth consent screen in Google Cloud Console');
+        console.error('2. Add your email as test user if app is external');
+        console.error('3. Verify Web Client ID is correct');
+        console.error('4. Check if Google+ API is enabled');
+        throw new Error('DEVELOPER_ERROR: Check OAuth configuration in Google Cloud Console');
       } else {
         throw new Error('Sign in failed: ' + error.message);
       }
@@ -172,13 +216,13 @@ export class GoogleSignInService {
    */
   static async loginWithGoogle(): Promise<any> {
     try {
-      console.log('Starting Google login...');
+      console.log('🔍 Starting Google login...');
       
       const googleUser = await this.signIn();
-      console.log('Google user data:', googleUser);
+      console.log('✅ Google user data obtained:', googleUser);
       
       const accessToken = await this.getAccessToken();
-      console.log('Access token obtained:', !!accessToken);
+      console.log('✅ Access token obtained:', !!accessToken);
       
       // Call your backend API to authenticate user
       const loginData = {
@@ -188,14 +232,21 @@ export class GoogleSignInService {
         auth_provider: 'google',
       };
 
-      console.log('Sending login data to backend:', loginData);
+      console.log('📤 Sending login data to backend:', loginData);
       
       const response = await api.loginWithGoogle(loginData);
-      console.log('Backend response:', response);
+      console.log('📥 Backend response:', response);
       
+      // Check if backend requires signup completion
+      if (response.requires_signup) {
+        console.log('ℹ️ New user requires signup completion (this is normal for new users)');
+        throw new Error('USER_REQUIRES_SIGNUP');
+      }
+      
+      console.log('✅ Google login successful!');
       return response;
     } catch (error) {
-      console.error('Google login error:', error);
+      console.error('❌ Google login error:', error);
       throw error;
     }
   }

@@ -28,6 +28,7 @@ interface AuthContextType {
   skipProfileSetup: () => void;
   isFirstTimeUser: () => boolean;
   updateCurrentRole: (role: 'driver' | 'passenger') => void;
+  recheckAuthState: () => Promise<void>;
   logout: () => Promise<void>;
   setProcessing: (processing: boolean) => void;
 }
@@ -44,34 +45,78 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [pendingSignupData, setPendingSignupData] = useState(null);
+  const [pendingSignupData, setPendingSignupData] = useState<any>(null);
 
   useEffect(() => {
     const checkAuthState = async () => {
       setIsLoading(true);
       try {
-        const isAuth = await tokenManager.isAuthenticated();
-        const userData = await AsyncStorage.getItem('user');
-        const vehicleDetails = await AsyncStorage.getItem('vehicleDetailsComplete');
+        // Get all data from AsyncStorage first (fast, no network calls)
+        const [isAuth, userData, vehicleDetails, profileSetupFlag, vehicleDetailsFlag] = await Promise.all([
+          tokenManager.isAuthenticated(),
+          AsyncStorage.getItem('user'),
+          AsyncStorage.getItem('vehicleDetailsComplete'),
+          AsyncStorage.getItem('profileSetupComplete'),
+          AsyncStorage.getItem('vehicleDetailsComplete')
+        ]);
         
         if (isAuth && userData) {
           const parsedUser = JSON.parse(userData);
           setUser(parsedUser);
           setIsAuthenticated(true);
-          setCurrentRole(parsedUser.user_type);
+          
+          // Convert user_type to lowercase to match app expectations
+          const userType = parsedUser.user_type ? parsedUser.user_type.toLowerCase() : null;
+          setCurrentRole(userType);
           setRoleSelected(true);
           
-          // Check profile setup completion based on actual user data
-          // Profile is complete if user has bio OR profile picture
+          console.log('🔐 Initial auth state:', {
+            userType: parsedUser.user_type,
+            convertedUserType: userType,
+            isAuthenticated: true,
+            roleSelected: true
+          });
+          
+          // Check profile setup completion - prioritize AsyncStorage flags, then user data
+          let isProfileComplete = false;
+          if (profileSetupFlag === 'true') {
+            isProfileComplete = true;
+          } else {
+            // Fallback to checking user data
           const hasBio = !!(parsedUser.bio && parsedUser.bio.trim());
           const hasProfilePicture = !!(parsedUser.profile_picture && parsedUser.profile_picture.trim());
-          const isProfileComplete = hasBio || hasProfilePicture;
+            isProfileComplete = hasBio || hasProfilePicture;
+            // Store the result for future use
+            await AsyncStorage.setItem('profileSetupComplete', isProfileComplete.toString());
+          }
           
-          // Vehicle details completion
-          const isVehicleComplete = vehicleDetails === 'true';
+          // Vehicle details completion - prioritize AsyncStorage flags, then user data
+          let isVehicleComplete = false;
+          if (parsedUser.user_type === 'DRIVER' || parsedUser.user_type === 'driver') {
+            if (vehicleDetailsFlag === 'true') {
+              isVehicleComplete = true;
+            } else {
+              // Check if user has driving license (from user data, no API call)
+              const hasDrivingLicense = !!(parsedUser.driving_license && parsedUser.driving_license.trim());
+              // For initial load, assume vehicle details are complete if they have license
+              // This prevents showing vehicle details screen unnecessarily
+              isVehicleComplete = hasDrivingLicense;
+              await AsyncStorage.setItem('vehicleDetailsComplete', isVehicleComplete.toString());
+            }
+          } else {
+            isVehicleComplete = true; // Passengers don't need vehicle details
+          }
           
           setProfileSetupComplete(isProfileComplete);
           setVehicleDetailsComplete(isVehicleComplete);
+          
+          console.log('🚀 Auth state loaded from AsyncStorage:', {
+            isAuthenticated: true,
+            roleSelected: true,
+            profileSetupComplete: isProfileComplete,
+            vehicleDetailsComplete: isVehicleComplete,
+            currentRole: parsedUser.user_type
+          });
         } else {
           // Clear any stale data
           setIsAuthenticated(false);
@@ -121,6 +166,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const hasProfilePicture = !!(data.user.profile_picture && data.user.profile_picture.trim());
       const isProfileComplete = hasBio || hasProfilePicture;
       
+      // Store profile setup completion flag for future fast access
+      await AsyncStorage.setItem('profileSetupComplete', isProfileComplete.toString());
+      
       // Vehicle details completion
       const isVehicleComplete = vehicleDetails === 'true';
       
@@ -156,11 +204,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       // For new users, set up initial state
       if (data.user) {
+        // Set authentication state
+        setIsAuthenticated(true);
+        setUser(data.user);
+        setCurrentRole(data.user.user_type);
+        setRoleSelected(true);
+        
         // New users need to complete profile setup
         setProfileSetupComplete(false);
         setVehicleDetailsComplete(false);
         
-        // Explicitly mark new users as needing profile setup
+        // Store user data and flags
+        await AsyncStorage.setItem('user', JSON.stringify(data.user));
         await AsyncStorage.setItem('profileSetupComplete', 'false');
         await AsyncStorage.removeItem('vehicleDetailsComplete');
       }
@@ -206,8 +261,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setTimeout(() => {
         setIsProcessing(false);
       }, 2000);
-    } catch (error) {
+    } catch (error: any) {
       setIsProcessing(false);
+      
+      // Check if user requires signup completion
+      if (error.message === 'USER_REQUIRES_SIGNUP') {
+        // Store Google data for signup
+        const googleUser = await GoogleSignInService.getCurrentUser();
+        if (googleUser) {
+          const googleData = {
+            email: googleUser.email,
+            google_id: googleUser.id,
+            first_name: googleUser.givenName || '',
+            last_name: googleUser.familyName || '',
+            profile_picture: googleUser.photo,
+            auth_provider: 'google'
+          };
+          setPendingSignupData(googleData);
+        }
+        throw new Error('USER_REQUIRES_SIGNUP');
+      }
+      
       throw error;
     } finally {
       setIsLoading(false);
@@ -221,11 +295,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       // For new users, set up initial state
       if (data.user) {
+        // Set authentication state
+        setIsAuthenticated(true);
+        setUser(data.user);
+        setCurrentRole(data.user.user_type);
+        setRoleSelected(true);
+        
         // New users need to complete profile setup
         setProfileSetupComplete(false);
         setVehicleDetailsComplete(false);
         
-        // Explicitly mark new users as needing profile setup
+        // Store user data and flags
+        await AsyncStorage.setItem('user', JSON.stringify(data.user));
         await AsyncStorage.setItem('profileSetupComplete', 'false');
         await AsyncStorage.removeItem('vehicleDetailsComplete');
       }
@@ -268,6 +349,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       user_type: role.toUpperCase(),
     };
 
+    console.log('🔍 CompleteSignup - Final user data being sent to API:');
+    console.log('Gender value:', userData.gender);
+    console.log('Gender type:', typeof userData.gender);
+    console.log('Complete data:', userData);
+
     try {
       const data = await signup(userData);
       setPendingSignupData(null);
@@ -279,7 +365,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const completeProfileSetup = async () => {
     setProfileSetupComplete(true);
-    // No need to store flag since we check actual user data
+    // Store flag for future fast access
+    await AsyncStorage.setItem('profileSetupComplete', 'true');
   };
 
   const isFirstTimeUser = () => {
@@ -296,45 +383,184 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Only passengers can skip profile setup
     if (currentRole === 'passenger') {
       setProfileSetupComplete(true);
-      // No need to store flag since we check actual user data
+      // Store flag for future fast access
+      await AsyncStorage.setItem('profileSetupComplete', 'true');
     }
   };
 
   const updateCurrentRole = async (role: 'driver' | 'passenger') => {
     setCurrentRole(role);
     
-    // Update user data in AsyncStorage with new role
+    try {
+      // Update user data with new role
     if (user) {
       const updatedUser = { ...user as any, user_type: role.toUpperCase() };
       setUser(updatedUser);
       await AsyncStorage.setItem('user', JSON.stringify(updatedUser));
+      }
+    } catch (error) {
+      console.error('Error updating user role:', error);
     }
     
-    // If switching to driver, check if vehicle details are complete
+    // If switching to driver, check vehicle details from stored data first
     if (role === 'driver') {
-      const vehicleDetails = await AsyncStorage.getItem('vehicleDetailsComplete');
-      if (vehicleDetails !== 'true') {
-        // Driver needs to complete vehicle details
+      const vehicleDetailsFlag = await AsyncStorage.getItem('vehicleDetailsComplete');
+      
+      if (vehicleDetailsFlag === 'true') {
+        // Already marked as complete, use stored flag
+        setVehicleDetailsComplete(true);
+      } else if (user) {
+        // Check if user has driving license from stored user data
+        const hasDrivingLicense = !!(user && (user as any).driving_license && (user as any).driving_license.trim());
+        
+        if (hasDrivingLicense) {
+          // Assume vehicle details are complete if they have license
+          // This prevents unnecessary API calls and screen flashing
+          setVehicleDetailsComplete(true);
+          await AsyncStorage.setItem('vehicleDetailsComplete', 'true');
+        } else {
+          setVehicleDetailsComplete(false);
+        }
+      } else {
         setVehicleDetailsComplete(false);
-        await AsyncStorage.removeItem('vehicleDetailsComplete');
       }
+    } else {
+      // Switching to passenger - vehicle details not needed
+      setVehicleDetailsComplete(true);
+    }
+  };
+
+  const recheckAuthState = async () => {
+    setIsLoading(true);
+    try {
+      // Get all data from AsyncStorage first (fast, no network calls)
+      const [isAuth, userData, vehicleDetails, profileSetupFlag, vehicleDetailsFlag] = await Promise.all([
+        tokenManager.isAuthenticated(),
+        AsyncStorage.getItem('user'),
+        AsyncStorage.getItem('vehicleDetailsComplete'),
+        AsyncStorage.getItem('profileSetupComplete'),
+        AsyncStorage.getItem('vehicleDetailsComplete')
+      ]);
+      
+      if (isAuth && userData) {
+        const parsedUser = JSON.parse(userData);
+        setUser(parsedUser);
+        setIsAuthenticated(true);
+        
+        // Convert user_type to lowercase to match app expectations
+        const userType = parsedUser.user_type ? parsedUser.user_type.toLowerCase() : null;
+        setCurrentRole(userType);
+        setRoleSelected(true);
+        
+        console.log('🔄 Setting auth state:', {
+          userType: parsedUser.user_type,
+          convertedUserType: userType,
+          isAuthenticated: true,
+          roleSelected: true
+        });
+        
+        // Check profile setup completion - prioritize AsyncStorage flags, then user data
+        let isProfileComplete = false;
+        if (profileSetupFlag === 'true') {
+          isProfileComplete = true;
+        } else {
+          // Fallback to checking user data
+          const hasBio = !!(parsedUser.bio && parsedUser.bio.trim());
+          const hasProfilePicture = !!(parsedUser.profile_picture && parsedUser.profile_picture.trim());
+          isProfileComplete = hasBio || hasProfilePicture;
+          // Store the result for future use
+          await AsyncStorage.setItem('profileSetupComplete', isProfileComplete.toString());
+        }
+        
+        // Vehicle details completion - prioritize AsyncStorage flags, then user data
+        let isVehicleComplete = false;
+        if (parsedUser.user_type === 'DRIVER' || parsedUser.user_type === 'driver') {
+          if (vehicleDetailsFlag === 'true') {
+            isVehicleComplete = true;
+          } else {
+            // Check if user has driving license (from user data, no API call)
+            const hasDrivingLicense = !!(parsedUser.driving_license && parsedUser.driving_license.trim());
+            // For initial load, assume vehicle details are complete if they have license
+            // This prevents showing vehicle details screen unnecessarily
+            isVehicleComplete = hasDrivingLicense;
+            await AsyncStorage.setItem('vehicleDetailsComplete', isVehicleComplete.toString());
+          }
+        } else {
+          isVehicleComplete = true; // Passengers don't need vehicle details
+        }
+        
+        setProfileSetupComplete(isProfileComplete);
+        setVehicleDetailsComplete(isVehicleComplete);
+        
+        console.log('🔄 Auth state rechecked from AsyncStorage:', {
+          isAuthenticated: true,
+          roleSelected: true,
+          profileSetupComplete: isProfileComplete,
+          vehicleDetailsComplete: isVehicleComplete,
+          currentRole: parsedUser.user_type
+        });
+      } else {
+        // Clear any stale data
+        setIsAuthenticated(false);
+        setRoleSelected(false);
+        setProfileSetupComplete(false);
+        setVehicleDetailsComplete(false);
+        setCurrentRole(null);
+        setUser(null);
+      }
+    } catch (error) {
+      console.error('Failed to recheck auth state', error);
+      // Clear state on error
+      setIsAuthenticated(false);
+      setRoleSelected(false);
+      setProfileSetupComplete(false);
+      setVehicleDetailsComplete(false);
+      setCurrentRole(null);
+      setUser(null);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const logout = async () => {
     setIsLoading(true);
     try {
+      console.log('🚪 Starting logout process...');
+      
       // Clear tokens using token manager
       await tokenManager.clearTokens();
       
-      // Clear other auth data
-      await AsyncStorage.removeItem('user');
-      await AsyncStorage.removeItem('profileSetupComplete');
-      await AsyncStorage.removeItem('vehicleDetailsComplete');
+      // Clear all auth-related data
+      await AsyncStorage.multiRemove([
+        'user',
+        'profileSetupComplete',
+        'vehicleDetailsComplete',
+        'postRide_state', // Clear PostRide screen state
+        'authToken',
+        'refreshToken'
+      ]);
+      
+      // Clear all AsyncStorage for complete reset
+      const keys = await AsyncStorage.getAllKeys();
+      const authKeys = keys.filter(key => 
+        key.startsWith('postRide_') || 
+        key.startsWith('auth') || 
+        key.includes('token') ||
+        key.includes('user') ||
+        key.includes('profile') ||
+        key.includes('vehicle')
+      );
+      
+      if (authKeys.length > 0) {
+        await AsyncStorage.multiRemove(authKeys);
+        console.log('🗑️ Cleared auth keys:', authKeys);
+      }
+      
+      console.log('✅ Logout completed successfully');
     } catch (error) {
-        console.error('Failed to logout', error);
-    }
-    finally {
+      console.error('❌ Failed to logout:', error);
+    } finally {
+      // Reset all auth state
     setIsAuthenticated(false);
     setRoleSelected(false);
     setProfileSetupComplete(false);
@@ -344,6 +570,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(null);
         setPendingSignupData(null);
         setIsLoading(false);
+      
+      console.log('🔄 Auth state reset completed');
     }
   };
   
@@ -372,6 +600,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       skipProfileSetup,
       isFirstTimeUser,
       updateCurrentRole,
+      recheckAuthState,
       logout,
       setProcessing: setIsProcessing
     }}>

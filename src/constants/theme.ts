@@ -1,25 +1,56 @@
-import { MD3LightTheme as DefaultTheme } from 'react-native-paper';
-import { COLORS } from './colors';
+import { MD3LightTheme, MD3DarkTheme } from 'react-native-paper';
+import { useColorScheme } from 'react-native';
+import { lightColors, darkColors } from './colors';
 
-const theme = {
-  ...DefaultTheme,
+// Light theme
+export const lightTheme = {
+  ...MD3LightTheme,
   colors: {
-  
-    primary: COLORS.accent,        // Blue (#248CFE)
-    secondary: COLORS.success,     // Blue (#248CFE)
-    background: COLORS.primary,    // White (#FFFFFF)
-    surface: COLORS.primary,       // White (#FFFFFF)
-    onSurface: COLORS.secondary,   // Black (#000000)
-    outline: COLORS.border,        // Light Gray (#E0E0E0)
-    surfaceVariant: COLORS.lightGray, // Light Gray (#F5F5F5)
-    error: COLORS.error,           // Red (#E53935)
-    disabled: COLORS.disabled,     // Cool Gray (#BDBDBD)
-    onPrimary: COLORS.primary,     // White text on primary
-    onSecondary: COLORS.primary,   // White text on secondary
-    onBackground: COLORS.secondary, // Black text on background
-    onSurfaceVariant: COLORS.textSecondary, // Dark Gray text on surface variant
+    ...MD3LightTheme.colors,
+    primary: lightColors.accent,
+    secondary: lightColors.success,
+    background: lightColors.primary,
+    surface: lightColors.primary,
+    onSurface: lightColors.textPrimary,
+    outline: lightColors.border,
+    surfaceVariant: lightColors.lightGray,
+    error: lightColors.error,
+    disabled: lightColors.disabled,
+    onPrimary: lightColors.primary,
+    onSecondary: lightColors.primary,
+    onBackground: lightColors.textPrimary,
+    onSurfaceVariant: lightColors.textSecondary,
   },
-  roundness: 16, // Increased roundness for more rounded input boxes
+  roundness: 16,
 };
 
-export default theme; 
+// Dark theme
+export const darkTheme = {
+  ...MD3DarkTheme,
+  colors: {
+    ...MD3DarkTheme.colors,
+    primary: darkColors.accent,
+    secondary: darkColors.success,
+    background: darkColors.primary,
+    surface: darkColors.primary,
+    onSurface: darkColors.textPrimary,
+    outline: darkColors.border,
+    surfaceVariant: darkColors.lightGray,
+    error: darkColors.error,
+    disabled: darkColors.disabled,
+    onPrimary: darkColors.primary,
+    onSecondary: darkColors.primary,
+    onBackground: darkColors.textPrimary,
+    onSurfaceVariant: darkColors.textSecondary,
+  },
+  roundness: 16,
+};
+
+// Hook to get theme based on current color scheme
+export const useTheme = () => {
+  const colorScheme = useColorScheme();
+  return colorScheme === 'dark' ? darkTheme : lightTheme;
+};
+
+// Default export for backward compatibility (uses light theme)
+export default lightTheme; 

@@ -22,6 +22,9 @@ const EditProfileScreen = ({ navigation }: any) => {
   // Load user data when component mounts
   useEffect(() => {
     if (userProfile) {
+      console.log('Debug - UserProfile data:', userProfile);
+      console.log('Debug - Gender field:', userProfile.gender, 'Type:', typeof userProfile.gender);
+      
       setFullName(`${userProfile.first_name || ''} ${userProfile.last_name || ''}`.trim());
       setEmail(userProfile.email || '');
       setPhone(userProfile.phone_no || '');
@@ -76,14 +79,20 @@ const EditProfileScreen = ({ navigation }: any) => {
     );
   };
 
-  const getGenderDisplay = (gender: string) => {
+  const getGenderDisplay = (gender: any) => {
     if (!gender) return 'Not specified';
+    
+    // Handle different possible formats of gender
+    const genderStr = typeof gender === 'string' ? gender : gender?.value || gender?.name || '';
+    
     // Ensure gender is either 'male' or 'female'
-    if (gender.toLowerCase() === 'male') {
+    if (genderStr === 'male') {
       return 'Male';
-    } else if (gender.toLowerCase() === 'female') {
+    } else if (genderStr === 'female') {
       return 'Female';
     }
+    
+    console.log('Debug - Gender value:', gender, 'Type:', typeof gender);
     return 'Not specified';
   };
 

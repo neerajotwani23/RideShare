@@ -2,6 +2,8 @@ from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 import os
+import json
+from enum import Enum
 
 from .models import Base
 from .database import engine, SessionLocal, setup_database_schema
@@ -15,6 +17,13 @@ from .controllers import (
     RatingController,
     PaymentController
 )
+
+# Custom JSON encoder for enums
+class EnumEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, Enum):
+            return obj.value
+        return super().default(obj)
 
 # Database dependency
 def get_db():

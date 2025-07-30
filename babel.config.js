@@ -4,8 +4,8 @@ module.exports = {
     ['module:react-native-dotenv', {
       moduleName: '@env',
       path: '.env',
-      blacklist: null,
-      whitelist: null,
+      allowlist: null,    // ✅ Use "allowlist" not "whitelist"
+      blocklist: null,    // ✅ Use "blocklist" not "blacklist"
       safe: false,
       allowUndefined: true,
     }],

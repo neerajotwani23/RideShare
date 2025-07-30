@@ -53,15 +53,13 @@ class UserBase(BaseModel):
     gender: Optional[GenderEnum] = None
 
 class UserCreate(UserBase):
-    password: str
+    password: Optional[str] = None  # Optional for Google users
     user_type: UserTypeEnum
-    gender: GenderEnum  # Make gender required for new users
+    gender: Optional[GenderEnum] = None  # Optional for Google users
     
     @validator('gender')
     def validate_gender(cls, v):
-        if not v:
-            raise ValueError("Gender is required and cannot be empty")
-        if v not in [GenderEnum.MALE, GenderEnum.FEMALE]:
+        if v is not None and v not in [GenderEnum.MALE, GenderEnum.FEMALE]:
             raise ValueError("Gender must be either 'male' or 'female'")
         return v
 
@@ -90,8 +88,13 @@ class UserResponse(UserBase):
     average_rating: float
     created_at: datetime
     
-    class Config:
-        from_attributes = True
+    model_config = {
+        "from_attributes": True,
+        "json_encoders": {
+            GenderEnum: lambda v: v.value if v else None,
+            UserTypeEnum: lambda v: v.value if v else None,
+        }
+    }
 
 # New schemas for user management
 class ProfileSetup(BaseModel):

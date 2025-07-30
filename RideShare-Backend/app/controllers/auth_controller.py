@@ -200,6 +200,8 @@ class AuthController:
         try:
             user_service = UserService(db)
             
+
+            
             # Extract Google user data
             email = google_data.get("email")
             google_id = google_data.get("google_id")
@@ -211,32 +213,47 @@ class AuthController:
                     detail="Missing required Google data"
                 )
             
-            # Check if user exists
+            # Check if user exists by email
             user = user_service.get_user_by_email(email)
             
             if user:
-                # User exists, verify Google ID matches
-                if user.google_id != google_id:
-                    raise HTTPException(
-                        status_code=status.HTTP_401_UNAUTHORIZED,
-                        detail="Google account mismatch"
-                    )
+                # User exists with this email
+                if user.google_id:
+                    # User already has Google ID linked
+                    if user.google_id != google_id:
+                        raise HTTPException(
+                            status_code=status.HTTP_401_UNAUTHORIZED,
+                            detail="Google account mismatch. This email is linked to a different Google account."
+                        )
+                    # User exists and Google ID matches - proceed with login
+                else:
+                    # User exists but no Google ID - link the Google account
+                    user.google_id = google_id
+                    if user.auth_provider == "email":
+                        user.auth_provider = "both"
+                    db.commit()
+                    db.refresh(user)
             else:
-                # Create new user with Google data
-                user_data = schemas.UserCreate(
-                    email=email,
-                    google_id=google_id,
-                    auth_provider="google",
-                    user_type="PASSENGER",  # Default to passenger, can be changed later
-                    first_name=google_data.get("first_name", ""),
-                    last_name=google_data.get("last_name", ""),
-                    profile_picture=google_data.get("profile_picture", ""),
-                    password="",  # No password for Google users
-                    phone_no="",
-                    cnic="",
-                    gender=""
-                )
-                user = user_service.create_user(user_data)
+                # Check if Google ID is already used by another user
+                existing_google_user = user_service.get_user_by_google_id(google_id)
+                if existing_google_user:
+                    raise HTTPException(
+                        status_code=status.HTTP_409_CONFLICT,
+                        detail="This Google account is already linked to another email address."
+                    )
+                
+                # Return Google data for signup completion instead of creating incomplete user
+                return {
+                    "requires_signup": True,
+                    "google_data": {
+                        "email": email,
+                        "google_id": google_id,
+                        "first_name": google_data.get("first_name", ""),
+                        "last_name": google_data.get("last_name", ""),
+                        "profile_picture": google_data.get("profile_picture", ""),
+                        "auth_provider": "google"
+                    }
+                }
             
             # Create tokens
             access_token_expires = timedelta(days=ACCESS_TOKEN_EXPIRE_DAYS)
@@ -259,7 +276,11 @@ class AuthController:
         except HTTPException as e:
             raise e
         except Exception as e:
+            print(f"Google login error: {e}")
+            print(f"Error type: {type(e)}")
+            import traceback
+            traceback.print_exc()
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="An error occurred during Google authentication"
+                detail=f"An error occurred during Google authentication: {str(e)}"
             ) 

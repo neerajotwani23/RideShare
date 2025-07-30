@@ -10,3 +10,4 @@ export { default as RideFilters } from './RideFilters';
 export { default as ToggleButton } from './ToggleButton';
 export { default as PhoneNumberInput } from './PhoneNumberInput';
 export { default as GoogleSignInButton } from './GoogleSignInButton'; 
+export { default as UnifiedGoogleSignIn } from './UnifiedGoogleSignIn'; 

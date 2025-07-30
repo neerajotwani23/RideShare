@@ -12,28 +12,32 @@ A React Native ride-sharing application with Google Sign-In integration.
 
 ### Environment Setup
 
-1. **Copy environment template:**
+1. **Set up environment variables:**
    ```bash
-   cp .env.example .env
+   npm run setup-env
    ```
+   This will create a `.env` file from the template.
 
 2. **Fill in your environment variables in `.env`:**
    ```bash
    # Google Sign-In Configuration
    GOOGLE_WEB_CLIENT_ID=your_google_web_client_id_here
    
-   # API Configuration
-   DEV_API_URL=http://your_dev_ip:8000
-   PROD_API_URL=https://your-production-api.com
+   # Google Maps API Key
+   GOOGLE_API_KEY=your_google_maps_api_key_here
    
    # Firebase Configuration
    FIREBASE_API_KEY=your_firebase_api_key_here
    FIREBASE_PROJECT_ID=your_firebase_project_id_here
-   FIREBASE_PROJECT_NUMBER=your_firebase_project_number_here
-   FIREBASE_MOBILE_SDK_APP_ID=your_firebase_mobile_sdk_app_id_here
    
-   # Groq AI Configuration
-   GROQ_API_KEY=your_groq_api_key_here
+   # API Configuration
+   API_BASE_URL=http://your_dev_ip:8000
+   
+   # Package name for Firebase configuration
+   PACKAGE_NAME=com.rideshare.app
+   
+   # Other sensitive configurations
+   SECRET_KEY=your_secret_key_here
    ```
 
 3. **Generate Firebase configuration:**

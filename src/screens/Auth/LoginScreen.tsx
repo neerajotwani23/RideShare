@@ -1,11 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Text, HelperText, Divider, TextInput, ActivityIndicator } from 'react-native-paper';
 
+
 import { useAuth } from '../../context/AuthContext';
 import { COLORS } from '../../constants/colors';
-import { CustomTextInput, CustomButton, FormCard, Icon, GoogleSignInButton } from '../../components';
+import { CustomTextInput, CustomButton, FormCard, Icon } from '../../components';
+import UnifiedGoogleSignIn from '../../components/UnifiedGoogleSignIn';
+import { api } from '../../services/api';
 
 const LoginScreen = ({ navigation }: any) => {
   const [email, setEmail] = useState('');
@@ -13,6 +16,8 @@ const LoginScreen = ({ navigation }: any) => {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const { login, loginWithGoogle, isLoading } = useAuth();
+
+
 
   const validate = () => {
     if (!email.trim()) {
@@ -65,6 +70,8 @@ const LoginScreen = ({ navigation }: any) => {
       await loginWithGoogle();
       // Navigation will be handled by AuthContext state change
     } catch (e: any) {
+      console.log('🔍 Google Sign-In Error in LoginScreen:', e);
+      
       let message = 'An error occurred during Google sign in.';
       if (typeof e === 'string') {
         message = e;
@@ -136,16 +143,19 @@ const LoginScreen = ({ navigation }: any) => {
             <Divider style={styles.divider} />
             </View>
 
-          <GoogleSignInButton
-            mode="login"
-            onSuccess={(result) => {
-              console.log('Google login successful:', result);
-              // The AuthContext will handle the navigation
-            }}
-            onError={(error) => {
-              setError(error);
-            }}
-          />
+                                <UnifiedGoogleSignIn
+                        key="login-google-signin"
+                        navigation={navigation}
+                        onSuccess={(result) => {
+                          console.log('Google login successful:', result);
+                          // The AuthContext will handle the navigation
+                        }}
+                        onError={(error) => {
+                          setError(error);
+                        }}
+                      />
+
+
         </FormCard>
 
         <View style={styles.signupSection}>
@@ -245,6 +255,7 @@ const styles = StyleSheet.create({
     color: COLORS.accent,
     fontSize: 16,
   },
+
 });
 
 export default LoginScreen; 

@@ -23,7 +23,7 @@ class User(Base):
     password = Column(String(255), nullable=True)  # Can be null for Google users
     phone_no = Column(String(20), nullable=True)
     google_id = Column(String(255), nullable=True, unique=True, index=True)
-    auth_provider = Column(String(50), default="email", nullable=False)  # "email" or "google"
+    auth_provider = Column(String(50), default="email", nullable=False)  # "email", "google", or "both"
     user_type = Column(SQLEnum(UserTypeEnum), nullable=False)
     cnic = Column(String(20), nullable=True, unique=True)
     profile_picture = Column(String(500), nullable=True)

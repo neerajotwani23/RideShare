@@ -4,28 +4,56 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Text, TextInput, Button, IconButton, Menu, Card, ActivityIndicator } from 'react-native-paper';
 
 import { useAuth } from '../../context/AuthContext';
-import { PhoneNumberInput, GoogleSignInButton } from '../../components';
+import { PhoneNumberInput } from '../../components';
+import UnifiedGoogleSignIn from '../../components/UnifiedGoogleSignIn';
 import { COLORS } from '../../constants/colors';
 
 const { width: screenWidth } = Dimensions.get('window');
 
-const SignupScreen = ({ navigation }: any) => {
+const SignupScreen = ({ navigation, route }: any) => {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [cnic, setCnic] = useState('');
-  const [gender, setGender] = useState(''); // Reset to empty string
+  const [selectedGender, setSelectedGender] = useState(''); // Reset to empty string
+  const [renderKey, setRenderKey] = useState(0); // Force re-render
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [cnicError, setCnicError] = useState('');
   const [showGenderMenu, setShowGenderMenu] = useState(false);
+  const [isGoogleSignup, setIsGoogleSignup] = useState(false);
 
   useEffect(() => {
-    console.log('Gender state changed to:', gender);
-  }, [gender]);
+    console.log('🎯 Gender state changed to:', selectedGender);
+    console.log('🎯 Gender state type:', typeof selectedGender);
+    console.log('🎯 Gender state length:', selectedGender.length);
+    console.log('🎯 Gender state matches backend enum:', selectedGender === 'male' || selectedGender === 'female');
+    console.log('🎯 Component should re-render with new gender value');
+  }, [selectedGender]);
+
+  useEffect(() => {
+    console.log('🎯 Gender menu visibility changed to:', showGenderMenu);
+  }, [showGenderMenu]);
+
+  // Handle Google user data from navigation params
+  useEffect(() => {
+    if (route.params?.googleUserData) {
+      const googleData = route.params.googleUserData;
+      console.log('Google user data received:', googleData);
+      
+      // Pre-fill the form with Google data
+      setFirstName(googleData.givenName || '');
+      setLastName(googleData.familyName || '');
+      setEmail(googleData.email || '');
+      setIsGoogleSignup(true);
+      
+      // Clear the params to avoid re-filling on re-render
+      navigation.setParams({ googleUserData: undefined });
+    }
+  }, [route.params?.googleUserData]);
 
   const [formError, setFormError] = useState('');
 
@@ -37,12 +65,20 @@ const SignupScreen = ({ navigation }: any) => {
   ];
   
   console.log('Gender options:', genderOptions);
-  console.log('Current gender state:', gender);
+  console.log('Current gender state:', selectedGender);
 
-  const handleGenderChange = (selectedGender: string) => {
-    console.log('Selected gender:', selectedGender);
-    setGender(selectedGender);
+  const handleGenderChange = (genderValue: string) => {
+    console.log('🎯 handleGenderChange called with:', genderValue);
+    console.log('🎯 Previous gender state:', selectedGender);
+    
+    // Update gender state
+    setSelectedGender(genderValue);
+    
+    // Close the menu after a small delay to ensure state update
+    setTimeout(() => {
     setShowGenderMenu(false);
+      console.log('🎯 Gender state after update:', genderValue);
+    }, 100);
   };
 
   const getGenderLabel = (genderValue: string) => {
@@ -51,6 +87,7 @@ const SignupScreen = ({ navigation }: any) => {
   };
 
   const handleOutsidePress = () => {
+    // Only close gender menu if it's open and we're not clicking on the gender selector
     if (showGenderMenu) {
       setShowGenderMenu(false);
     }
@@ -81,16 +118,29 @@ const SignupScreen = ({ navigation }: any) => {
   };
 
   const validateForm = () => {
-    return (
+    const isValid = (
       firstName.trim() &&
       lastName.trim() &&
       email.trim() &&
-      gender.trim() &&
+      selectedGender.trim() &&
       password.trim() &&
       confirmPassword.trim() &&
       !cnicError &&
       password === confirmPassword
     );
+    
+    console.log('🔍 Form validation check:');
+    console.log('  - firstName:', !!firstName.trim());
+    console.log('  - lastName:', !!lastName.trim());
+    console.log('  - email:', !!email.trim());
+    console.log('  - gender:', !!selectedGender.trim(), `(value: "${selectedGender}")`);
+    console.log('  - password:', !!password.trim());
+    console.log('  - confirmPassword:', !!confirmPassword.trim());
+    console.log('  - !cnicError:', !cnicError);
+    console.log('  - password === confirmPassword:', password === confirmPassword);
+    console.log('  - Form is valid:', isValid);
+    
+    return isValid;
   };
 
   const handleSignup = async () => {
@@ -98,6 +148,10 @@ const SignupScreen = ({ navigation }: any) => {
       setFormError('Please fill all required fields correctly.');
       return;
     }
+
+    console.log('🔍 Signup form data:');
+    console.log('Gender value:', selectedGender);
+    console.log('Gender type:', typeof selectedGender);
 
     // Store signup data in context and navigate to role selection
     const signupData = {
@@ -107,19 +161,23 @@ const SignupScreen = ({ navigation }: any) => {
       password,
       phone_no: phoneNumber,
       cnic,
-      gender,
+      gender: selectedGender,
+      isGoogleSignup, // Add flag to indicate if this is Google signup
     };
+
+    console.log('📤 Complete signup data:', signupData);
 
     // Store the signup data in context for later use
     storePendingSignupData(signupData);
-    navigation.navigate('RoleSelection');
+    // Don't navigate manually - let AppNavigator handle navigation based on auth state
+    // The user will be automatically redirected to the appropriate screen
   };
 
   const handleGoogleSignup = async () => {
     try {
-      // For Google signup, we'll navigate to role selection first
-      // Then complete the signup with Google data
-      navigation.navigate('RoleSelection', { isGoogleSignup: true });
+      // For Google signup, let the AppNavigator handle navigation
+      // The user will be automatically redirected to the appropriate screen
+      console.log('🎯 Google signup initiated - letting AppNavigator handle navigation');
     } catch (e: any) {
       let message = 'An error occurred during Google sign up.';
       if (typeof e === 'string') {
@@ -149,6 +207,8 @@ const SignupScreen = ({ navigation }: any) => {
         contentContainerStyle={styles.scrollContent} 
         showsVerticalScrollIndicator={false}
         onTouchStart={handleOutsidePress}
+        keyboardShouldPersistTaps="handled"
+        nestedScrollEnabled={true}
       >
         {/* Logo Section */}
         <View style={styles.logoSection}>
@@ -169,6 +229,13 @@ const SignupScreen = ({ navigation }: any) => {
         <View style={styles.welcomeSection}>
           <Text style={styles.welcomeTitle}>Join RideShare</Text>
           <Text style={styles.welcomeSubtitle}>Create your account to start sharing rides</Text>
+          {isGoogleSignup && (
+            <View style={styles.googleInfo}>
+              <Text style={styles.googleInfoText}>
+                ✓ Information from your Google account has been pre-filled
+              </Text>
+            </View>
+          )}
         </View>
 
         {/* Form Section */}
@@ -245,13 +312,24 @@ const SignupScreen = ({ navigation }: any) => {
 
             {/* Gender */}
             <View style={styles.genderContainer}>
+              {/* Debug display */}
+              <Text style={{ color: 'red', fontSize: 12, marginBottom: 4 }}>
+                Debug: selectedGender = "{selectedGender}" (length: {selectedGender.length})
+              </Text>
               <TouchableOpacity
                 style={styles.genderSelector}
-                onPress={() => setShowGenderMenu(!showGenderMenu)}
+                onPress={() => {
+                  console.log('🎯 Gender selector pressed, current state:', showGenderMenu);
+                  setShowGenderMenu(!showGenderMenu);
+                }}
+                activeOpacity={0.8}
               >
-                <Text style={[styles.genderText, !gender && styles.placeholderText]}>
-                  {gender === 'male' ? 'Male' : 
-                   gender === 'female' ? 'Female' : 
+                <Text 
+                  key={`gender-text-${renderKey}`}
+                  style={[styles.genderText, !selectedGender && styles.placeholderText]}
+                >
+                  {selectedGender === 'male' ? 'Male' : 
+                   selectedGender === 'female' ? 'Female' : 
                    'Select Gender'}
                 </Text>
                 <IconButton 
@@ -267,16 +345,26 @@ const SignupScreen = ({ navigation }: any) => {
                   <TouchableOpacity
                     style={[
                       styles.genderOption,
-                      gender === 'male' && styles.genderOptionSelected
+                      selectedGender === 'male' && styles.genderOptionSelected
                     ]}
                     onPress={() => {
-                      setGender('male');
+                      console.log('🎯 Male option pressed');
+                      console.log('🎯 Current selectedGender before update:', selectedGender);
+                      console.log('🎯 Setting selectedGender to male');
+                      setSelectedGender('male');
                       setShowGenderMenu(false);
+                      setRenderKey(prev => prev + 1);
+                      console.log('🎯 selectedGender should now be male');
+                      // Force immediate state check
+                      setTimeout(() => {
+                        console.log('🎯 selectedGender after timeout:', selectedGender);
+                      }, 0);
                     }}
+                    activeOpacity={0.7}
                   >
                     <Text style={[
                       styles.genderOptionText,
-                      gender === 'male' && styles.genderOptionTextSelected
+                      selectedGender === 'male' && styles.genderOptionTextSelected
                     ]}>
                       Male
                     </Text>
@@ -285,16 +373,26 @@ const SignupScreen = ({ navigation }: any) => {
                   <TouchableOpacity
                     style={[
                       styles.genderOption,
-                      gender === 'female' && styles.genderOptionSelected
+                      selectedGender === 'female' && styles.genderOptionSelected
                     ]}
                     onPress={() => {
-                      setGender('female');
+                      console.log('🎯 Female option pressed');
+                      console.log('🎯 Current selectedGender before update:', selectedGender);
+                      console.log('🎯 Setting selectedGender to female');
+                      setSelectedGender('female');
                       setShowGenderMenu(false);
+                      setRenderKey(prev => prev + 1);
+                      console.log('🎯 selectedGender should now be female');
+                      // Force immediate state check
+                      setTimeout(() => {
+                        console.log('🎯 selectedGender after timeout:', selectedGender);
+                      }, 0);
                     }}
+                    activeOpacity={0.7}
                   >
                     <Text style={[
                       styles.genderOptionText,
-                      gender === 'female' && styles.genderOptionTextSelected
+                      selectedGender === 'female' && styles.genderOptionTextSelected
                     ]}>
                       Female
                     </Text>
@@ -367,9 +465,10 @@ const SignupScreen = ({ navigation }: any) => {
               <View style={styles.divider} />
             </View>
 
-            <GoogleSignInButton
-              mode="signup"
-              role="passenger"
+            <UnifiedGoogleSignIn
+              key="signup-google-signin"
+              navigation={navigation}
+              isOnSignupScreen={true}
               onSuccess={(result) => {
                 console.log('Google signup successful:', result);
                 // The AuthContext will handle the navigation
@@ -471,7 +570,7 @@ const styles = StyleSheet.create({
 
   genderContainer: {
     position: 'relative',
-    zIndex: 10,
+    zIndex: 1000,
     marginBottom: 12,
   },
   chevronIcon: {
@@ -587,7 +686,8 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
     shadowRadius: 8,
-    zIndex: 1000,
+    zIndex: 1001,
+    maxHeight: 120,
   },
   genderOption: {
     paddingHorizontal: 16,
@@ -606,6 +706,20 @@ const styles = StyleSheet.create({
   genderOptionTextSelected: {
     color: COLORS.accent,
     fontFamily: 'Montserrat-SemiBold',
+  },
+  googleInfo: {
+    backgroundColor: '#e8f5e8',
+    padding: 8,
+    borderRadius: 8,
+    marginTop: 8,
+    borderWidth: 1,
+    borderColor: '#4caf50',
+  },
+  googleInfoText: {
+    color: '#2e7d32',
+    fontSize: 12,
+    textAlign: 'center',
+    fontFamily: 'Montserrat-Medium',
   },
 });
 

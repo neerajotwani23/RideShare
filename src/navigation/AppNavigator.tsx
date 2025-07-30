@@ -23,6 +23,7 @@ import ChangePasswordScreen from '../screens/Profile/ChangePasswordScreen';
 // Main App Screens
 import HomeScreen from '../screens/Home/HomeScreen';
 import PostRideScreen from '../screens/Ride/PostRideScreen';
+import LocationSelectionScreen from '../screens/Ride/LocationSelectionScreen';
 import FindRideScreen from '../screens/Ride/FindRideScreen';
 import RideDetailsScreen from '../screens/Ride/RideDetailsScreen';
 import DuringRideScreen from '../screens/Ride/DuringRideScreen';
@@ -60,6 +61,8 @@ function FindRideStack() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="FindRideMain" component={FindRideScreen} />
+      <Stack.Screen name="LocationSelection" component={LocationSelectionScreen} />
+      <Stack.Screen name="SuggestedRides" component={SuggestedRidesScreen} />
       <Stack.Screen name="RideDetails" component={RideDetailsScreen} />
       <Stack.Screen name="DuringRide" component={DuringRideScreen} />
       <Stack.Screen name="RateRide" component={RateRideScreen} />
@@ -73,6 +76,7 @@ function PostRideStack() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="PostRideMain" component={PostRideScreen} />
+      <Stack.Screen name="LocationSelection" component={LocationSelectionScreen} />
       <Stack.Screen name="SuggestedRides" component={SuggestedRidesScreen} />
       <Stack.Screen name="RideDetails" component={RideDetailsScreen} />
       <Stack.Screen name="DuringRide" component={DuringRideScreen} />
@@ -121,7 +125,7 @@ function PassengerTabs() {
     >
       <Tab.Screen 
         name="Find Ride"
-        component={FindRideScreen}
+        component={FindRideStack}
         options={{
           tabBarIcon: ({ color, size }) => <SearchIcon color={color} size={size} />,
         }}
@@ -185,7 +189,7 @@ function DriverTabs() {
     >
       <Tab.Screen 
         name="Post Ride" 
-        component={PostRideScreen}
+        component={PostRideStack}
         options={{
           tabBarIcon: ({ color, size }) => <PlusIcon color={color} size={size} />,
         }}
@@ -261,6 +265,35 @@ const AppNavigator = () => {
     isProcessing
   });
 
+  // Additional debug info
+  if (isProcessing) {
+    console.log('🔄 App is processing - showing Processing screen');
+  } else if (!isAuthenticated) {
+    console.log('🔐 User not authenticated - showing Auth flow');
+  } else if (!profileSetupComplete) {
+    console.log('👤 Profile setup incomplete - showing ProfileSetup');
+  } else if (currentRole === 'driver' && !vehicleDetailsComplete) {
+    console.log('🚗 Driver vehicle details incomplete - showing VehicleDetails');
+  } else {
+    console.log(`✅ All checks passed - showing ${currentRole === 'driver' ? 'DriverTabs' : 'PassengerTabs'}`);
+  }
+
+  // Determine which screen to show
+  let screenToShow = 'Unknown';
+  if (isProcessing) {
+    screenToShow = 'Processing';
+  } else if (!isAuthenticated) {
+    screenToShow = 'Auth Flow (Splash/Login/Signup/RoleSelection)';
+  } else if (!profileSetupComplete) {
+    screenToShow = 'ProfileSetup';
+  } else if (currentRole === 'driver' && !vehicleDetailsComplete) {
+    screenToShow = 'VehicleDetails';
+  } else {
+    screenToShow = currentRole === 'driver' ? 'DriverTabs' : 'PassengerTabs';
+  }
+  
+  console.log('🧭 AppNavigator will show:', screenToShow);
+
   return (
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
@@ -276,9 +309,6 @@ const AppNavigator = () => {
             <Stack.Screen name="RoleSelection" component={RoleSelectionScreen} />
             <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
           </>
-        ) : !roleSelected ? (
-          // Role Selection
-          <Stack.Screen name="RoleSelection" component={RoleSelectionScreen} />
         ) : !profileSetupComplete ? (
           // Profile Setup Flow (Required for drivers, optional for passengers)
           <>
