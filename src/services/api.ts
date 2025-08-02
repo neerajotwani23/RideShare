@@ -112,6 +112,10 @@ export const api = {
   // Authentication
   login: async (credentials: any) => {
     try {
+      console.log('🔐 Login attempt - BASE_URL:', BASE_URL);
+      console.log('🔐 Login attempt - Full URL:', `${BASE_URL}/auth/login`);
+      console.log('🔐 Login attempt - Credentials:', credentials);
+      
       const response = await fetch(`${BASE_URL}/auth/login`, {
         method: 'POST',
         headers: {
@@ -119,6 +123,10 @@ export const api = {
         },
         body: JSON.stringify(credentials),
       });
+      
+      console.log('🔐 Login response status:', response.status);
+      console.log('🔐 Login response headers:', response.headers);
+      
       const result = await handleResponse(response);
       
       // Store both access and refresh tokens using token manager
@@ -128,6 +136,7 @@ export const api = {
       
       return result;
     } catch (error) {
+      console.error('🔐 Login error details:', error);
       handleNetworkError(error, 'login');
     }
   },
@@ -137,6 +146,8 @@ export const api = {
       console.log('Platform:', Platform.OS);
       console.log('BASE_URL:', BASE_URL);
       console.log('Attempting to register user with data:', userData);
+      console.log('Gender value being sent:', userData.gender);
+      console.log('Gender type:', typeof userData.gender);
       console.log('API URL:', `${BASE_URL}/auth/register`);
       
       const response = await fetch(`${BASE_URL}/auth/register`, {
@@ -191,6 +202,7 @@ export const api = {
     } catch (error) {
       console.error('API: Google login error:', error);
       handleNetworkError(error, 'google-login');
+      throw error; // Re-throw the error so it can be caught by the calling function
     }
   },
 

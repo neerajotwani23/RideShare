@@ -78,10 +78,10 @@ const EditProfileScreen = ({ navigation }: any) => {
 
   const getGenderDisplay = (gender: string) => {
     if (!gender) return 'Not specified';
-    // Ensure gender is either 'male' or 'female'
-    if (gender.toLowerCase() === 'male') {
+    // Ensure gender is either 'MALE' or 'FEMALE'
+    if (gender === 'MALE') {
       return 'Male';
-    } else if (gender.toLowerCase() === 'female') {
+    } else if (gender === 'FEMALE') {
       return 'Female';
     }
     return 'Not specified';

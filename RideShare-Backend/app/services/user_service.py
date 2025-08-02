@@ -26,6 +26,10 @@ class UserService:
         """Get user by email"""
         return self.user_repo.get_by_email(email)
     
+    def get_user_by_google_id(self, google_id: str) -> Optional[User]:
+        """Get user by Google ID"""
+        return self.user_repo.get_by_google_id(google_id)
+    
     def update_user(self, user_id: int, user_update: schemas.UserUpdate) -> User:
         """Update user information"""
         return self.user_repo.update(user_id, user_update)

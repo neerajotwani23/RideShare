@@ -4,12 +4,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Text, TextInput, Button, IconButton, Menu, Card, ActivityIndicator } from 'react-native-paper';
 
 import { useAuth } from '../../context/AuthContext';
-import { PhoneNumberInput, GoogleSignInButton } from '../../components';
+import { PhoneNumberInput } from '../../components';
+import UnifiedGoogleSignIn from '../../components/UnifiedGoogleSignIn';
 import { COLORS } from '../../constants/colors';
 
 const { width: screenWidth } = Dimensions.get('window');
 
-const SignupScreen = ({ navigation }: any) => {
+const SignupScreen = ({ navigation, route }: any) => {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
@@ -22,18 +23,36 @@ const SignupScreen = ({ navigation }: any) => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [cnicError, setCnicError] = useState('');
   const [showGenderMenu, setShowGenderMenu] = useState(false);
+  const [isGoogleSignup, setIsGoogleSignup] = useState(false);
 
   useEffect(() => {
     console.log('Gender state changed to:', gender);
   }, [gender]);
+
+  // Handle Google user data from navigation params
+  useEffect(() => {
+    if (route.params?.googleUserData) {
+      const googleData = route.params.googleUserData;
+      console.log('Google user data received:', googleData);
+      
+      // Pre-fill the form with Google data
+      setFirstName(googleData.givenName || '');
+      setLastName(googleData.familyName || '');
+      setEmail(googleData.email || '');
+      setIsGoogleSignup(true);
+      
+      // Clear the params to avoid re-filling on re-render
+      navigation.setParams({ googleUserData: undefined });
+    }
+  }, [route.params?.googleUserData]);
 
   const [formError, setFormError] = useState('');
 
   const { storePendingSignupData, signupWithGoogle, isLoading } = useAuth();
 
   const genderOptions = [
-    { value: 'male', label: 'Male' },
-    { value: 'female', label: 'Female' },
+    { value: 'MALE', label: 'Male' },
+    { value: 'FEMALE', label: 'Female' },
   ];
   
   console.log('Gender options:', genderOptions);
@@ -99,6 +118,10 @@ const SignupScreen = ({ navigation }: any) => {
       return;
     }
 
+    console.log('🔍 Signup form data:');
+    console.log('Gender value:', gender);
+    console.log('Gender type:', typeof gender);
+
     // Store signup data in context and navigate to role selection
     const signupData = {
       first_name: firstName,
@@ -108,7 +131,10 @@ const SignupScreen = ({ navigation }: any) => {
       phone_no: phoneNumber,
       cnic,
       gender,
+      isGoogleSignup, // Add flag to indicate if this is Google signup
     };
+
+    console.log('📤 Complete signup data:', signupData);
 
     // Store the signup data in context for later use
     storePendingSignupData(signupData);
@@ -169,6 +195,13 @@ const SignupScreen = ({ navigation }: any) => {
         <View style={styles.welcomeSection}>
           <Text style={styles.welcomeTitle}>Join RideShare</Text>
           <Text style={styles.welcomeSubtitle}>Create your account to start sharing rides</Text>
+          {isGoogleSignup && (
+            <View style={styles.googleInfo}>
+              <Text style={styles.googleInfoText}>
+                ✓ Information from your Google account has been pre-filled
+              </Text>
+            </View>
+          )}
         </View>
 
         {/* Form Section */}
@@ -250,8 +283,8 @@ const SignupScreen = ({ navigation }: any) => {
                 onPress={() => setShowGenderMenu(!showGenderMenu)}
               >
                 <Text style={[styles.genderText, !gender && styles.placeholderText]}>
-                  {gender === 'male' ? 'Male' : 
-                   gender === 'female' ? 'Female' : 
+                  {gender === 'MALE' ? 'Male' : 
+                   gender === 'FEMALE' ? 'Female' : 
                    'Select Gender'}
                 </Text>
                 <IconButton 
@@ -267,16 +300,16 @@ const SignupScreen = ({ navigation }: any) => {
                   <TouchableOpacity
                     style={[
                       styles.genderOption,
-                      gender === 'male' && styles.genderOptionSelected
+                      gender === 'MALE' && styles.genderOptionSelected
                     ]}
                     onPress={() => {
-                      setGender('male');
+                      setGender('MALE');
                       setShowGenderMenu(false);
                     }}
                   >
                     <Text style={[
                       styles.genderOptionText,
-                      gender === 'male' && styles.genderOptionTextSelected
+                      gender === 'MALE' && styles.genderOptionTextSelected
                     ]}>
                       Male
                     </Text>
@@ -285,16 +318,16 @@ const SignupScreen = ({ navigation }: any) => {
                   <TouchableOpacity
                     style={[
                       styles.genderOption,
-                      gender === 'female' && styles.genderOptionSelected
+                      gender === 'FEMALE' && styles.genderOptionSelected
                     ]}
                     onPress={() => {
-                      setGender('female');
+                      setGender('FEMALE');
                       setShowGenderMenu(false);
                     }}
                   >
                     <Text style={[
                       styles.genderOptionText,
-                      gender === 'female' && styles.genderOptionTextSelected
+                      gender === 'FEMALE' && styles.genderOptionTextSelected
                     ]}>
                       Female
                     </Text>
@@ -367,9 +400,10 @@ const SignupScreen = ({ navigation }: any) => {
               <View style={styles.divider} />
             </View>
 
-            <GoogleSignInButton
-              mode="signup"
-              role="passenger"
+            <UnifiedGoogleSignIn
+              key="signup-google-signin"
+              navigation={navigation}
+              isOnSignupScreen={true}
               onSuccess={(result) => {
                 console.log('Google signup successful:', result);
                 // The AuthContext will handle the navigation
@@ -606,6 +640,20 @@ const styles = StyleSheet.create({
   genderOptionTextSelected: {
     color: COLORS.accent,
     fontFamily: 'Montserrat-SemiBold',
+  },
+  googleInfo: {
+    backgroundColor: '#e8f5e8',
+    padding: 8,
+    borderRadius: 8,
+    marginTop: 8,
+    borderWidth: 1,
+    borderColor: '#4caf50',
+  },
+  googleInfoText: {
+    color: '#2e7d32',
+    fontSize: 12,
+    textAlign: 'center',
+    fontFamily: 'Montserrat-Medium',
   },
 });
 

@@ -31,10 +31,17 @@ class UserRepository:
                 detail="Email already registered"
             )
         
-        # Hash password and create user
-        hashed_password = self.get_password_hash(user.password)
+        # Prepare user data
         user_data = user.dict()
-        user_data["password"] = hashed_password
+        
+        # Handle password for Google vs email users
+        if user.password:
+            # Hash password for email users
+            hashed_password = self.get_password_hash(user.password)
+            user_data["password"] = hashed_password
+        else:
+            # No password for Google users
+            user_data["password"] = None
         
         # Ensure new users start with a rating of 5.0
         user_data["average_rating"] = 5.0
@@ -50,6 +57,9 @@ class UserRepository:
     
     def get_by_email(self, email: str) -> Optional[User]:
         return self.db.query(User).filter(User.email == email).first()
+    
+    def get_by_google_id(self, google_id: str) -> Optional[User]:
+        return self.db.query(User).filter(User.google_id == google_id).first()
     
     def authenticate(self, email: str, password: str) -> Optional[User]:
         user = self.get_by_email(email)

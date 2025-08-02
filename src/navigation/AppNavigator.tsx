@@ -4,7 +4,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Icon from '../components/Icon';
 import { useSafeAreaInsets } from '../hooks/useSafeAreaInsets';
-
+import LocationSelect from '../screens/Ride/LocationSelectionScreen';
 // Auth Screens
 import SplashScreen from '../screens/Auth/SplashScreen';
 import LoginScreen from '../screens/Auth/LoginScreen';
@@ -73,6 +73,7 @@ function PostRideStack() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="PostRideMain" component={PostRideScreen} />
+      <Stack.Screen name="LocationScreen" component={LocationSelect}/>
       <Stack.Screen name="SuggestedRides" component={SuggestedRidesScreen} />
       <Stack.Screen name="RideDetails" component={RideDetailsScreen} />
       <Stack.Screen name="DuringRide" component={DuringRideScreen} />
@@ -165,6 +166,7 @@ function DriverTabs() {
   return (
     <Tab.Navigator
       initialRouteName="Post Ride"
+      
       screenOptions={{
         tabBarStyle: {
           backgroundColor: '#FFFFFF',
@@ -185,7 +187,7 @@ function DriverTabs() {
     >
       <Tab.Screen 
         name="Post Ride" 
-        component={PostRideScreen}
+        component={PostRideStack}
         options={{
           tabBarIcon: ({ color, size }) => <PlusIcon color={color} size={size} />,
         }}

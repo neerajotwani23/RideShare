@@ -2,8 +2,24 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { api } from '../services/api';
 import { optimizedDataSyncService } from '../services/optimizedDataSyncService';
 import { useAuth } from './AuthContext';
+import Geolocation from '@react-native-community/geolocation';
+import { Alert, PermissionsAndroid, Platform } from 'react-native';
 
 interface AppContextType {
+  //Location
+   defaultLocation:any,
+   location:any,
+   setLocation:(location:any) => void,
+   destination:any,
+   setDestination:(destination:any) => void,
+   source:any,
+   setSource:(source:any) => void,
+   destinationLocation:any,
+   setDestinationLocation :(destinationLocation:any) => void,
+   
+
+   // Current Location:
+      getCurrentLocation:()=>void,
   // User Data
   userProfile: any;
   walletBalance: number;
@@ -106,7 +122,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   
   const [isLoading, setIsLoading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
-
+  const [source, setSource] = useState(null);
+  const [destinationLocation, setDestinationLocation] = useState(null);
   // Refresh Functions
   const refreshUserProfile = useCallback(async () => {
     if (!isAuthenticated) return;
@@ -568,8 +585,83 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   }, [isAuthenticated, currentRole, refreshMyVehicles]);
 
+   const [location, setLocation] = useState<any>(null);
+   const [destination, setDestination] = useState(null);
+    const defaultLocation = {
+    latitude: 37.78825,
+    longitude: -122.4324,
+    latitudeDelta: 0.0922,
+    longitudeDelta: 0.0421,
+  }
+
+    const getCurrentLocation = () => {
+    Geolocation.getCurrentPosition(
+      position => {
+        setLocation({
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+          latitudeDelta: 0.01,
+          longitudeDelta: 0.01,
+        });
+      },
+      error => {
+        Alert.alert(
+          'Error',
+          `Failed to get your location: ${error.message}` +
+          ' Make sure your location is enabled.',
+        );
+        setLocation(defaultLocation);
+
+      }
+    );
+  }
+
+  const requestLocationPermission = async () => {
+    try {
+      if (Platform.OS === 'android') {
+        const granted = await PermissionsAndroid.requestMultiple([
+          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+          PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION,
+        ]);
+
+        const fineGranted = granted[PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION] === PermissionsAndroid.RESULTS.GRANTED;
+        const coarseGranted = granted[PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION] === PermissionsAndroid.RESULTS.GRANTED;
+
+        if (fineGranted || coarseGranted) {
+          getCurrentLocation();
+        } else {
+          Alert.alert(
+            'Permission Denied',
+            'Please enable location permissions in settings to use this feature.'
+          );
+          setLocation(defaultLocation);
+        }
+      } else {
+        // iOS or other platforms: attempt location directly (iOS auto-prompts)
+        getCurrentLocation();
+      }
+    } catch (err) {
+      console.warn('Permission request error:', err);
+      setLocation(defaultLocation);
+    }
+  };
+
+  useEffect(() => {
+    requestLocationPermission();
+  }, [])
+
   return (
     <AppContext.Provider value={{
+      destinationLocation, 
+      setDestinationLocation,
+      source,
+      setSource,
+      location,
+      defaultLocation,
+      destination,
+      setDestination,
+      setLocation,
+      getCurrentLocation,
       userProfile,
       walletBalance,
       myRides,

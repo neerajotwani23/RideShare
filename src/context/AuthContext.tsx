@@ -44,7 +44,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [pendingSignupData, setPendingSignupData] = useState(null);
+  const [pendingSignupData, setPendingSignupData] = useState<any>(null);
 
   useEffect(() => {
     const checkAuthState = async () => {
@@ -206,8 +206,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setTimeout(() => {
         setIsProcessing(false);
       }, 2000);
-    } catch (error) {
+    } catch (error: any) {
       setIsProcessing(false);
+      
+      // Check if user requires signup completion
+      if (error.message === 'USER_REQUIRES_SIGNUP') {
+        // Store Google data for signup
+        const googleUser = await GoogleSignInService.getCurrentUser();
+        if (googleUser) {
+          const googleData = {
+            email: googleUser.email,
+            google_id: googleUser.id,
+            first_name: googleUser.givenName || '',
+            last_name: googleUser.familyName || '',
+            profile_picture: googleUser.photo,
+            auth_provider: 'google'
+          };
+          setPendingSignupData(googleData);
+        }
+        throw new Error('USER_REQUIRES_SIGNUP');
+      }
+      
       throw error;
     } finally {
       setIsLoading(false);
@@ -267,6 +286,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       ...(pendingSignupData as any),
       user_type: role.toUpperCase(),
     };
+
+    console.log('🔍 CompleteSignup - Final user data being sent to API:');
+    console.log('Gender value:', userData.gender);
+    console.log('Gender type:', typeof userData.gender);
+    console.log('Complete data:', userData);
 
     try {
       const data = await signup(userData);

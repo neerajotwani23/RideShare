@@ -10,8 +10,8 @@ class UserTypeEnum(str, Enum):
     PASSENGER = "PASSENGER"
 
 class GenderEnum(str, Enum):
-    MALE = "male"
-    FEMALE = "female"
+    MALE = "MALE"
+    FEMALE = "FEMALE"
 
 class TransactionType(str, Enum):
     DEBIT = "debit"
@@ -53,16 +53,14 @@ class UserBase(BaseModel):
     gender: Optional[GenderEnum] = None
 
 class UserCreate(UserBase):
-    password: str
+    password: Optional[str] = None  # Optional for Google users
     user_type: UserTypeEnum
-    gender: GenderEnum  # Make gender required for new users
+    gender: Optional[GenderEnum] = None  # Optional for Google users
     
     @validator('gender')
     def validate_gender(cls, v):
-        if not v:
-            raise ValueError("Gender is required and cannot be empty")
-        if v not in [GenderEnum.MALE, GenderEnum.FEMALE]:
-            raise ValueError("Gender must be either 'male' or 'female'")
+        if v is not None and v not in [GenderEnum.MALE, GenderEnum.FEMALE]:
+            raise ValueError("Gender must be either 'MALE' or 'FEMALE'")
         return v
 
 class UserUpdate(BaseModel):

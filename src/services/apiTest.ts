@@ -8,7 +8,7 @@ export const testApiErrorHandling = async () => {
   
   try {
     // Test with invalid endpoint to trigger error
-    const response = await fetch('http://10.210.7.19:8000/invalid-endpoint', {
+    const response = await fetch('http://10.210.1.225:8000/invalid-endpoint', {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -24,7 +24,7 @@ export const testApiErrorHandling = async () => {
   
   try {
     // Test with valid endpoint but no auth
-    const response = await fetch('http://10.210.7.19:8000/users/profile', {
+    const response = await fetch('http://10.210.1.225:8000/users/profile', {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -55,7 +55,7 @@ export const testNetworkConnectivity = async () => {
   }
   
   try {
-    const response = await fetch('http://10.210.7.19:8000/health', {
+    const response = await fetch('http://10.210.1.225:8000/health', {
       method: 'GET',
     });
     console.log('✅ Backend connectivity test passed:', response.status);

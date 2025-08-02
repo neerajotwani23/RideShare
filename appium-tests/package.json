@@ -1,0 +1,46 @@
+{
+  "name": "rideshare-appium-tests",
+  "version": "1.0.0",
+  "description": "Appium test suite for RideShare app",
+  "main": "index.js",
+  "scripts": {
+    "test": "npx mocha --timeout 60000 --require @babel/register --require ./test-setup.js",
+    "test:login": "npx mocha --timeout 60000 --require @babel/register --require ./test-setup.js tests/login/*.js",
+    "test:signup": "npx mocha --timeout 60000 --require @babel/register --require ./test-setup.js tests/signup/*.js",
+    "test:auth": "npx mocha --timeout 60000 --require @babel/register --require ./test-setup.js tests/auth/*.js",
+    "test:gui": "npx mocha --timeout 60000 --require @babel/register --require ./test-setup-gui.js",
+    "test:gui:login": "npx mocha --timeout 60000 --require @babel/register --require ./test-setup-gui.js tests/login/*.js",
+    "test:gui:signup": "npx mocha --timeout 60000 --require @babel/register --require ./test-setup-gui.js tests/signup/*.js",
+    "setup:gui": "scripts\\setup-gui.bat",
+    "setup:windows": "scripts\\setup-windows.bat",
+    "appium": "appium",
+    "inspector": "appium --allow-insecure chromedriver_autodownload",
+    "clean": "rmdir /s /q screenshots && mkdir screenshots",
+    "install-deps": "npm install && npm install -g mocha"
+  },
+  "dependencies": {
+    "@babel/core": "^7.23.6",
+    "@babel/preset-env": "^7.23.6",
+    "@babel/register": "^7.22.15",
+    "appium": "^2.19.0",
+    "chai": "^4.3.10",
+    "chai-as-promised": "^7.1.1",
+    "dotenv": "^16.3.1",
+    "mocha": "^10.2.0",
+    "webdriverio": "^9.18.4"
+  },
+  "devDependencies": {
+    "@types/chai": "^4.3.5",
+    "@types/mocha": "^10.0.1"
+  },
+  "keywords": [
+    "appium",
+    "testing",
+    "react-native",
+    "mobile",
+    "automation",
+    "gui"
+  ],
+  "author": "RideShare Team",
+  "license": "MIT"
+}

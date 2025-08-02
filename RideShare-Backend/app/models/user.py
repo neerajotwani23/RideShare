@@ -10,8 +10,8 @@ class UserTypeEnum(enum.Enum):
     PASSENGER = "PASSENGER"
 
 class GenderEnum(enum.Enum):
-    MALE = "male"
-    FEMALE = "female"
+    MALE = "MALE"
+    FEMALE = "FEMALE"
 
 class User(Base):
     __tablename__ = "user"
@@ -23,7 +23,7 @@ class User(Base):
     password = Column(String(255), nullable=True)  # Can be null for Google users
     phone_no = Column(String(20), nullable=True)
     google_id = Column(String(255), nullable=True, unique=True, index=True)
-    auth_provider = Column(String(50), default="email", nullable=False)  # "email" or "google"
+    auth_provider = Column(String(50), default="email", nullable=False)  # "email", "google", or "both"
     user_type = Column(SQLEnum(UserTypeEnum), nullable=False)
     cnic = Column(String(20), nullable=True, unique=True)
     profile_picture = Column(String(500), nullable=True)
@@ -122,7 +122,7 @@ class User(Base):
         if not gender:
             raise ValueError("Gender is required and cannot be empty")
         if gender not in [GenderEnum.MALE.value, GenderEnum.FEMALE.value]:
-            raise ValueError("Gender must be either 'male' or 'female'")
+            raise ValueError("Gender must be either 'MALE' or 'FEMALE'")
         return gender
     
     @validates('bio')
