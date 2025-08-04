@@ -38,7 +38,15 @@ type LocationSelectionParams = {
 
 const LocationSelect: React.FC = ({ navigation, route }: any) => {
 
-    const { source, setSource, location, setLocation, destination, setDestination, defaultLocation, setDestinationLocation } = useApp();
+    const { source, setSource, location, setLocation, destination, setDestination, destinationLocation, defaultLocation, setDestinationLocation } = useApp();
+    
+    // Separate state for current location (blue dot) and map region
+    const [currentLocation, setCurrentLocation] = useState<{
+        latitude: number;
+        longitude: number;
+        latitudeDelta: number;
+        longitudeDelta: number;
+    } | null>(null);
     const { typeoflocation } = route.params;
 
     const [destselect, setDestselect] = useState(true);
@@ -49,6 +57,7 @@ const LocationSelect: React.FC = ({ navigation, route }: any) => {
     } | null>(null);
     const [currentLocationText, setCurrentLocationText] = useState('');
     const [isMapReady, setIsMapReady] = useState(false);
+    const [selectedLocationName, setSelectedLocationName] = useState('');
 
     // Initialize map on component mount
     useEffect(() => {
@@ -58,35 +67,7 @@ const LocationSelect: React.FC = ({ navigation, route }: any) => {
     // Initialize location based on context
     const initializeLocation = () => {
         console.log('📍 Initializing location...');
-
-        if (location && location.latitude && location.longitude) {
-            // Use existing location from context
-            console.log('📍 Using existing location from context:', location);
-            setCenterLocation({
-                latitude: location.latitude,
-                longitude: location.longitude,
-                name: getCurrentLocationText(),
-            });
-            setIsMapReady(true);
-        } else if (defaultLocation && defaultLocation.latitude && defaultLocation.longitude) {
-            // Use default location from context
-            console.log('📍 Using default location from context:', defaultLocation);
-            setLocation({
-                latitude: defaultLocation.latitude,
-                longitude: defaultLocation.longitude,
-                latitudeDelta: 0.01,
-                longitudeDelta: 0.01,
-            });
-            setCenterLocation({
-                latitude: defaultLocation.latitude,
-                longitude: defaultLocation.longitude,
-                name: 'Current Location',
-            });
-            setIsMapReady(true);
-        } else {
-            // Get current location
-            getCurrentLocation();
-        }
+        getCurrentLocation();
     };
 
     // Get current location text based on type
@@ -101,27 +82,24 @@ const LocationSelect: React.FC = ({ navigation, route }: any) => {
     // Get current location
     const getCurrentLocation = () => {
         console.log('📍 Getting current location...');
-
         Geolocation.getCurrentPosition(
             (position) => {
                 const { latitude, longitude } = position.coords;
                 console.log('📍 Location received:', { latitude, longitude });
-
-                const currentLocation = {
+                const currentLocationCoords = {
                     latitude,
                     longitude,
                     latitudeDelta: 0.01,
                     longitudeDelta: 0.01,
                 };
-
-                setLocation(currentLocation);
+                setCurrentLocation(currentLocationCoords);
                 setCenterLocation({
                     latitude,
                     longitude,
                     name: 'Current Location',
                 });
+                setLocation(currentLocationCoords); // Set map region to current location
                 setIsMapReady(true);
-
                 console.log('📍 Current location set successfully');
             },
             (error) => {
@@ -133,12 +111,13 @@ const LocationSelect: React.FC = ({ navigation, route }: any) => {
                     latitudeDelta: 0.01,
                     longitudeDelta: 0.01,
                 };
-                setLocation(defaultLocationCoords);
+                setCurrentLocation(defaultLocationCoords);
                 setCenterLocation({
                     latitude: 33.6844,
                     longitude: 73.0479,
                     name: 'Default Location',
                 });
+                setLocation(defaultLocationCoords); // Set map region to default location
                 setIsMapReady(true);
                 console.log('📍 Default coordinates set');
             },
@@ -164,48 +143,73 @@ const LocationSelect: React.FC = ({ navigation, route }: any) => {
     // Handle map region change
     const handleMapRegionChange = async (region: any) => {
         // Update center location when map moves
+        // The coordinates should represent what's under the red marker
+        
+        // Always get the location name from coordinates when map moves
+        const locationName = await getLocationNameFromCoords(region.latitude, region.longitude);
+        
         setCenterLocation({
             latitude: region.latitude,
             longitude: region.longitude,
-            name: getCurrentLocationText() || 'Selected Location',
+            name: locationName,
         });
+        
+        // Clear the selected location name when user moves the map manually
+        // This allows the location name to update dynamically
+        setSelectedLocationName('');
+    };
+
+    // Get location name from coordinates using reverse geocoding
+    const getLocationNameFromCoords = async (latitude: number, longitude: number) => {
+        try {
+            const response = await fetch(
+                `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${GOOGLE_API_KEY}`
+            );
+            const data = await response.json();
+            
+            if (data.results && data.results.length > 0) {
+                return data.results[0].formatted_address;
+            }
+            return 'Selected Location';
+        } catch (error) {
+            console.error('Reverse geocoding error:', error);
+            return 'Selected Location';
+        }
     };
 
     // Confirm location selection
-    const confirmLocation = () => {
+    const confirmLocation = async () => {
         console.log('📍 confirmLocation called');
         console.log('📍 centerLocation:', centerLocation);
         console.log('📍 typeoflocation:', typeoflocation);
 
         if (centerLocation) {
-            // Update the appropriate location in context
-            if (typeoflocation === "Pick up Location") {
-                setSource(centerLocation.name);
-            } else {
-                setDestination(centerLocation.name);
+            // Get location name if not already set
+            let locationName = selectedLocationName;
+            if (!locationName) {
+                locationName = await getLocationNameFromCoords(centerLocation.latitude, centerLocation.longitude);
             }
 
-            // Update location in context
-            setLocation({
-                latitude: centerLocation.latitude,
-                longitude: centerLocation.longitude,
-                latitudeDelta: 0.01,
-                longitudeDelta: 0.01,
-            });
-
-            // Get current params and call callback if exists
-            const currentParams = route.params;
-            if (currentParams?.onLocationSelected) {
-                const selectedLocation = {
-                    type: typeoflocation,
-                    name: centerLocation.name,
-                    coords: {
-                        latitude: centerLocation.latitude,
-                        longitude: centerLocation.longitude,
-                    }
-                };
-                console.log('📍 Calling onLocationSelected callback');
-                currentParams.onLocationSelected(selectedLocation);
+            // Update the appropriate location in context
+            if (typeoflocation === "Pick up Location") {
+                setSource(locationName);
+                // Update pickup location coordinates
+                setLocation({
+                    latitude: centerLocation.latitude,
+                    longitude: centerLocation.longitude,
+                    latitudeDelta: 0.01,
+                    longitudeDelta: 0.01,
+                });
+            } else {
+                setDestination(locationName);
+                // Update dropoff location coordinates ONLY
+                // Don't update the pickup location (setLocation)
+                setDestinationLocation({
+                    latitude: centerLocation.latitude,
+                    longitude: centerLocation.longitude,
+                    latitudeDelta: 0.01,
+                    longitudeDelta: 0.01,
+                });
             }
 
             console.log('📍 About to go back');
@@ -229,7 +233,6 @@ const LocationSelect: React.FC = ({ navigation, route }: any) => {
 
             {/* Search Input with GooglePlacesAutocomplete */}
             <View style={styles.searchContainer}>
-
                 <GooglePlacesAutocomplete
                     placeholder={typeoflocation}
                     listViewDisplayed="auto"
@@ -239,34 +242,11 @@ const LocationSelect: React.FC = ({ navigation, route }: any) => {
                     fetchDetails={true}
                     keepResultsAfterBlur={destselect}
                     onPress={(data, details = null) => {
-
                         setDestselect(false);
+                        setSelectedLocationName(data.description);
 
                         if (data.description === 'Current Location') {
                             if (location && location.latitude && location.longitude) {
-                                setLocation({
-                                    latitude: location.latitude,
-                                    longitude: location.longitude,
-                                    latitudeDelta: 0.01,
-                                    longitudeDelta: 0.01,
-                                });
-
-                                if (typeoflocation === 'Pick up Location') {
-                                    setSource(data.description);
-                                } else {
-                                    setDestination(data.description);
-                                        if (details && details.geometry && details.geometry.location) {
-                                    const { lat, lng } = details.geometry.location;
-
-                                    setDestinationLocation({
-                                        latitude: lat,
-                                        longitude: lng,
-                                        latitudeDelta: 0.01,
-                                        longitudeDelta: 0.01,
-                                    });
-                                }
-                                }
-
                                 setCenterLocation({
                                     latitude: location.latitude,
                                     longitude: location.longitude,
@@ -274,43 +254,24 @@ const LocationSelect: React.FC = ({ navigation, route }: any) => {
                                 });
                             }
                         } else {
-                            if (typeoflocation === 'Pick up Location') {
-                                setSource(data.description);
-                                setLocation({
-                                    latitude: location.latitude,
-                                    longitude: location.longitude,
-                                    latitudeDelta: 0.01,
-                                    longitudeDelta: 0.01,
-                                });
-                            } else {
-                                setDestination(data.description);
-                                if (details && details.geometry && details.geometry.location) {
-                                    const { lat, lng } = details.geometry.location;
-
-                                    setDestinationLocation({
-                                        latitude: lat,
-                                        longitude: lng,
-                                        latitudeDelta: 0.01,
-                                        longitudeDelta: 0.01,
-                                    });
-                                } else {
-                                    console.error('Location details are not available');
-                                }
-                            }
-
                             if (details && details.geometry && details.geometry.location) {
-                                const newLocation = {
-                                    latitude: details.geometry.location.lat,
-                                    longitude: details.geometry.location.lng,
-                                    latitudeDelta: 0.01,
-                                    longitudeDelta: 0.01,
-                                };
-                                setLocation(newLocation);
+                                // Only update centerLocation, don't change the current location
+                                // This will move the map to bring the selected location under the red marker
                                 setCenterLocation({
                                     latitude: details.geometry.location.lat,
                                     longitude: details.geometry.location.lng,
                                     name: data.description,
                                 });
+                                
+                                // Update the map region to center on the selected location
+                                // But keep the current location unchanged for the blue dot
+                                const newRegion = {
+                                    latitude: details.geometry.location.lat,
+                                    longitude: details.geometry.location.lng,
+                                    latitudeDelta: 0.01,
+                                    longitudeDelta: 0.01,
+                                };
+                                setLocation(newRegion);
                             }
                         }
                         Keyboard.dismiss();
@@ -327,7 +288,7 @@ const LocationSelect: React.FC = ({ navigation, route }: any) => {
                         fields: 'formatted_address,geometry',
                     }}
                     GoogleReverseGeocodingQuery={{
-                        rankby: 'distance',
+                        bounds: 0,
                     }}
                     textInputProps={{
                         value: typeoflocation === "Pick up Location" ? (source ?? '') : (destination ?? ''),
@@ -355,14 +316,14 @@ const LocationSelect: React.FC = ({ navigation, route }: any) => {
                     nearbyPlacesAPI="GooglePlacesSearch"
                     GooglePlacesSearchQuery={{
                         rankby: 'distance',
-                        type: 'establishment',
+                        type: 'establishment' as any,
                     }}
                     filterReverseGeocodingByTypes={[
                         'locality',
                         'administrative_area_level_3',
                     ]}
                     suppressDefaultStyles={true}
-                    returnKeyType="search"
+
                     enableHighAccuracyLocation={true}
                     disableScroll={true}
                     renderRow={(rowData) => (
@@ -380,7 +341,7 @@ const LocationSelect: React.FC = ({ navigation, route }: any) => {
                     <MapView
                         style={styles.map}
                         region={location}
-                        showsUserLocation={false}
+                        showsUserLocation={true}
                         mapType="standard"
                         userInterfaceStyle="light"
                         onMapReady={() => {
@@ -389,9 +350,9 @@ const LocationSelect: React.FC = ({ navigation, route }: any) => {
                         }}
                         onRegionChangeComplete={handleMapRegionChange}
                     >
-                        {/* Current Location Marker - Blue Circle */}
-                        {location && (
-                            <Marker coordinate={location}>
+                        {/* Current Location Marker - Blue Dot */}
+                        {currentLocation && (
+                            <Marker coordinate={currentLocation}>
                                 <View style={styles.blueDot} />
                             </Marker>
                         )}
@@ -488,7 +449,7 @@ const styles = StyleSheet.create({
         padding: 12,
         fontSize: 16,
         fontFamily: 'Montserrat-Regular',
-        color: COLORS.textPrimary,
+        color: COLORS.secondary,
         backgroundColor: 'transparent',
     },
     autocompleteListView: {

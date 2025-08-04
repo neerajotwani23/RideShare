@@ -124,6 +124,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [source, setSource] = useState(null);
   const [destinationLocation, setDestinationLocation] = useState(null);
+  const [location, setLocation] = useState<any>(null);
+  const [destination, setDestination] = useState(null);
   // Refresh Functions
   const refreshUserProfile = useCallback(async () => {
     if (!isAuthenticated) return;
@@ -585,8 +587,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   }, [isAuthenticated, currentRole, refreshMyVehicles]);
 
-   const [location, setLocation] = useState<any>(null);
-   const [destination, setDestination] = useState(null);
+
     const defaultLocation = {
     latitude: 37.78825,
     longitude: -122.4324,

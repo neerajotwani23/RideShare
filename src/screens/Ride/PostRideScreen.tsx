@@ -20,10 +20,6 @@ const PostRideScreen = ({ navigation, route }: any) => {
   // Navigation sync hook
   useOptimizedNavigationSync();
 
-
-  // const [location, setLocation] = useState<any>(null);
-  // const [destination, setDestination] = useState('');
-  
   const [rideType, setRideType] = useState('now'); // 'now' or 'schedule'
   const [date, setDate] = useState(new Date());
   const [time, setTime] = useState(new Date());
@@ -36,9 +32,63 @@ const PostRideScreen = ({ navigation, route }: any) => {
   const [smoking, setSmoking] = useState(false);
   const [error, setError] = useState('');
   const [destselect, setDestselect] = useState(true);
+  const [currentLocation, setCurrentLocation] = useState<any>(null);
+  const mapRef = React.useRef(null);
 
-  const { createRide, isLoading, location, setLocation, source,setSource,destination, setDestination,destinationLocation, defaultLocation } = useApp();
+  const { createRide, isLoading, location, setLocation, source,setSource,destination, setDestination,destinationLocation, defaultLocation, getCurrentLocation } = useApp();
 
+  // Calculate map region to show all markers
+  const calculateMapRegion = useCallback(() => {
+    const markers = [];
+    
+    // Add current location
+    if (location) {
+      markers.push(location);
+    }
+    
+    // Add pickup location (if different from current location)
+    if (source && source !== 'Current Location' && location) {
+      markers.push(location);
+    }
+    
+    // Add dropoff location
+    if (destinationLocation) {
+      markers.push(destinationLocation);
+    }
+    
+    if (markers.length === 0) {
+      return location || defaultLocation;
+    }
+    
+    if (markers.length === 1) {
+      return {
+        ...markers[0],
+        latitudeDelta: 0.01,
+        longitudeDelta: 0.01,
+      };
+    }
+    
+    // Calculate bounds for multiple markers
+    const latitudes = markers.map(marker => marker.latitude);
+    const longitudes = markers.map(marker => marker.longitude);
+    
+    const minLat = Math.min(...latitudes);
+    const maxLat = Math.max(...latitudes);
+    const minLng = Math.min(...longitudes);
+    const maxLng = Math.max(...longitudes);
+    
+    const centerLat = (minLat + maxLat) / 2;
+    const centerLng = (minLng + maxLng) / 2;
+    const deltaLat = (maxLat - minLat) * 1.5; // Add 50% padding
+    const deltaLng = (maxLng - minLng) * 1.5;
+    
+    return {
+      latitude: centerLat,
+      longitude: centerLng,
+      latitudeDelta: Math.max(deltaLat, 0.01),
+      longitudeDelta: Math.max(deltaLng, 0.01),
+    };
+  }, [location, source, destinationLocation, defaultLocation]);
 
   // Handle parameters passed from chatbot
   useEffect(() => {
@@ -57,6 +107,99 @@ const PostRideScreen = ({ navigation, route }: any) => {
       }
     }
   }, [route?.params]);
+
+  // Ensure location permissions and current location are set
+  useEffect(() => {
+    const ensureLocationAccess = async () => {
+      try {
+        if (Platform.OS === 'android') {
+          const granted = await PermissionsAndroid.requestMultiple([
+            PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+            PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION,
+          ]);
+
+          const fineGranted = granted[PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION] === PermissionsAndroid.RESULTS.GRANTED;
+          const coarseGranted = granted[PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION] === PermissionsAndroid.RESULTS.GRANTED;
+
+          if (fineGranted || coarseGranted) {
+            // Location permission granted, get current location
+            Geolocation.getCurrentPosition(
+              position => {
+                const currentLocation = {
+                  latitude: position.coords.latitude,
+                  longitude: position.coords.longitude,
+                  latitudeDelta: 0.01,
+                  longitudeDelta: 0.01,
+                };
+                setLocation(currentLocation);
+              },
+              error => {
+                console.warn('Failed to get current location:', error);
+              },
+              { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
+            );
+          }
+        } else {
+          // iOS - try to get location directly
+          Geolocation.getCurrentPosition(
+            position => {
+              const currentLocation = {
+                latitude: position.coords.latitude,
+                longitude: position.coords.longitude,
+                latitudeDelta: 0.01,
+                longitudeDelta: 0.01,
+              };
+              setLocation(currentLocation);
+            },
+            error => {
+              console.warn('Failed to get current location:', error);
+            },
+            { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
+          );
+        }
+      } catch (err) {
+        console.warn('Location permission request error:', err);
+      }
+    };
+
+    ensureLocationAccess();
+  }, []);
+
+  // Get current location for the blue dot
+  useEffect(() => {
+    const getCurrentLocationForMap = () => {
+      Geolocation.getCurrentPosition(
+        position => {
+          const currentLoc = {
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+            latitudeDelta: 0.01,
+            longitudeDelta: 0.01,
+          };
+          setCurrentLocation(currentLoc);
+        },
+        error => {
+          console.warn('Failed to get current location for map:', error);
+        },
+        { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
+      );
+    };
+
+    getCurrentLocationForMap();
+  }, []);
+
+  // Auto-fit both markers when both are selected
+  useEffect(() => {
+    if (mapRef.current && location && destinationLocation) {
+      (mapRef.current as any).fitToCoordinates([
+        location,
+        destinationLocation
+      ], {
+        edgePadding: { top: 80, right: 80, bottom: 80, left: 80 },
+        animated: true,
+      });
+    }
+  }, [location, destinationLocation]);
 
   const handlePost = async () => {
     if (!source || !destination || !seats || !fare) {
@@ -131,69 +274,6 @@ const PostRideScreen = ({ navigation, route }: any) => {
     });
   };
 
-  // const defaultLocation = {
-  //   latitude: 37.78825,
-  //   longitude: -122.4324,
-  //   latitudeDelta: 0.0922,
-  //   longitudeDelta: 0.0421,
-  // }
-
-  // const getCurrentLocation = () => {
-  //   Geolocation.getCurrentPosition(
-  //     position => {
-  //       setLocation({
-  //         latitude: position.coords.latitude,
-  //         longitude: position.coords.longitude,
-  //         latitudeDelta: 0.01,
-  //         longitudeDelta: 0.01,
-  //       });
-  //     },
-  //     error => {
-  //       Alert.alert(
-  //         'Error',
-  //         `Failed to get your location: ${error.message}` +
-  //         ' Make sure your location is enabled.',
-  //       );
-  //       setLocation(defaultLocation);
-
-  //     }
-  //   );
-  // }
-
-  // const requestLocationPermission = async () => {
-  //   try {
-  //     if (Platform.OS === 'android') {
-  //       const granted = await PermissionsAndroid.requestMultiple([
-  //         PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-  //         PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION,
-  //       ]);
-
-  //       const fineGranted = granted[PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION] === PermissionsAndroid.RESULTS.GRANTED;
-  //       const coarseGranted = granted[PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION] === PermissionsAndroid.RESULTS.GRANTED;
-
-  //       if (fineGranted || coarseGranted) {
-  //         getCurrentLocation();
-  //       } else {
-  //         Alert.alert(
-  //           'Permission Denied',
-  //           'Please enable location permissions in settings to use this feature.'
-  //         );
-  //         setLocation(defaultLocation);
-  //       }
-  //     } else {
-  //       // iOS or other platforms: attempt location directly (iOS auto-prompts)
-  //       getCurrentLocation();
-  //     }
-  //   } catch (err) {
-  //     console.warn('Permission request error:', err);
-  //     setLocation(defaultLocation);
-  //   }
-  // };
-
-  // useEffect(() => {
-  //   requestLocationPermission();
-  // }, [])
-
   // Error handler for Google Places Autocomplete
   const handleGooglePlacesError = (error: string) => {
     console.warn('Google Places Error:', error);
@@ -208,38 +288,64 @@ const PostRideScreen = ({ navigation, route }: any) => {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.mapPlaceholder}>
-
         <MapView
+          ref={mapRef}
           style={{ flex: 1 }}
-          // onRegionChangeComplete={(region) => {
-          //   console.log('Region changed to:', region);
-          //   // Update the location state with the new region's coordinates
-          //   setLocation({
-          //     latitude: region.latitude,
-          //     longitude: region.longitude,
-          //     latitudeDelta: region.latitudeDelta,
-          //     longitudeDelta: region.longitudeDelta,
-          //   });
-          // }}
-          region={location || defaultLocation}
+          region={calculateMapRegion()}
           showsUserLocation={true}
           showsMyLocationButton={false}
           zoomEnabled={true}
           zoomControlEnabled={true}
-
+          mapType="standard"
+          userInterfaceStyle="light"
         >
-          {location && (
-            <Marker coordinate={location}>
-              <FontAwesome6 name="car-side" size={32} color={'#ffffff'} />
+          {/* Current Location Marker - Blue Dot */}
+          {currentLocation && (
+            <Marker 
+              coordinate={currentLocation}
+              title="Current Location"
+              description="Your current location"
+            >
+              <View style={styles.currentLocationDot} />
             </Marker>
           )}
-          {destinationLocation && (
-            <Marker coordinate={destinationLocation}>
-              <FontAwesome6 name="location-dot" size={32} color={'#00ffcc'} />
+          
+          {/* Pickup Location Marker - Blue */}
+          {source && source !== 'Current Location' && location && (
+            <Marker 
+              coordinate={location}
+              title="Pickup Location"
+              description={source}
+            >
+              <View style={styles.blueMarker}>
+                <FontAwesome6 name="location-dot" size={24} color="#248CFE" />
+              </View>
             </Marker>
+          )}
+          
+          {/* Dropoff Location Marker - Green */}
+          {destinationLocation && (
+            <Marker 
+              coordinate={destinationLocation}
+              title="Drop-off Location"
+              description={destination}
+            >
+              <View style={styles.greenMarker}>
+                <FontAwesome6 name="location-dot" size={24} color="#00CC66" />
+              </View>
+            </Marker>
+          )}
+          
+          {/* Route line between pickup and dropoff */}
+          {source && source !== 'Current Location' && location && destinationLocation && (
+            <Polyline
+              coordinates={[location, destinationLocation]}
+              strokeColor="#248CFE"
+              strokeWidth={3}
+              lineDashPattern={[5, 5]}
+            />
           )}
         </MapView>
-
       </View>
       <KeyboardAvoidingView style={styles.absoluteSheet} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <View style={styles.bottomSheet}>
@@ -255,97 +361,6 @@ const PostRideScreen = ({ navigation, route }: any) => {
             >
               <Text style={styles.touchableText}>{source||"From Pickup Location"}</Text>
             </TouchableOpacity>
-
-            {/* <GooglePlacesAutocomplete
-              placeholder="From (Pickup Location)"
-              listViewDisplayed="auto"
-              predefinedPlaces={[]}
-              currentLocation={true}
-              currentLocationLabel='Current Location'
-              fetchDetails={true}
-              keepResultsAfterBlur={destselect}
-              onPress={(data, details = null) => {
-                console.log(data, details); // Log for debugging
-                setDestselect(false)
-                if (data.description === 'Current Location') {
-                  // Assuming location holds the current coordinates
-                  setLocation({
-                    latitude: location.latitude, // Replace with your current location coordinates
-                    longitude: location.longitude,
-                    latitudeDelta: 0.01,
-                    longitudeDelta: 0.01,
-                  });
-                  setSource(data.description);
-                } else {
-                  setSource(data.description);
-                  if (details && details.geometry && details.geometry.location) {
-                    setLocation({
-                      latitude: details.geometry.location.lat,
-                      longitude: details.geometry.location.lng,
-                      latitudeDelta: 0.01,
-                      longitudeDelta: 0.01,
-                    });
-                  }
-                }
-                Keyboard.dismiss();
-              }}
-              onFail={handleGooglePlacesError}
-              timeout={10000}
-              query={{
-                key: GOOGLE_API_KEY,
-                language: 'en',
-                components: 'country:pk',
-                types: 'establishment|geocode',
-              }}
-              GooglePlacesDetailsQuery={{
-                fields: 'formatted_address,geometry',
-              }}
-              GoogleReverseGeocodingQuery={{
-                rankby: 'distance',
-              }}
-              textInputProps={{
-                value: source ?? '',
-                onChangeText: setSource,
-                placeholderTextColor: COLORS.textSecondary,
-                style: styles.autocompleteInput,
-                autoCorrect: false,
-                autoCapitalize: 'none',
-                 onFocus: () => {
-                  setDestselect(true);
-                },
-              }}
-              styles={{
-                container: { flex: 0 },
-                textInputContainer: styles.autocompleteInputContainer,
-                textInput: styles.autocompleteInput,
-                listView: styles.autocompleteListView,
-                row: styles.autocompleteRow,
-                description: styles.autocompleteDescription,
-                poweredContainer: { display: 'none' },
-              }}
-              enablePoweredByContainer={false}
-              minLength={2}
-              debounce={400}
-              nearbyPlacesAPI="GooglePlacesSearch"
-              GooglePlacesSearchQuery={{
-                rankby: 'distance',
-                type: 'establishment',
-              }}
-              filterReverseGeocodingByTypes={[
-                'locality',
-                'administrative_area_level_3',
-              ]}
-              suppressDefaultStyles={true}
-              returnKeyType="search"
-              enableHighAccuracyLocation={true}
-              disableScroll={true}
-              renderRow={(rowData) => (
-                <View style={styles.rowContainer}>
-                  <Icon name="map-marker" size={20} color={COLORS.accent} />
-                  <Text>{rowData.description}</Text>
-                </View>
-              )}
-            /> */}
           </View>
           {/* Destination */}
           <View style={styles.autocompleteContainer}>
@@ -355,82 +370,6 @@ const PostRideScreen = ({ navigation, route }: any) => {
               }}>
               <Text style={styles.touchableText}>{destination||"Drop-off Location"}</Text>
             </TouchableOpacity>
-
-            {/* <GooglePlacesAutocomplete
-              enableHighAccuracyLocation={true}
-              disableScroll={true}
-              predefinedPlaces={[]}
-              placeholder="To (Drop-off Location)"
-              fetchDetails={true}
-              onPress={(data, details = null) => {
-                setDestination(data.description); // Keep string for input
-                setDestselect(false);
-                if (details && details.geometry && details.geometry.location) {
-                  setDestinationLocation({
-                    latitude: details.geometry.location.lat,
-                    longitude: details.geometry.location.lng,
-                    latitudeDelta: 0.01,
-                    longitudeDelta: 0.01,
-                  });
-                }
-                Keyboard.dismiss();
-              }}
-              onFail={handleGooglePlacesError}
-              timeout={10000} // 10 second timeout
-              query={{
-                key: GOOGLE_API_KEY,
-                language: 'en',
-                components: 'country:pk',
-                types: 'establishment|geocode',
-              }}
-              GooglePlacesDetailsQuery={{
-                fields: 'formatted_address,geometry',
-              }}
-              GoogleReverseGeocodingQuery={{
-                rankby: 'distance',
-              }}
-              textInputProps={{
-                value: destination,
-                onChangeText: setDestination,
-                placeholderTextColor: COLORS.textSecondary,
-                style: styles.autocompleteInput,
-                autoCorrect: false,
-                autoCapitalize: 'none',
-                onFocus: () => {
-                  setDestselect(true);
-                },
-              }}
-              styles={{
-                container: { flex: 0 },
-                textInputContainer: styles.autocompleteInputContainer,
-                textInput: styles.autocompleteInput,
-                listView: styles.autocompleteListView,
-                row: styles.autocompleteRow,
-                description: styles.autocompleteDescription,
-                poweredContainer: { display: 'none' },
-              }}
-              enablePoweredByContainer={false}
-              minLength={2}
-              debounce={400} // Increased debounce time
-              nearbyPlacesAPI="GooglePlacesSearch"
-              GooglePlacesSearchQuery={{
-                rankby: 'distance',
-                type: 'establishment',
-              }}
-              filterReverseGeocodingByTypes={[
-                'locality',
-                'administrative_area_level_3',
-              ]}
-              suppressDefaultStyles={true}
-              keepResultsAfterBlur={destselect}
-              returnKeyType="search"
-              renderRow={(rowData) => (
-                <View style={styles.rowContainer}>
-                  <Icon name="map-marker" size={20} color={COLORS.accent} />
-                  <Text style={styles.autocompleteDescription}>{rowData.description}</Text>
-                </View>
-              )}
-            /> */}
           </View>
           {/* The rest of your form in a ScrollView */}
           <ScrollView
@@ -439,7 +378,6 @@ const PostRideScreen = ({ navigation, route }: any) => {
             bounces={false}
             overScrollMode="never"
             keyboardShouldPersistTaps="always"
-
           >
             {/* ...rest of your form fields... */}
             {/* Example: */}
@@ -597,7 +535,6 @@ const PostRideScreen = ({ navigation, route }: any) => {
               </HelperText>
             ) : null}
 
-
             {/* ... */}
             {/* Your other fields and post button */}
             <Button
@@ -640,7 +577,5 @@ const PostRideScreen = ({ navigation, route }: any) => {
     </SafeAreaView>
   );
 };
-
-
 
 export default PostRideScreen;

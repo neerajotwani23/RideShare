@@ -337,4 +337,36 @@ autocompleteIcon: {
     backgroundColor: COLORS.primary, // Match your app's theme
     gap: 10
   },
+  // Map Marker Styles
+  currentLocationDot: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: '#248CFE',
+    borderWidth: 3,
+    borderColor: '#ffffff',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  blueMarker: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  greenMarker: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
 });
