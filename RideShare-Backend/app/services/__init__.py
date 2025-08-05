@@ -4,14 +4,16 @@ from .ride_service import RideService
 from .ride_request_service import RideRequestService
 from .transaction_service import TransactionService
 from .rating_service import RatingService
-from .payment_service import PaymentService
+from .payment_service import PaymentService  # ✅ NEW
+from .stripe_service import StripeService  # ✅ NEW
 
 __all__ = [
     "UserService",
     "VehicleService",
     "RideService",
-    "RideRequestService", 
+    "RideRequestService",
     "TransactionService",
     "RatingService",
-    "PaymentService"
-] 
+    "PaymentService",  # ✅ NEW
+    "StripeService",  # ✅ NEW
+]

@@ -173,7 +173,7 @@ const FindRideScreen = ({ navigation, route }: any) => {
             overScrollMode="never"
           >
           <View style={styles.form}>
-            <View style={styles.inputContainer}>
+            {/* <View style={styles.inputContainer}>
               <Icon name="map-marker" size={20} color={COLORS.accent} style={styles.inputIcon} />
               <TextInput
                 label="From (Pickup Location)"
@@ -197,7 +197,28 @@ const FindRideScreen = ({ navigation, route }: any) => {
                 outlineColor={COLORS.border}
                 activeOutlineColor={COLORS.secondary}
               />
-            </View>
+            </View> */}
+
+             <View style={styles.autocompleteContainer}>
+            <Icon name="map-marker" size={20} color={COLORS.accent} style={styles.autocompleteIcon} />
+            <TouchableOpacity
+              style={styles.touchableContainer}
+              onPress={() => {
+                navigation.navigate('LocationScreen',{typeoflocation:"Pick up Location"});
+              }}
+            >
+              <Text style={styles.touchableText}>{source||"From Pickup Location"}</Text>
+            </TouchableOpacity>
+          </View>
+          {/* Destination */}
+          <View style={styles.autocompleteContainer}>
+            <Icon name="map-marker-check" size={20} color={COLORS.success} style={styles.autocompleteIcon} />
+            <TouchableOpacity style={styles.touchableContainer}  onPress={() => {
+                navigation.navigate('LocationScreen',{typeoflocation:"Drop-off Location"});
+              }}>
+              <Text style={styles.touchableText}>{destination||"Drop-off Location"}</Text>
+            </TouchableOpacity>
+          </View>
 
             <Text style={styles.sectionTitle}>When do you want to travel?</Text>
             
@@ -751,6 +772,37 @@ const styles = StyleSheet.create({
     fontFamily: 'Montserrat-Medium',
     color: COLORS.secondary,
   },
+    // Autocomplete styles
+autocompleteContainer: {
+  flexDirection: 'row',         // Align children in a row
+  alignItems: 'center',         // Center items vertically
+  marginBottom: 16,
+  position: 'relative',
+  borderColor: '#D3D3D3',       // Light gray color for the border
+  borderWidth: 1,
+  borderRadius: 20,             // Use a number for radius
+  padding: 10,                  // Add padding inside the border
+  backgroundColor: 'white',      // Set background to white for better visibility
+},
+
+touchableContainer: {
+  flex: 1,                      // Allow the TouchableOpacity to fill space
+  padding: 10,                  // Add padding for better touch area
+  justifyContent: 'center',      // Center text vertically
+  marginLeft: 30,               // Add margin to create a gap between the icon and the button
+},
+
+touchableText: {
+  color: COLORS.secondary || 'black', // Ensure text color is set (use a fallback if necessary)
+  fontSize: 16,                 // Set a font size for visibility
+},
+
+autocompleteIcon: {
+  position: 'absolute',
+  left: 16,
+  top: 18,
+  zIndex: 1,
+},
 });
 
 export default FindRideScreen; 

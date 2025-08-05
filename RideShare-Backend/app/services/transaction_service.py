@@ -17,3 +17,6 @@ class TransactionService:
     def get_user_transactions(self, user_id: int, skip: int = 0, limit: int = 10) -> List[Transaction]:
         """Get user transaction history"""
         return self.transaction_repo.get_by_user_id(user_id, skip, limit) 
+    def create_stripe_transaction(self, transaction: schemas.TransactionStripeCreate) -> Transaction:
+        """Create a transaction with Stripe integration"""
+        return self.transaction_repo.create_stripe_transaction(transaction)

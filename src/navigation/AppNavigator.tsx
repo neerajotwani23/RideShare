@@ -64,6 +64,7 @@ function FindRideStack() {
       <Stack.Screen name="DuringRide" component={DuringRideScreen} />
       <Stack.Screen name="RateRide" component={RateRideScreen} />
       <Stack.Screen name="BookingDetails" component={BookingDetailsScreen} />
+      <Stack.Screen name="LocationScreen" component={LocationSelect}/>
     </Stack.Navigator>
   );
 }
@@ -122,7 +123,7 @@ function PassengerTabs() {
     >
       <Tab.Screen 
         name="Find Ride"
-        component={FindRideScreen}
+        component={FindRideStack}
         options={{
           tabBarIcon: ({ color, size }) => <SearchIcon color={color} size={size} />,
         }}

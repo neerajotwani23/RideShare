@@ -1,9 +1,9 @@
 import enum
-from sqlalchemy import Column, Integer, DateTime, ForeignKey, Enum as SQLEnum, Numeric, CheckConstraint
+from sqlalchemy import Column, Integer, DateTime, ForeignKey, Enum as SQLEnum, Numeric, CheckConstraint,String
 from sqlalchemy.orm import relationship, validates
 from sqlalchemy.sql import func
 from .base import Base
-
+from decimal import Decimal
 class TransactionTypeEnum(enum.Enum):
     DEBIT = "debit"
     CREDIT = "credit"
@@ -12,6 +12,7 @@ class Transaction(Base):
     __tablename__ = "transaction"
     
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    stripe_id = Column(String, nullable=True)
     user_id = Column(Integer, ForeignKey("user.id"), nullable=False)
     ride_id = Column(Integer, ForeignKey("ride.id"), nullable=True)
     type = Column(SQLEnum(TransactionTypeEnum), nullable=False)

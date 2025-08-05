@@ -24,6 +24,7 @@ class TransactionController:
     def _setup_routes(self):
         self.router.add_api_route("/", self.create_transaction, methods=["POST"], response_model=schemas.TransactionResponse)
         self.router.add_api_route("/my-transactions", self.get_my_transactions, methods=["GET"], response_model=List[schemas.TransactionResponse])
+        self.router.add_api_route("/stripe", self.create_stripe_transaction, methods=["POST"], response_model=schemas.TransactionResponse)
     
     def create_transaction(
         self,
@@ -46,3 +47,13 @@ class TransactionController:
         """Get current user's transaction history"""
         transaction_service = TransactionService(db)
         return transaction_service.get_user_transactions(current_user.id, skip, limit) 
+    def create_stripe_transaction(
+        self,
+        transaction: schemas.TransactionStripeCreate,
+        current_user: User = Depends(AuthController.get_current_user),
+        db: Session = Depends(get_db)
+    ):
+        """Create a transaction with Stripe integration"""
+        transaction_service = TransactionService(db)
+        transaction.user_id = current_user.id
+        return transaction_service.create_stripe_transaction(transaction)

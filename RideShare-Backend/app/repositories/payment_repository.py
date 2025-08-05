@@ -34,3 +34,6 @@ class PaymentRepository:
         return self.db.query(Payment).filter(
             (Payment.from_user_id == user_id) | (Payment.to_user_id == user_id)
         ).all() 
+
+# app/repositories/payment_repository.py
+

@@ -13,7 +13,8 @@ from .controllers import (
     RideRequestController,
     TransactionController,
     RatingController,
-    PaymentController
+    PaymentController,
+    StripeController
 )
 
 # Database dependency
@@ -55,6 +56,7 @@ ride_request_controller = RideRequestController()
 transaction_controller = TransactionController()
 rating_controller = RatingController()
 payment_controller = PaymentController()
+stripe_controller = StripeController()
 
 # Include all routers
 app.include_router(auth_controller.router)
@@ -65,6 +67,7 @@ app.include_router(ride_request_controller.router)
 app.include_router(transaction_controller.router)
 app.include_router(rating_controller.router)
 app.include_router(payment_controller.router)
+app.include_router(stripe_controller.router)
 
 @app.get("/")
 def read_root():

@@ -43,3 +43,6 @@ class PaymentController:
         """Get current user's payments (sent and received)"""
         payment_service = PaymentService(db)
         return payment_service.get_user_payments(current_user.id) 
+
+# app/controllers/payment_controller.py
+

@@ -6,6 +6,7 @@ from .ride_request_controller import RideRequestController
 from .transaction_controller import TransactionController
 from .rating_controller import RatingController
 from .payment_controller import PaymentController
+from .stripe_controller import StripeController
 
 __all__ = [
     "AuthController",
@@ -15,5 +16,6 @@ __all__ = [
     "RideRequestController",
     "TransactionController", 
     "RatingController",
-    "PaymentController"
+    "PaymentController",
+    "StripeController"
 ] 

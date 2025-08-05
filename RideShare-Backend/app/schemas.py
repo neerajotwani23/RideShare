@@ -226,6 +226,16 @@ class TransactionCreate(TransactionBase):
     user_id: Optional[int] = None  # Will be set by controller
     ride_id: Optional[int] = None
 
+class TransactionStripeCreate(TransactionBase):
+    stripe_id: Optional[str] = None  # For Stripe transactions
+    user_id: Optional[int] = None  # Will be set by controller
+    ride_id: Optional[int] = None
+
+    @validator('amount')
+    def validate_amount(cls, v):
+        if v <= 0:
+            raise ValueError('Amount must be positive')
+        return round(v, 2)
 class TransactionResponse(TransactionBase):
     id: int
     user_id: int

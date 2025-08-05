@@ -5,14 +5,96 @@ import { WalletIcon, CarIcon, RefreshIcon, CalendarIcon, AddIcon } from '../../c
 import { COLORS } from '../../constants/colors';
 import { useApp } from '../../context/AppContext';
 import { useOptimizedNavigationSync } from '../../hooks/useOptimizedNavigationSync';
+import { StripeProvider,usePaymentSheet } from '@stripe/stripe-react-native';
+
+import { Stripe_PublishableKey,ENV_CONFIG } from '../../config/env';
+
+import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 
 const WalletScreen = () => {
   // Navigation sync hook
   useOptimizedNavigationSync();
+  const [ready, setReady] = useState(true);
+  const [stripe_id, setStripeId] = useState<string | null>(null);
+  const [isPaymentLoading, setIsPaymentLoading] = useState(false);
+  const { initPaymentSheet, presentPaymentSheet,loading } = usePaymentSheet();
+ 
+// ...existing code...
+const fetchStripeConfig = async () => {
+  try {
+    const response = await axios.post(`${ENV_CONFIG.API_BASE_URL}/stripe/initiate`, null, {
+      params: {
+        amount: Number(addAmount) * 100, // Convert to cents for Stripe
+        currency: 'usd'
+      }
+    });
+    
+    // Return the data from the response
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching Stripe config:', error);
+    Alert.alert('Error', 'Failed to initialize payment. Please try again.');
+    throw error;
+  }
+};
+ const Resord_Transaction = async (type:string,amount:string,stripe_id:string | null,user_id:string,ride_id= null) => {
+      try{
+        const Token = await AsyncStorage.getItem('accessToken');
+        await axios.post(`${ENV_CONFIG.API_BASE_URL}/transactions/stripe`,{
+          type,
+          amount,
+          stripe_id,
+          user_id,
+          ride_id
+        },{
+          headers:{
+            Authorization: `Bearer ${Token}`
+          }
+        })
+      }catch (error){
+        Alert.alert('Error', 'Failed to record transaction. Please try again later.');
+      }
+
+    }
+  const initializePaymentSheet = async () => {
+    try {
+      setIsPaymentLoading(true);
+      const {paymentIntent, ephemeralKey, customer} = await fetchStripeConfig();
+      setStripeId(customer);
+      const { error } = await initPaymentSheet({
+        paymentIntentClientSecret: paymentIntent,
+        customerEphemeralKeySecret: ephemeralKey,
+        customerId: customer,
+        merchantDisplayName: 'RideShare',
+        allowsDelayedPaymentMethods: true,
+        returnURL: 'stripe-example://stripe-redirect',
+      });
+      if (error){
+        Alert.alert(`Error Code: ${error.code}, Message: ${error.message}`);
+        setIsPaymentLoading(false);
+        return false;
+      }else{
+        console.log(`Payment Intent: ${paymentIntent}`);
+        console.log(`Ephemeral Key: ${ephemeralKey}`);  
+        console.log(`Customer ID: ${customer}`);
+        setReady(true);
+        setIsPaymentLoading(false);
+        return true;
+      }
+    } catch (error) {
+      console.error('Payment sheet initialization error:', error);
+      setIsPaymentLoading(false);
+      return false;
+    }
+  };
+
   
   const [addAmount, setAddAmount] = useState('');
   const { 
-    walletBalance, 
+    walletBalance,
+    userProfile, 
     transactions, 
     addMoneyToWallet, 
     refreshWalletBalance, 
@@ -27,6 +109,7 @@ const WalletScreen = () => {
   }, []);
 
   const handleAdd = async () => {
+    // Validation
     const amt = parseFloat(addAmount);
     if (isNaN(amt) || amt <= 0) {
       Alert.alert('Invalid Amount', 'Please enter a valid amount greater than 0.');
@@ -34,11 +117,28 @@ const WalletScreen = () => {
     }
 
     try {
-      await addMoneyToWallet(amt);
-      setAddAmount('');
-      Alert.alert('Success', `Rs. ${amt.toFixed(2)} has been added to your wallet.`);
-    } catch (error: any) {
-      Alert.alert('Error', error.message || 'Failed to add money to wallet.');
+      // Initialize payment sheet first
+      const isInitialized = await initializePaymentSheet();
+      
+      if (!isInitialized) {
+        return; // Error already shown in initializePaymentSheet
+      }
+
+      // Present payment sheet
+      const {error} = await presentPaymentSheet();
+
+      if (error) {
+        Alert.alert(`Error Code: ${error.code}, Message: ${error.message}`);
+      } else {
+        Alert.alert('Success', 'Payment successful! Money added to your wallet.');
+        refreshWalletBalance();
+        Resord_Transaction('debit',addAmount,stripe_id,userProfile.id);
+        setAddAmount('');
+        setReady(false);
+      }
+    } catch (error) {
+      console.error('Payment error:', error);
+      Alert.alert('Error', 'Payment failed. Please try again.');
     }
   };
 
@@ -107,6 +207,7 @@ const WalletScreen = () => {
       </Card>
 
         {/* Add Money Section */}
+
       <Card style={styles.addMoneyCard}>
           <Card.Content style={styles.addMoneyContent}>
             <Text style={styles.sectionTitle}>Add Money</Text>
@@ -122,17 +223,19 @@ const WalletScreen = () => {
                 activeOutlineColor={COLORS.accent}
                 theme={{ roundness: 12 }}
           />
+         <StripeProvider publishableKey={Stripe_PublishableKey}> 
           <Button 
             mode="contained" 
             onPress={handleAdd} 
             style={styles.addButton}
                 contentStyle={styles.buttonContent}
                 labelStyle={styles.buttonLabel}
-                disabled={isLoading || !addAmount.trim()}
-                loading={isLoading}
+                
+                loading={isPaymentLoading}
           >
-                Add
+                {isPaymentLoading ? 'Initializing...' : 'Add'}
           </Button>
+          </StripeProvider>
             </View>
         </Card.Content>
       </Card>
@@ -196,6 +299,17 @@ const WalletScreen = () => {
           )}
         </View>
         </ScrollView>
+
+      {/* Loading Overlay for Payment Initialization */}
+      {isPaymentLoading && (
+        <View style={styles.loadingOverlay}>
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={COLORS.accent} />
+            <Text style={styles.loadingText}>Initializing Payment...</Text>
+            <Text style={styles.loadingSubtext}>Please wait while we prepare your payment</Text>
+          </View>
+        </View>
+      )}
     </SafeAreaView>
   );
 };
@@ -203,6 +317,7 @@ const WalletScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    marginTop: 10,
     backgroundColor: COLORS.primary,
   },
   scrollView: {
@@ -415,6 +530,46 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontFamily: 'Montserrat-Regular',
     color: COLORS.textSecondary,
+  },
+  loadingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000,
+  },
+  loadingContainer: {
+    backgroundColor: COLORS.primary,
+    borderRadius: 16,
+    padding: 32,
+    alignItems: 'center',
+    marginHorizontal: 40,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  loadingText: {
+    fontSize: 18,
+    fontFamily: 'Montserrat-Bold',
+    color: COLORS.secondary,
+    marginTop: 16,
+    textAlign: 'center',
+  },
+  loadingSubtext: {
+    fontSize: 14,
+    fontFamily: 'Montserrat-Regular',
+    color: COLORS.textSecondary,
+    marginTop: 8,
+    textAlign: 'center',
   },
 });
 
