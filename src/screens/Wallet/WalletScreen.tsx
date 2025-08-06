@@ -76,9 +76,7 @@ const fetchStripeConfig = async () => {
         setIsPaymentLoading(false);
         return false;
       }else{
-        console.log(`Payment Intent: ${paymentIntent}`);
-        console.log(`Ephemeral Key: ${ephemeralKey}`);  
-        console.log(`Customer ID: ${customer}`);
+      
         setReady(true);
         setIsPaymentLoading(false);
         return true;
@@ -131,10 +129,12 @@ const fetchStripeConfig = async () => {
         Alert.alert(`Error Code: ${error.code}, Message: ${error.message}`);
       } else {
         Alert.alert('Success', 'Payment successful! Money added to your wallet.');
-        refreshWalletBalance();
-        Resord_Transaction('debit',addAmount,stripe_id,userProfile.id);
+        
+        Resord_Transaction('credit',addAmount,stripe_id,userProfile.id);
         setAddAmount('');
         setReady(false);
+        refreshWalletBalance();
+        refreshTransactions();
       }
     } catch (error) {
       console.error('Payment error:', error);
@@ -278,7 +278,7 @@ const fetchStripeConfig = async () => {
                     <View style={styles.transactionInfo}>
                       <Text style={styles.transactionDesc}>{transaction.description}</Text>
                       <Text style={styles.transactionDate}>
-                        {formatDate(transaction.created_at)}
+                        {formatDate(transaction.datetime)}
                       </Text>
                     </View>
                   </View>

@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { View, StyleSheet, TouchableOpacity, Dimensions, Platform, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { api } from '../../services/api';
 import { useOptimizedNavigationSync } from '../../hooks/useOptimizedNavigationSync';
-
+import { useApp } from '../../context/AppContext';
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 import { Text, Card, Divider, Chip, TextInput, Switch } from 'react-native-paper';
 import Icon from '../../components/Icon';
@@ -47,8 +47,7 @@ const FindRideScreen = ({ navigation, route }: any) => {
   // Navigation sync hook
   useOptimizedNavigationSync();
   
-  const [source, setSource] = useState('');
-  const [destination, setDestination] = useState('');
+ 
   const [rideType, setRideType] = useState<'now' | 'schedule'>('now');
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -58,6 +57,60 @@ const FindRideScreen = ({ navigation, route }: any) => {
   const [music, setMusic] = useState(false);
   const [smoking, setSmoking] = useState(false);
 
+  const { createRide, isLoading, location, setLocation, source,setSource,destination, setDestination,destinationLocation, defaultLocation, getCurrentLocation } = useApp();
+  
+    // Calculate map region to show all markers
+    const calculateMapRegion = useCallback(() => {
+      const markers = [];
+      
+      // Add current location
+      if (location) {
+        markers.push(location);
+      }
+      
+      // Add pickup location (if different from current location)
+      if (source && source !== 'Current Location' && location) {
+        markers.push(location);
+      }
+      
+      // Add dropoff location
+      if (destinationLocation) {
+        markers.push(destinationLocation);
+      }
+      
+      if (markers.length === 0) {
+        return location || defaultLocation;
+      }
+      
+      if (markers.length === 1) {
+        return {
+          ...markers[0],
+          latitudeDelta: 0.01,
+          longitudeDelta: 0.01,
+        };
+      }
+      
+      // Calculate bounds for multiple markers
+      const latitudes = markers.map(marker => marker.latitude);
+      const longitudes = markers.map(marker => marker.longitude);
+      
+      const minLat = Math.min(...latitudes);
+      const maxLat = Math.max(...latitudes);
+      const minLng = Math.min(...longitudes);
+      const maxLng = Math.max(...longitudes);
+      
+      const centerLat = (minLat + maxLat) / 2;
+      const centerLng = (minLng + maxLng) / 2;
+      const deltaLat = (maxLat - minLat) * 1.5; // Add 50% padding
+      const deltaLng = (maxLng - minLng) * 1.5;
+      
+      return {
+        latitude: centerLat,
+        longitude: centerLng,
+        latitudeDelta: Math.max(deltaLat, 0.01),
+        longitudeDelta: Math.max(deltaLng, 0.01),
+      };
+    }, [location, source, destinationLocation, defaultLocation]);
   // Handle parameters passed from chatbot
   useEffect(() => {
     if (route?.params?.searchParams) {
