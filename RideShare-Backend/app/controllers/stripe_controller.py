@@ -22,3 +22,6 @@ class StripeController:
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=str(e)
             )
+
+# Create router instance
+stripe_controller = StripeController()

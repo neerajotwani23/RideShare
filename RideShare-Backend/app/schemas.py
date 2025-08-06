@@ -14,30 +14,30 @@ class GenderEnum(str, Enum):
     FEMALE = "FEMALE"
 
 class TransactionType(str, Enum):
-    DEBIT = "debit"
-    CREDIT = "credit"
+    DEBIT = "DEBIT"
+    CREDIT = "CREDIT"
 
 class PaymentType(str, Enum):
-    CASH = "cash"
-    WALLET = "wallet"
+    CASH = "CASH"
+    WALLET = "WALLET"
 
 class RideStatus(str, Enum):
-    PENDING = "pending"
-    ACTIVE = "active"
-    CONFIRMED = "confirmed"
-    COMPLETED = "completed"
-    CANCELLED = "cancelled"
+    PENDING = "PENDING"
+    ACTIVE = "ACTIVE"
+    CONFIRMED = "CONFIRMED"
+    COMPLETED = "COMPLETED"
+    CANCELLED = "CANCELLED"
 
 class RequestStatus(str, Enum):
-    PENDING = "pending"
-    ACCEPTED = "accepted"
-    REJECTED = "rejected"
-    CANCELLED = "cancelled"
+    PENDING = "PENDING"
+    ACCEPTED = "ACCEPTED"
+    REJECTED = "REJECTED"
+    CANCELLED = "CANCELLED"
 
 class GenderPreference(str, Enum):
-    ANY = "any"
-    MALE = "male"
-    FEMALE = "female"
+    ANY = "ANY"
+    MALE = "MALE"
+    FEMALE = "FEMALE"
 
 # ============== USER SCHEMAS ==============
 class UserBase(BaseModel):
@@ -51,11 +51,15 @@ class UserBase(BaseModel):
     bio: Optional[str] = None
     driving_license: Optional[str] = None
     gender: Optional[GenderEnum] = None
+    google_id: Optional[str] = None
+    auth_provider: Optional[str] = "email"
 
 class UserCreate(UserBase):
     password: Optional[str] = None  # Optional for Google users
     user_type: UserTypeEnum
     gender: Optional[GenderEnum] = None  # Optional for Google users
+    google_id: Optional[str] = None  # For Google users
+    auth_provider: Optional[str] = "email"  # "email", "google", or "both"
     
     @validator('gender')
     def validate_gender(cls, v):
@@ -74,6 +78,8 @@ class UserUpdate(BaseModel):
     bio: Optional[str] = None
     driving_license: Optional[str] = None
     gender: Optional[GenderEnum] = None
+    google_id: Optional[str] = None
+    auth_provider: Optional[str] = None
 
 class UserLogin(BaseModel):
     email: EmailStr

@@ -79,3 +79,6 @@ class VehicleController:
             raise HTTPException(status_code=404, detail="Vehicle not found")
         
         return vehicle_service.delete_vehicle(vehicle_id) 
+
+# Create router instance
+vehicle_controller = VehicleController()

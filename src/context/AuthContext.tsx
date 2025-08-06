@@ -20,6 +20,7 @@ interface AuthContextType {
   loginWithGoogle: () => Promise<void>;
   signupWithGoogle: (role: 'driver' | 'passenger') => Promise<any>;
   selectRole: (role: 'driver' | 'passenger') => void;
+  setRoleFromInitialization: (role: 'driver' | 'passenger') => void;
   selectRoleForSignup: (role: 'driver' | 'passenger') => void;
   storePendingSignupData: (data: any) => void;
   completeSignup: (role: 'driver' | 'passenger') => Promise<any>;
@@ -44,7 +45,49 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isGoogleSignupFlow, setIsGoogleSignupFlow] = useState(false);
   const [pendingSignupData, setPendingSignupData] = useState<any>(null);
+
+  // Helper function to check if vehicle details are actually complete
+  const checkVehicleDetailsComplete = async (userData: any): Promise<boolean> => {
+    try {
+      // If user is not a driver, vehicle details are not required
+      if (userData.user_type?.toLowerCase() !== 'driver') {
+        return true;
+      }
+
+      // Check if user has driving license
+      const hasDrivingLicense = !!(userData.driving_license && userData.driving_license.trim());
+      
+      // Check if user has vehicles with essential details
+      let hasCompleteVehicle = false;
+      try {
+        const vehicles = await api.getMyVehicles();
+        if (vehicles && vehicles.length > 0) {
+          const vehicle = vehicles[0]; // Check the first vehicle
+          const hasMake = !!(vehicle.name_make && vehicle.name_make.trim());
+          const hasPlate = !!(vehicle.no_plate && vehicle.no_plate.trim());
+          hasCompleteVehicle = hasMake && hasPlate;
+        }
+      } catch (error) {
+        console.log('Could not fetch vehicles, assuming incomplete:', error);
+      }
+
+      const isComplete = hasDrivingLicense && hasCompleteVehicle;
+      
+      console.log('🔍 Vehicle details check:', {
+        hasDrivingLicense,
+        hasCompleteVehicle,
+        isComplete,
+        userType: userData.user_type
+      });
+
+      return isComplete;
+    } catch (error) {
+      console.error('Error checking vehicle details:', error);
+      return false;
+    }
+  };
 
   useEffect(() => {
     const checkAuthState = async () => {
@@ -52,13 +95,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       try {
         const isAuth = await tokenManager.isAuthenticated();
         const userData = await AsyncStorage.getItem('user');
-        const vehicleDetails = await AsyncStorage.getItem('vehicleDetailsComplete');
         
         if (isAuth && userData) {
           const parsedUser = JSON.parse(userData);
           setUser(parsedUser);
           setIsAuthenticated(true);
-          setCurrentRole(parsedUser.user_type);
+          setCurrentRole(parsedUser.user_type?.toLowerCase());
           setRoleSelected(true);
           
           // Check profile setup completion based on actual user data
@@ -67,8 +109,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const hasProfilePicture = !!(parsedUser.profile_picture && parsedUser.profile_picture.trim());
           const isProfileComplete = hasBio || hasProfilePicture;
           
-          // Vehicle details completion
-          const isVehicleComplete = vehicleDetails === 'true';
+          // Check vehicle details completion using the helper function
+          const isVehicleComplete = await checkVehicleDetailsComplete(parsedUser);
           
           setProfileSetupComplete(isProfileComplete);
           setVehicleDetailsComplete(isVehicleComplete);
@@ -110,19 +152,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await AsyncStorage.setItem('user', JSON.stringify(data.user));
       setUser(data.user);
       setIsAuthenticated(true);
-      setCurrentRole(data.user.user_type);
+      setCurrentRole(data.user.user_type?.toLowerCase());
       setRoleSelected(true);
       
       // Check if user has completed onboarding based on actual data
-      const vehicleDetails = await AsyncStorage.getItem('vehicleDetailsComplete');
-      
       // Profile is complete if user has bio OR profile picture
       const hasBio = !!(data.user.bio && data.user.bio.trim());
       const hasProfilePicture = !!(data.user.profile_picture && data.user.profile_picture.trim());
       const isProfileComplete = hasBio || hasProfilePicture;
       
-      // Vehicle details completion
-      const isVehicleComplete = vehicleDetails === 'true';
+      // Check vehicle details completion using the helper function
+      const isVehicleComplete = await checkVehicleDetailsComplete(data.user);
       
       console.log('📊 User state:', {
         hasBio,
@@ -184,19 +224,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         await AsyncStorage.setItem('user', JSON.stringify(data.user));
         setUser(data.user);
         setIsAuthenticated(true);
-        setCurrentRole(data.user.user_type);
+        setCurrentRole(data.user.user_type?.toLowerCase());
         setRoleSelected(true);
         
         // Check if user has completed onboarding based on actual data
-        const vehicleDetails = await AsyncStorage.getItem('vehicleDetailsComplete');
-        
         // Profile is complete if user has bio OR profile picture
         const hasBio = !!(data.user.bio && data.user.bio.trim());
         const hasProfilePicture = !!(data.user.profile_picture && data.user.profile_picture.trim());
         const isProfileComplete = hasBio || hasProfilePicture;
         
-        // Vehicle details completion
-        const isVehicleComplete = vehicleDetails === 'true';
+        // Check vehicle details completion using the helper function
+        const isVehicleComplete = await checkVehicleDetailsComplete(data.user);
         
         setProfileSetupComplete(isProfileComplete);
         setVehicleDetailsComplete(isVehicleComplete);
@@ -206,26 +244,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setTimeout(() => {
         setIsProcessing(false);
       }, 2000);
-    } catch (error: any) {
-      setIsProcessing(false);
+    } catch (error) {
+      console.error('❌ Google login failed:', error);
       
-      // Check if user requires signup completion
+      // If this is a signup flow (user not found), set the flag
       if (error.message === 'USER_REQUIRES_SIGNUP') {
-        // Store Google data for signup
-        const googleUser = await GoogleSignInService.getCurrentUser();
-        if (googleUser) {
-          const googleData = {
-            email: googleUser.email,
-            google_id: googleUser.id,
-            first_name: googleUser.givenName || '',
-            last_name: googleUser.familyName || '',
-            profile_picture: googleUser.photo,
-            auth_provider: 'google'
-          };
-          setPendingSignupData(googleData);
-        }
-        throw new Error('USER_REQUIRES_SIGNUP');
+        console.log('🎯 Setting Google signup flow flag');
+        setIsGoogleSignupFlow(true);
       }
+      
+      // Only clear processing state, keep other states to prevent navigation conflicts
+      setIsProcessing(false);
       
       throw error;
     } finally {
@@ -269,6 +298,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await AsyncStorage.removeItem('vehicleDetailsComplete');
   };
 
+  const setRoleFromInitialization = (role: 'driver' | 'passenger') => {
+    console.log('🎭 AuthContext: Setting role from initialization:', role);
+    setRoleSelected(true);
+    setCurrentRole(role);
+    // Don't reset completion status during initialization
+  };
+
   const selectRoleForSignup = (role: 'driver' | 'passenger') => {
     setSelectedRoleForSignup(role);
   };
@@ -302,6 +338,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const completeProfileSetup = async () => {
+    console.log('✅ AuthContext: Completing profile setup');
     setProfileSetupComplete(true);
     // No need to store flag since we check actual user data
   };
@@ -312,8 +349,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const completeVehicleDetails = async () => {
+    console.log('🚗 AuthContext: Completing vehicle details');
     setVehicleDetailsComplete(true);
     await AsyncStorage.setItem('vehicleDetailsComplete', 'true');
+    
+    // Refresh user data to ensure we have the latest vehicle information
+    try {
+      const updatedUser = await api.getCurrentUser();
+      await AsyncStorage.setItem('user', JSON.stringify(updatedUser));
+      setUser(updatedUser);
+      console.log('✅ User data refreshed after completing vehicle details');
+    } catch (error) {
+      console.error('❌ Failed to refresh user data after completing vehicle details:', error);
+    }
+  };
+
+  const clearAuthStateForSignup = () => {
+    setIsAuthenticated(false);
+    setRoleSelected(false);
+    setProfileSetupComplete(false);
+    setVehicleDetailsComplete(false);
+    setCurrentRole(null);
+    setUser(null);
+    setIsProcessing(false);
+    // DON'T clear isGoogleSignupFlow here - keep it true to prevent navigation conflicts
+    // setIsGoogleSignupFlow(false);
+  };
+  
+  const clearGoogleSignupFlow = () => {
+    setIsGoogleSignupFlow(false);
   };
 
   const skipProfileSetup = async () => {
@@ -336,11 +400,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     // If switching to driver, check if vehicle details are complete
     if (role === 'driver') {
-      const vehicleDetails = await AsyncStorage.getItem('vehicleDetailsComplete');
-      if (vehicleDetails !== 'true') {
-        // Driver needs to complete vehicle details
-        setVehicleDetailsComplete(false);
-        await AsyncStorage.removeItem('vehicleDetailsComplete');
+      const updatedUserData = user ? { ...user as any, user_type: role.toUpperCase() } : null;
+      if (updatedUserData) {
+        const isVehicleComplete = await checkVehicleDetailsComplete(updatedUserData);
+        setVehicleDetailsComplete(isVehicleComplete);
+        
+        if (isVehicleComplete) {
+          await AsyncStorage.setItem('vehicleDetailsComplete', 'true');
+        } else {
+          await AsyncStorage.removeItem('vehicleDetailsComplete');
+        }
       }
     }
   };
@@ -382,12 +451,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       user,
       isLoading,
       isProcessing,
+      isGoogleSignupFlow,
       pendingSignupData,
       login, 
       signup, 
       loginWithGoogle,
       signupWithGoogle,
       selectRole,
+      setRoleFromInitialization,
       selectRoleForSignup,
       storePendingSignupData,
       completeSignup,
@@ -397,7 +468,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       isFirstTimeUser,
       updateCurrentRole,
       logout,
-      setProcessing: setIsProcessing
+      setProcessing: setIsProcessing,
+      clearAuthStateForSignup,
+      clearGoogleSignupFlow
     }}>
       {children}
     </AuthContext.Provider>

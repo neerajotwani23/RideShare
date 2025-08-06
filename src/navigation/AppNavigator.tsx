@@ -22,6 +22,7 @@ import ChangePasswordScreen from '../screens/Profile/ChangePasswordScreen';
 
 // Main App Screens
 import HomeScreen from '../screens/Home/HomeScreen';
+import MainApp from '../screens/MainApp';
 import PostRideScreen from '../screens/Ride/PostRideScreen';
 import FindRideScreen from '../screens/Ride/FindRideScreen';
 import RideDetailsScreen from '../screens/Ride/RideDetailsScreen';
@@ -252,17 +253,18 @@ const WalletIcon = ({ color, size }: { color: string; size: number }) => (
 
 // Main App Navigator
 const AppNavigator = () => {
-  const { isAuthenticated, roleSelected, profileSetupComplete, vehicleDetailsComplete, currentRole, isProcessing } = useAuth();
+  const { isAuthenticated, roleSelected, profileSetupComplete, vehicleDetailsComplete, currentRole, isProcessing, isGoogleSignupFlow } = useAuth();
 
-  // Debug logging
-  console.log('🧭 Navigation state:', {
-    isAuthenticated,
-    roleSelected,
-    profileSetupComplete,
-    vehicleDetailsComplete,
-    currentRole,
-    isProcessing
-  });
+  // Debug logging for development (can be removed in production)
+  // console.log('🧭 Navigation state:', {
+  //   isAuthenticated,
+  //   roleSelected,
+  //   profileSetupComplete,
+  //   vehicleDetailsComplete,
+  //   currentRole,
+  //   isProcessing,
+  //   isGoogleSignupFlow
+  // });
 
   return (
     <NavigationContainer>
@@ -270,8 +272,8 @@ const AppNavigator = () => {
         {isProcessing ? (
           // Processing Screen (shown after login while determining navigation)
           <Stack.Screen name="Processing" component={ProcessingScreen} />
-        ) : !isAuthenticated ? (
-          // Auth Flow
+        ) : !isAuthenticated || isGoogleSignupFlow ? (
+          // Auth Flow (including Google signup flow)
           <>
             <Stack.Screen name="Splash" component={SplashScreen} />
             <Stack.Screen name="Login" component={LoginScreen} />
@@ -295,6 +297,7 @@ const AppNavigator = () => {
         ) : (
           // Main App
           <>
+            <Stack.Screen name="MainApp" component={MainApp} />
             {currentRole === 'passenger' ? (
               <Stack.Screen name="PassengerTabs" component={PassengerTabs} />
             ) : (

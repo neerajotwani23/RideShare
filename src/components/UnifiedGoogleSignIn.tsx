@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   TouchableOpacity,
   Text,
@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { GoogleSignInService } from '../services/googleSignInService';
-import { GOOGLE_CONFIG } from '../config/googleConfig';
+import { useAuth } from '../context/AuthContext';
 
 interface UnifiedGoogleSignInProps {
   onSuccess?: (user: any) => void;
@@ -17,7 +17,7 @@ interface UnifiedGoogleSignInProps {
   style?: any;
   textStyle?: any;
   navigation?: any;
-  isOnSignupScreen?: boolean; // Add this prop to differentiate behavior
+  isOnSignupScreen?: boolean;
 }
 
 const UnifiedGoogleSignIn: React.FC<UnifiedGoogleSignInProps> = ({
@@ -29,39 +29,36 @@ const UnifiedGoogleSignIn: React.FC<UnifiedGoogleSignInProps> = ({
   isOnSignupScreen = false,
 }) => {
   const [isLoading, setIsLoading] = useState(false);
-  const [hasAttempted, setHasAttempted] = useState(false);
-
-  // Reset attempt flag when component mounts or screen changes
-  useEffect(() => {
-    setHasAttempted(false);
-  }, [isOnSignupScreen]);
+  const { loginWithGoogle } = useAuth();
 
   const handleGoogleSignIn = async () => {
-    if (isLoading || hasAttempted) {
-      console.log('🚫 Google Sign-In already in progress or attempted');
+    if (isLoading) {
+      console.log('🚫 Google Sign-In already in progress');
       return;
     }
     
     console.log('🚀 Starting Google Sign-In process...');
     setIsLoading(true);
-    setHasAttempted(true);
     
     try {
-      console.log('📞 Calling Google Sign-In service...');
+      // Validate configuration first
+      if (!GoogleSignInService.validateConfiguration()) {
+        throw new Error('Google Sign-In is not properly configured');
+      }
       
-      // Call Google Sign-In service directly
-      const data = await GoogleSignInService.loginWithGoogle();
+      // Login with Google (this handles sign-in, token, and backend call internally)
+      console.log('🚀 Starting Google login process...');
+      const response = await loginWithGoogle();
+      console.log('📥 Backend response:', response);
       
-      console.log('✅ Google Sign-In successful:', data);
-      
+      // If successful, call onSuccess
       if (onSuccess) {
-        onSuccess(data);
+        onSuccess(response);
       }
       
     } catch (error: any) {
       console.error('❌ Google Sign-In error:', error);
       
-      // Check if error indicates user doesn't exist or requires signup
       const errorMessage = error.message || 'Google Sign-In failed';
       console.log('🔍 Error message:', errorMessage);
 
@@ -70,39 +67,68 @@ const UnifiedGoogleSignIn: React.FC<UnifiedGoogleSignInProps> = ({
           errorMessage.includes('does not exist') ||
           errorMessage.includes('User not found') ||
           errorMessage.includes('Invalid credentials')) {
-        // User doesn't exist or requires signup completion
-        if (isOnSignupScreen) {
-          // If we're already on signup screen, just show an error
-          console.log('ℹ️ Already on signup screen - user needs to complete the form');
-          if (onError) {
-            onError('Please complete the signup form with your details');
-          } else {
-            Alert.alert('Signup Required', 'Please complete the signup form with your details');
+        
+        // User doesn't exist - navigate to signup with Google data
+        console.log('🔄 New user detected - navigating to signup screen');
+        
+        if (navigation) {
+          try {
+            // Get Google user data for signup pre-filling before signing out
+            const googleUser = await GoogleSignInService.getCurrentUser();
+            let googleUserData = null;
+            
+            if (googleUser) {
+              googleUserData = {
+                id: googleUser.id,
+                name: googleUser.name,
+                email: googleUser.email,
+                photo: googleUser.photo,
+                familyName: googleUser.familyName,
+                givenName: googleUser.givenName,
+                auth_provider: 'google',
+              };
+              console.log('📋 Google data for signup pre-filling:', googleUserData);
+            }
+            
+            // Navigate to signup with Google data first, then sign out
+            if (googleUserData) {
+              navigation.reset({
+                index: 0,
+                routes: [{ name: 'Signup', params: { googleUserData } }],
+              });
+            } else {
+              navigation.reset({
+                index: 0,
+                routes: [{ name: 'Signup' }],
+              });
+            }
+            
+            // Sign out from Google after navigation to prevent state conflicts
+            setTimeout(async () => {
+              try {
+                await GoogleSignInService.signOut();
+                console.log('✅ Signed out from Google after signup navigation');
+              } catch (signOutError) {
+                console.log('ℹ️ Sign out error (continuing anyway):', signOutError);
+              }
+            }, 1000);
+            
+          } catch (getUserError) {
+            console.error('❌ Error getting Google user data:', getUserError);
+            // Navigate to signup first, then sign out
+            navigation.navigate('Signup');
+            
+            setTimeout(async () => {
+              try {
+                await GoogleSignInService.signOut();
+                console.log('✅ Signed out from Google after error');
+              } catch (signOutError) {
+                console.log('ℹ️ Sign out error:', signOutError);
+              }
+            }, 1000);
           }
         } else {
-          // Navigate to signup screen
-          console.log('🔄 New user detected - navigating to signup screen');
-          if (navigation) {
-            // Get Google user data for signup
-            try {
-              const userInfo = await GoogleSignin.getCurrentUser();
-              const googleUserData = {
-                id: (userInfo as any).user?.id || (userInfo as any).id || '',
-                name: (userInfo as any).user?.name || (userInfo as any).name || '',
-                email: (userInfo as any).user?.email || (userInfo as any).email || '',
-                photo: (userInfo as any).user?.photo || (userInfo as any).photo || undefined,
-                familyName: (userInfo as any).user?.familyName || (userInfo as any).familyName || undefined,
-                givenName: (userInfo as any).user?.givenName || (userInfo as any).givenName || undefined,
-              };
-              console.log('📋 Pre-filling signup form with Google data');
-              navigation.navigate('Signup', { googleUserData });
-            } catch (getUserError) {
-              console.error('❌ Error getting Google user data:', getUserError);
-              navigation.navigate('Signup');
-            }
-          } else {
-            Alert.alert('Error', 'Navigation not available');
-          }
+          Alert.alert('Error', 'Navigation not available');
         }
       } else if (errorMessage.includes('Google account mismatch') ||
                  errorMessage.includes('already linked to another email')) {
@@ -112,6 +138,25 @@ const UnifiedGoogleSignIn: React.FC<UnifiedGoogleSignInProps> = ({
           onError(errorMessage);
         } else {
           Alert.alert('Account Linking Error', errorMessage);
+        }
+      } else if (errorMessage.includes('cancelled by user')) {
+        // User cancelled the sign-in - don't show error
+        console.log('🚫 User cancelled Google Sign-In');
+      } else if (errorMessage.includes('Google Play Services not available')) {
+        // Play Services issue
+        console.log('📱 Google Play Services issue:', errorMessage);
+        if (onError) {
+          onError('Please update Google Play Services to use Google Sign-In');
+        } else {
+          Alert.alert('Google Play Services Required', 'Please update Google Play Services to use Google Sign-In');
+        }
+      } else if (errorMessage.includes('configuration error')) {
+        // Configuration issue
+        console.log('⚙️ Configuration issue:', errorMessage);
+        if (onError) {
+          onError('Google Sign-In is not properly configured. Please contact support.');
+        } else {
+          Alert.alert('Configuration Error', 'Google Sign-In is not properly configured. Please contact support.');
         }
       } else {
         // Other error
@@ -125,11 +170,6 @@ const UnifiedGoogleSignIn: React.FC<UnifiedGoogleSignInProps> = ({
     } finally {
       console.log('🏁 Finishing Google Sign-In process');
       setIsLoading(false);
-      // Reset the attempt flag after a delay to allow for navigation
-      setTimeout(() => {
-        console.log('🔄 Resetting attempt flag');
-        setHasAttempted(false);
-      }, 2000);
     }
   };
 

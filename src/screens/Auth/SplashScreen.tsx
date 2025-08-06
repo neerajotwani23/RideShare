@@ -26,18 +26,26 @@ const SplashScreen = ({ navigation }: any) => {
   
   const { 
     setProcessing,
-    selectRole,
+    setRoleFromInitialization,
     completeProfileSetup,
-    completeVehicleDetails
+    completeVehicleDetails,
+    isGoogleSignupFlow
   } = useAuth();
 
   useEffect(() => {
     // Start animations immediately to prevent black screen
     startAnimations();
     
+    // Skip initialization during Google signup flow
+    if (isGoogleSignupFlow) {
+      console.log('🎯 Skipping app initialization - Google signup flow active');
+      setIsInitializing(false);
+      return;
+    }
+    
     // Initialize app
     initializeApp();
-  }, []);
+  }, [isGoogleSignupFlow]);
 
   const startAnimations = () => {
     // Start animations immediately to show splash screen
@@ -81,18 +89,23 @@ const SplashScreen = ({ navigation }: any) => {
         // Update auth context with initialization results
         setProcessing(false);
         
+        console.log('🔧 Updating AuthContext with initialization results...');
+        
         // Set role if authenticated and role is selected
         if (result.isAuthenticated && result.roleSelected && result.currentRole) {
-          selectRole(result.currentRole);
+          console.log('🎭 Setting role from initialization:', result.currentRole);
+          setRoleFromInitialization(result.currentRole);
         }
         
         // Complete profile setup if needed
         if (result.profileSetupComplete) {
+          console.log('✅ Completing profile setup');
           completeProfileSetup();
         }
         
         // Complete vehicle details if needed
         if (result.vehicleDetailsComplete) {
+          console.log('🚗 Completing vehicle details');
           completeVehicleDetails();
         }
 
@@ -102,38 +115,61 @@ const SplashScreen = ({ navigation }: any) => {
         }, 500);
       } else {
         setError(result.error || 'Initialization failed');
-        // Still navigate to login even if there's an error
-        setTimeout(() => {
-        navigation.replace('Login');
-        }, 2000);
+        // Still navigate to login even if there's an error (unless Google signup flow)
+        if (!isGoogleSignupFlow) {
+          setTimeout(() => {
+            navigation.replace('Login');
+          }, 2000);
+        }
       }
       
     } catch (error) {
       console.error('❌ App initialization error:', error);
       setError(error instanceof Error ? error.message : 'Unknown error');
       
-      // Navigate to login on error
-      setTimeout(() => {
-        navigation.replace('Login');
-      }, 2000);
+      // Navigate to login on error (unless Google signup flow)
+      if (!isGoogleSignupFlow) {
+        setTimeout(() => {
+          navigation.replace('Login');
+        }, 2000);
+      }
     } finally {
       setIsInitializing(false);
     }
   };
 
   const navigateBasedOnAuthState = (result: InitializationResult) => {
+    console.log('🧭 Navigating based on auth state:', {
+      isAuthenticated: result.isAuthenticated,
+      roleSelected: result.roleSelected,
+      profileSetupComplete: result.profileSetupComplete,
+      vehicleDetailsComplete: result.vehicleDetailsComplete,
+      currentRole: result.currentRole,
+      isGoogleSignupFlow
+    });
+    
+    // Don't navigate during Google signup flow
+    if (isGoogleSignupFlow) {
+      console.log('🎯 Skipping navigation - Google signup flow active');
+      return;
+    }
+    
     if (!result.isAuthenticated) {
+      console.log('➡️ Navigating to Login');
       navigation.replace('Login');
     } else if (!result.roleSelected) {
+      console.log('➡️ Navigating to RoleSelection');
       navigation.replace('RoleSelection');
     } else if (!result.profileSetupComplete) {
+      console.log('➡️ Navigating to ProfileSetup');
       navigation.replace('ProfileSetup');
     } else if (result.currentRole === 'driver' && !result.vehicleDetailsComplete) {
+      console.log('➡️ Navigating to VehicleDetails');
       navigation.replace('VehicleDetails');
     } else {
-      // User is fully set up, navigate to main app
-      // The AppNavigator will handle the routing
-      navigation.replace('Login'); // This will trigger the AppNavigator to show the correct screen
+      // User is fully set up, navigate to MainApp which will handle routing
+      console.log('➡️ Navigating to MainApp');
+      navigation.replace('MainApp');
     }
   };
 

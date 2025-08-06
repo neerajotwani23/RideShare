@@ -24,16 +24,28 @@ const SignupScreen = ({ navigation, route }: any) => {
   const [cnicError, setCnicError] = useState('');
   const [showGenderMenu, setShowGenderMenu] = useState(false);
   const [isGoogleSignup, setIsGoogleSignup] = useState(false);
+  const { clearAuthStateForSignup, clearGoogleSignupFlow } = useAuth();
 
+
+
+  // Clear auth state when arriving from failed Google login
   useEffect(() => {
-    console.log('Gender state changed to:', gender);
-  }, [gender]);
+    // If coming from Google login failure, clear auth state to prevent navigation conflicts
+    if (route.params?.googleUserData) {
+      clearAuthStateForSignup();
+      
+      // Clear Google signup flow after a delay to allow screen to stabilize
+      setTimeout(() => {
+        clearGoogleSignupFlow();
+      }, 2000);
+    }
+  }, []);
 
   // Handle Google user data from navigation params
   useEffect(() => {
     if (route.params?.googleUserData) {
       const googleData = route.params.googleUserData;
-      console.log('Google user data received:', googleData);
+      
       
       // Pre-fill the form with Google data
       setFirstName(googleData.givenName || '');
@@ -55,11 +67,9 @@ const SignupScreen = ({ navigation, route }: any) => {
     { value: 'FEMALE', label: 'Female' },
   ];
   
-  console.log('Gender options:', genderOptions);
-  console.log('Current gender state:', gender);
+  
 
   const handleGenderChange = (selectedGender: string) => {
-    console.log('Selected gender:', selectedGender);
     setGender(selectedGender);
     setShowGenderMenu(false);
   };
@@ -118,9 +128,7 @@ const SignupScreen = ({ navigation, route }: any) => {
       return;
     }
 
-    console.log('🔍 Signup form data:');
-    console.log('Gender value:', gender);
-    console.log('Gender type:', typeof gender);
+    
 
     // Store signup data in context and navigate to role selection
     const signupData = {
@@ -134,7 +142,7 @@ const SignupScreen = ({ navigation, route }: any) => {
       isGoogleSignup, // Add flag to indicate if this is Google signup
     };
 
-    console.log('📤 Complete signup data:', signupData);
+    
 
     // Store the signup data in context for later use
     storePendingSignupData(signupData);
@@ -171,11 +179,10 @@ const SignupScreen = ({ navigation, route }: any) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView 
-        contentContainerStyle={styles.scrollContent} 
-        showsVerticalScrollIndicator={false}
-        onTouchStart={handleOutsidePress}
-      >
+             <ScrollView 
+         contentContainerStyle={styles.scrollContent} 
+         showsVerticalScrollIndicator={false}
+       >
         {/* Logo Section */}
         <View style={styles.logoSection}>
           <TouchableOpacity 
@@ -204,8 +211,8 @@ const SignupScreen = ({ navigation, route }: any) => {
           )}
         </View>
 
-        {/* Form Section */}
-        <Card style={styles.formCard}>
+                 {/* Form Section */}
+         <Card style={styles.formCard}>
           <Card.Content style={styles.formContent}>
             {formError ? (
               <Text style={styles.formError}>{formError}</Text>
@@ -276,65 +283,68 @@ const SignupScreen = ({ navigation, route }: any) => {
             />
             {cnicError ? <Text style={styles.errorText}>{cnicError}</Text> : null}
 
-            {/* Gender */}
-            <View style={styles.genderContainer}>
-              <TouchableOpacity
-                style={styles.genderSelector}
-                onPress={() => setShowGenderMenu(!showGenderMenu)}
-              >
-                <Text style={[styles.genderText, !gender && styles.placeholderText]}>
-                  {gender === 'MALE' ? 'Male' : 
-                   gender === 'FEMALE' ? 'Female' : 
-                   'Select Gender'}
-                </Text>
-                <IconButton 
-                  icon={showGenderMenu ? "chevron-up" : "chevron-down"} 
-                  size={20} 
-                  iconColor={COLORS.textSecondary} 
-                  style={styles.chevronIcon} 
-                />
-              </TouchableOpacity>
-              
-              {showGenderMenu && (
-                <View style={styles.genderDropdown}>
-                  <TouchableOpacity
-                    style={[
-                      styles.genderOption,
-                      gender === 'MALE' && styles.genderOptionSelected
-                    ]}
-                    onPress={() => {
-                      setGender('MALE');
-                      setShowGenderMenu(false);
-                    }}
-                  >
-                    <Text style={[
-                      styles.genderOptionText,
-                      gender === 'MALE' && styles.genderOptionTextSelected
-                    ]}>
-                      Male
-                    </Text>
-                  </TouchableOpacity>
-                  
-                  <TouchableOpacity
-                    style={[
-                      styles.genderOption,
-                      gender === 'FEMALE' && styles.genderOptionSelected
-                    ]}
-                    onPress={() => {
-                      setGender('FEMALE');
-                      setShowGenderMenu(false);
-                    }}
-                  >
-                    <Text style={[
-                      styles.genderOptionText,
-                      gender === 'FEMALE' && styles.genderOptionTextSelected
-                    ]}>
-                      Female
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              )}
-            </View>
+                                      {/* Gender */}
+             <View style={styles.genderContainer}>
+               <TouchableOpacity
+                 style={styles.genderSelector}
+                 onPress={() => setShowGenderMenu(!showGenderMenu)}
+               >
+                 <Text style={[
+                   styles.genderText, 
+                   !gender ? styles.placeholderText : styles.selectedGenderText
+                 ]}>
+                   {gender === 'MALE' ? 'Male' : 
+                    gender === 'FEMALE' ? 'Female' : 
+                    'Select Gender'}
+                 </Text>
+                 <IconButton 
+                   icon={showGenderMenu ? "chevron-up" : "chevron-down"} 
+                   size={20} 
+                   iconColor={COLORS.textSecondary} 
+                   style={styles.chevronIcon} 
+                 />
+               </TouchableOpacity>
+               
+               {showGenderMenu && (
+                 <View style={styles.genderDropdown}>
+                   <TouchableOpacity
+                     style={[
+                       styles.genderOption,
+                       gender === 'MALE' && styles.genderOptionSelected
+                     ]}
+                     onPress={() => {
+                       setGender('MALE');
+                       setShowGenderMenu(false);
+                     }}
+                   >
+                     <Text style={[
+                       styles.genderOptionText,
+                       gender === 'MALE' && styles.genderOptionTextSelected
+                     ]}>
+                       Male
+                     </Text>
+                   </TouchableOpacity>
+                   
+                   <TouchableOpacity
+                     style={[
+                       styles.genderOption,
+                       gender === 'FEMALE' && styles.genderOptionSelected
+                     ]}
+                     onPress={() => {
+                       setGender('FEMALE');
+                       setShowGenderMenu(false);
+                     }}
+                   >
+                     <Text style={[
+                       styles.genderOptionText,
+                       gender === 'FEMALE' && styles.genderOptionTextSelected
+                     ]}>
+                       Female
+                     </Text>
+                   </TouchableOpacity>
+                 </View>
+               )}
+             </View>
 
             {/* Password */}
             <View style={styles.passwordContainer}>
@@ -401,13 +411,10 @@ const SignupScreen = ({ navigation, route }: any) => {
             </View>
 
             <UnifiedGoogleSignIn
-              key="signup-google-signin"
               navigation={navigation}
-              isOnSignupScreen={true}
-              onSuccess={(result) => {
-                console.log('Google signup successful:', result);
-                // The AuthContext will handle the navigation
-              }}
+                             onSuccess={(result) => {
+                 // The AuthContext will handle the navigation
+               }}
               onError={(error) => {
                 setFormError(error);
               }}
@@ -531,12 +538,15 @@ const styles = StyleSheet.create({
   },
   genderText: {
     fontSize: 16,
-    color: COLORS.secondary,
     fontFamily: 'Montserrat-Regular',
     flex: 1,
   },
   placeholderText: {
     color: COLORS.textSecondary,
+  },
+  selectedGenderText: {
+    color: COLORS.secondary,
+    fontFamily: 'Montserrat-SemiBold',
   },
   errorText: {
     color: COLORS.error,

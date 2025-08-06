@@ -143,3 +143,6 @@ class RideRequestController:
             raise HTTPException(status_code=403, detail="Access denied")
         
         return ride_request_service.complete_ride_request(request_id) 
+
+# Create router instance
+ride_request_controller = RideRequestController()

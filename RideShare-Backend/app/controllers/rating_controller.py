@@ -104,3 +104,6 @@ class RatingController:
         )
         
         return rating_service.create_rating(rating) 
+
+# Create router instance
+rating_controller = RatingController()

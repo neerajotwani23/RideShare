@@ -234,3 +234,6 @@ class RideController:
             
         ride_service = RideService(db)
         return ride_service.get_rides_by_status(current_user.id, ride_status) 
+
+# Create router instance
+ride_controller = RideController()

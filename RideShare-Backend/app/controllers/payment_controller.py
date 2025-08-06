@@ -44,5 +44,6 @@ class PaymentController:
         payment_service = PaymentService(db)
         return payment_service.get_user_payments(current_user.id) 
 
-# app/controllers/payment_controller.py
+# Create router instance
+payment_controller = PaymentController()
 

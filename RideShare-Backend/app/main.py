@@ -1,131 +1,55 @@
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy.orm import Session
-import os
+from .database import engine
+from . import models
+from .controllers.auth_controller import auth_controller
+from .controllers.user_controller import user_controller
+from .controllers.ride_controller import ride_controller
+from .controllers.ride_request_controller import ride_request_controller
+from .controllers.payment_controller import payment_controller
+from .controllers.rating_controller import rating_controller
+from .controllers.transaction_controller import transaction_controller
+from .controllers.vehicle_controller import vehicle_controller
+from .controllers.stripe_controller import stripe_controller
+from .controllers.file_upload_controller import file_upload_controller
 
-from .models import Base
-from .database import engine, SessionLocal, setup_database_schema
-from .controllers import (
-    AuthController,
-    UserController,
-    VehicleController,
-    RideController,
-    RideRequestController,
-    TransactionController,
-    RatingController,
-    PaymentController,
-    StripeController
-)
+# Create database tables
+models.Base.metadata.create_all(bind=engine)
 
-# Database dependency
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+# Initialize Google Drive service and log status
+from .core.google_drive_config import google_drive_service
+print("=== BACKEND STARTUP DEBUG ===")
+print(f"Google Drive service available: {google_drive_service.service is not None}")
+print(f"Google Drive folder ID: {google_drive_service.folder_id}")
+print("=== END BACKEND STARTUP DEBUG ===")
 
-# Setup database schema (only creates tables if they don't exist)
-print("🚀 Starting RideShare Backend...")
-setup_database_schema()
+app = FastAPI(title="RideShare API", version="1.0.0")
 
-# FastAPI app configuration
-app = FastAPI(
-    title="RideShare API",
-    description="A comprehensive rideshare platform API with user management, ride booking, payments, and ratings",
-    version="1.0.0",
-    docs_url="/docs",
-    redoc_url="/redoc"
-)
-
-# CORS middleware
+# Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Configure this based on your frontend domains
+    allow_origins=["*"],  # In production, specify your frontend URL
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Initialize and include all controllers
-auth_controller = AuthController()
-user_controller = UserController()
-vehicle_controller = VehicleController()
-ride_controller = RideController()
-ride_request_controller = RideRequestController()
-transaction_controller = TransactionController()
-rating_controller = RatingController()
-payment_controller = PaymentController()
-stripe_controller = StripeController()
-
-# Include all routers
+# Include routers
 app.include_router(auth_controller.router)
 app.include_router(user_controller.router)
-app.include_router(vehicle_controller.router)
 app.include_router(ride_controller.router)
 app.include_router(ride_request_controller.router)
-app.include_router(transaction_controller.router)
-app.include_router(rating_controller.router)
 app.include_router(payment_controller.router)
+app.include_router(rating_controller.router)
+app.include_router(transaction_controller.router)
+app.include_router(vehicle_controller.router)
 app.include_router(stripe_controller.router)
+app.include_router(file_upload_controller.router)
 
 @app.get("/")
-def read_root():
-    """Root endpoint with API information"""
-    return {
-        "message": "Welcome to the RideShare API",
-        "version": "1.0.0",
-        "docs": "/docs",
-        "redoc": "/redoc",
-        "app_features": [
-            "User Authentication & Role Selection",
-            "Profile Management & Onboarding", 
-            "Vehicle Registration (Drivers)",
-            "Post & Search Rides",
-            "Ride Request System",
-            "Wallet & Payment Processing",
-            "User-to-User Rating System",
-            "Ride History & Filtering"
-        ],
-        "endpoints": {
-            "auth": "/auth (login, register, reset password)",
-            "users": "/users (profile, role selection, wallet)",
-            "vehicles": "/vehicles (vehicle management for drivers)",
-            "rides": "/rides (post ride, search, my rides)",
-            "ride_requests": "/ride-requests (book rides, manage requests)",
-            "transactions": "/transactions (wallet transactions)",
-            "ratings": "/ratings (user reviews and ratings)",
-            "payments": "/payments (payment processing)"
-        },
-        "app_screens_supported": [
-            "SplashScreen, LoginScreen, SignupScreen",
-            "RoleSelectionScreen, ProfileSetupScreen",
-            "HomeScreen, FindRideScreen, SuggestedRidesScreen",
-            "PostRideScreen, MyRidesScreen, RideDetailsScreen",
-            "WalletScreen, VehicleDetailsScreen",
-            "RateRideScreen, ProfileScreen, SettingsScreen"
-        ]
-    }
+async def root():
+    return {"message": "RideShare API is running!"}
 
 @app.get("/health")
-def health_check():
-    """Health check endpoint"""
-    return {"status": "healthy", "message": "RideShare API is running"}
-
-@app.get("/info")
-def get_api_info():
-    """Get API configuration information"""
-    return {
-        "database_connected": True,
-        "environment": os.getenv("ENVIRONMENT", "development"),
-        "api_version": "1.0.0",
-        "architecture": "Layered Architecture (Controller -> Service -> Repository)",
-        "database_schema": "MySQL with proper enums and relationships",
-        "features": {
-            "authentication": "JWT-based with role-based access",
-            "user_types": ["driver", "passenger"],
-            "ride_statuses": ["pending", "active", "confirmed", "completed", "cancelled"],
-            "payment_types": ["cash", "wallet"],
-            "rating_system": "User-to-user 5-star rating with reviews"
-        }
-    }
+async def health_check():
+    return {"status": "healthy"}

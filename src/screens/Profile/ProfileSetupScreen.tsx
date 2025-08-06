@@ -1,16 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, TouchableOpacity, Alert, ScrollView } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Alert, ScrollView, ActivityIndicator } from 'react-native';
 import { Text, TextInput, Button, Avatar, IconButton } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../context/AuthContext';
 import { COLORS } from '../../constants/colors';
 import { api } from '../../services/api';
+import { fileUploadService } from '../../services/fileUploadService';
 import { navigationDebugService } from '../../services/debugNavigation';
 
 const ProfileSetupScreen = ({ navigation, route }: any) => {
   const [bio, setBio] = useState('');
   const [userRole, setUserRole] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [profilePicture, setProfilePicture] = useState<string | null>(null);
 
   const { completeProfileSetup, skipProfileSetup, currentRole, logout } = useAuth();
 
@@ -20,24 +23,42 @@ const ProfileSetupScreen = ({ navigation, route }: any) => {
     setUserRole(role);
   }, [currentRole, route]);
 
-  const handleSelectPhoto = () => {
-    Alert.alert(
-      'Select Photo',
-      'Choose how you want to add your profile photo',
-      [
-        { text: 'Camera', onPress: () => console.log('Camera selected') },
-        { text: 'Gallery', onPress: () => console.log('Gallery selected') },
-        { text: 'Cancel', style: 'cancel' },
-      ]
-    );
+  const handleSelectPhoto = async () => {
+    try {
+      setIsUploading(true);
+      
+      // Upload profile picture using the file upload service
+      const uploadResponse = await fileUploadService.uploadProfilePicture();
+      
+      // Set the profile picture URL
+      setProfilePicture(uploadResponse.file_url);
+      
+      Alert.alert('Success', 'Profile picture uploaded successfully!');
+    } catch (error: any) {
+      console.error('Profile picture upload error:', error);
+      Alert.alert('Error', error.message || 'Failed to upload profile picture. Please try again.');
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   const handleSave = async () => {
     try {
       setIsLoading(true);
-      // Update profile with bio if provided
+      
+      // Update profile with bio and profile picture if provided
+      const profileData: any = {};
+      
       if (bio.trim()) {
-        await api.updateProfile({ bio: bio.trim() });
+        profileData.bio = bio.trim();
+      }
+      
+      if (profilePicture) {
+        profileData.profile_picture = profilePicture;
+      }
+      
+      if (Object.keys(profileData).length > 0) {
+        await api.updateProfile(profileData);
       }
       
       completeProfileSetup();
@@ -50,31 +71,7 @@ const ProfileSetupScreen = ({ navigation, route }: any) => {
   };
 
   const handleSkip = () => {
-    // Only passengers can skip profile setup
-    if (userRole === 'driver') {
-      Alert.alert(
-        'Profile Setup Required',
-        'As a driver, you need to complete your profile setup before proceeding to vehicle details.',
-        [{ text: 'OK' }]
-      );
-    } else {
-      // Passengers can skip profile setup
-      Alert.alert(
-        'Skip Profile Setup',
-        'You can complete your profile later from the settings. Are you sure you want to skip?',
-        [
-          { text: 'Cancel', style: 'cancel' },
-          { 
-            text: 'Skip', 
-            style: 'destructive',
-            onPress: () => {
-              skipProfileSetup();
-              // Navigation will be handled automatically by AppNavigator
-            }
-          }
-        ]
-      );
-    }
+    skipProfileSetup();
   };
 
   const handleBackPress = () => {
@@ -110,45 +107,56 @@ const ProfileSetupScreen = ({ navigation, route }: any) => {
 
   return (
     <SafeAreaView style={styles.container}>
-    <ScrollView contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled">
+      <ScrollView contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled">
       <View style={styles.header}>
         <IconButton
           icon="arrow-left"
           size={24}
-          iconColor="#000000"
+          iconColor={COLORS.secondary}
           onPress={handleBackPress}
           style={styles.backButton}
         />
-        <Text style={styles.headerTitle}>Profile Setup</Text>
-        <View style={styles.headerRight}>
-          <IconButton
-            icon="bug"
-            size={20}
-            iconColor="#000000"
-            onPress={handleDebugNavigation}
-          />
-          {userRole === 'passenger' && (
-            <TouchableOpacity onPress={handleSkip}>
-              <Text style={styles.skipButton}>Skip</Text>
-            </TouchableOpacity>
-          )}
-        </View>
+        <Text style={styles.headerTitle}>Complete Your Profile</Text>
+        <TouchableOpacity onPress={handleSkip} style={styles.skipButton}>
+          <Text style={styles.skipButtonText}>Skip</Text>
+        </TouchableOpacity>
       </View>
 
       <View style={styles.content}>
         <View style={styles.profileSection}>
-          <TouchableOpacity onPress={handleSelectPhoto} style={styles.avatarContainer}>
-              <Avatar.Icon size={100} icon="account" style={styles.avatar} />
-            <View style={styles.cameraIcon}>
-              <IconButton
-                icon="camera"
-                size={20}
-                iconColor="#FFFFFF"
-                style={styles.cameraButton}
+          <TouchableOpacity 
+            onPress={handleSelectPhoto} 
+            style={styles.avatarContainer}
+            disabled={isUploading}
+          >
+            {isUploading ? (
+              <View style={styles.uploadingContainer}>
+                <ActivityIndicator size="large" color={COLORS.accent} />
+                <Text style={styles.uploadingText}>Uploading...</Text>
+              </View>
+            ) : profilePicture ? (
+              <Avatar.Image 
+                size={100} 
+                source={{ uri: profilePicture }} 
+                style={styles.avatar} 
               />
-            </View>
+            ) : (
+              <Avatar.Icon size={100} icon="account" style={styles.avatar} />
+            )}
+            {!isUploading && (
+              <View style={styles.cameraIcon}>
+                <IconButton
+                  icon="camera"
+                  size={20}
+                  iconColor="#FFFFFF"
+                  style={styles.cameraButton}
+                />
+              </View>
+            )}
           </TouchableOpacity>
-          <Text style={styles.photoText}>Add Profile Photo</Text>
+          <Text style={styles.photoText}>
+            {isUploading ? 'Uploading...' : 'Add Profile Photo'}
+          </Text>
         </View>
 
         <View style={styles.inputContainer}>
@@ -195,7 +203,7 @@ const ProfileSetupScreen = ({ navigation, route }: any) => {
           disabled={isLoading}
           loading={isLoading}
         >
-          {userRole === 'driver' ? 'Save & Continue' : 'Save & Continue'}
+          {isLoading ? 'Saving...' : 'Save Profile'}
         </Button>
       </View>
       </ScrollView>
@@ -240,6 +248,11 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     minHeight: 32,
     textAlignVertical: 'center',
+  },
+  skipButtonText: {
+    fontSize: 16,
+    fontFamily: 'Montserrat-Medium',
+    color: '#248CFE',
   },
   content: {
     flex: 1,
@@ -345,6 +358,23 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontFamily: 'Montserrat-Bold',
     color: '#fff',
+  },
+  uploadingContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    borderRadius: 100,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  uploadingText: {
+    color: '#fff',
+    marginTop: 10,
+    fontSize: 16,
+    fontFamily: 'Montserrat-Medium',
   },
 });
 

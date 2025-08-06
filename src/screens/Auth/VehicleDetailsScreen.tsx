@@ -6,6 +6,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuth } from '../../context/AuthContext';
 import { COLORS } from '../../constants/colors';
 import { api } from '../../services/api';
+import { fileUploadService } from '../../services/fileUploadService';
 import { authDebugService } from '../../services/debugAuth';
 
 const VehicleDetailsScreen = ({ navigation }: any) => {
@@ -18,9 +19,11 @@ const VehicleDetailsScreen = ({ navigation }: any) => {
   const [errors, setErrors] = useState<{[key: string]: string}>({});
   const [isLoadingData, setIsLoadingData] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isUploadingLicense, setIsUploadingLicense] = useState(false);
+  const [isUploadingRegistration, setIsUploadingRegistration] = useState(false);
   const [existingVehicle, setExistingVehicle] = useState<any>(null);
   
-  const { completeVehicleDetails, logout } = useAuth();
+  const { completeVehicleDetails, logout, currentRole, user } = useAuth();
 
   // Load existing vehicle data on component mount
   useEffect(() => {
@@ -81,6 +84,10 @@ const VehicleDetailsScreen = ({ navigation }: any) => {
       } else {
         console.log('ℹ️ No existing vehicles found - this is normal for new users');
       }
+      
+      // Check if vehicle details are actually complete and update status if needed
+      await checkAndUpdateVehicleDetailsStatus();
+      
     } catch (error) {
       console.error('❌ Error loading vehicle data:', error);
       console.error('❌ Error details:', error instanceof Error ? error.message : 'Unknown error');
@@ -90,41 +97,73 @@ const VehicleDetailsScreen = ({ navigation }: any) => {
     }
   };
 
-  const handleDocumentUpload = (documentType: 'vehicleReg' | 'drivingLicense') => {
-    const documentName = documentType === 'vehicleReg' ? 'Vehicle Registration' : 'Driving License';
-    Alert.alert(
-      `Upload ${documentName}`,
-      `Choose how you want to upload your ${documentName.toLowerCase()} document`,
-      [
-        { 
-          text: 'Camera', 
-          onPress: () => {
-            console.log(`Camera selected for ${documentType}`);
-            // Simulate document upload
-            const mockImageUri = `https://via.placeholder.com/300x200/007AFF/FFFFFF?text=${documentName.replace(' ', '+')}`;
-            if (documentType === 'vehicleReg') {
-              setVehicleRegistration(mockImageUri);
-            } else {
-              setDrivingLicense(mockImageUri);
-            }
-          }
-        },
-        { 
-          text: 'Gallery', 
-          onPress: () => {
-            console.log(`Gallery selected for ${documentType}`);
-            // Simulate document upload
-            const mockImageUri = `https://via.placeholder.com/300x200/34C759/FFFFFF?text=${documentName.replace(' ', '+')}`;
-            if (documentType === 'vehicleReg') {
-              setVehicleRegistration(mockImageUri);
-            } else {
-              setDrivingLicense(mockImageUri);
-            }
-          }
-        },
-        { text: 'Cancel', style: 'cancel' },
-      ]
-    );
+  // Check if vehicle details are actually complete and update status if needed
+  const checkAndUpdateVehicleDetailsStatus = async () => {
+    try {
+      // Only check for drivers
+      if (currentRole !== 'driver' || !user) {
+        return;
+      }
+      
+      // Check if user has driving license
+      const hasDrivingLicense = !!(user.driving_license && user.driving_license.trim());
+      
+      // Check if user has vehicles with essential details
+      let hasCompleteVehicle = false;
+      try {
+        const vehicles = await api.getMyVehicles();
+        if (vehicles && vehicles.length > 0) {
+          const vehicle = vehicles[0]; // Check the first vehicle
+          const hasMake = !!(vehicle.name_make && vehicle.name_make.trim());
+          const hasPlate = !!(vehicle.no_plate && vehicle.no_plate.trim());
+          hasCompleteVehicle = hasMake && hasPlate;
+        }
+      } catch (error) {
+        console.log('Could not fetch vehicles for status check:', error);
+      }
+
+      const isComplete = hasDrivingLicense && hasCompleteVehicle;
+      
+      console.log('🔍 Vehicle details status check:', {
+        hasDrivingLicense,
+        hasCompleteVehicle,
+        isComplete
+      });
+      
+      // If vehicle details are actually complete, update the status
+      if (isComplete) {
+        await completeVehicleDetails();
+        console.log('✅ Vehicle details status updated to complete');
+      }
+      
+    } catch (error) {
+      console.error('❌ Error checking vehicle details status:', error);
+    }
+  };
+
+  const handleDocumentUpload = async (documentType: 'vehicleReg' | 'drivingLicense') => {
+    try {
+      if (documentType === 'drivingLicense') {
+        setIsUploadingLicense(true);
+        const uploadResponse = await fileUploadService.uploadDrivingLicense();
+        setDrivingLicense(uploadResponse.file_url);
+        Alert.alert('Success', 'Driving license uploaded successfully!');
+      } else {
+        setIsUploadingRegistration(true);
+        const uploadResponse = await fileUploadService.uploadVehicleRegistration();
+        setVehicleRegistration(uploadResponse.file_url);
+        Alert.alert('Success', 'Vehicle registration uploaded successfully!');
+      }
+    } catch (error: any) {
+      console.error(`${documentType} upload error:`, error);
+      Alert.alert('Error', error.message || `Failed to upload ${documentType === 'drivingLicense' ? 'driving license' : 'vehicle registration'}. Please try again.`);
+    } finally {
+      if (documentType === 'drivingLicense') {
+        setIsUploadingLicense(false);
+      } else {
+        setIsUploadingRegistration(false);
+      }
+    }
   };
 
   const validateForm = () => {
@@ -174,6 +213,16 @@ const VehicleDetailsScreen = ({ navigation }: any) => {
       if (existingVehicle) {
         // Update existing vehicle
         await api.updateVehicle(existingVehicle.id, vehicleData);
+        
+        // Check if this was an incomplete vehicle that's now complete
+        const wasIncomplete = !existingVehicle.name_make || !existingVehicle.no_plate;
+        const isNowComplete = vehicleData.name_make && vehicleData.no_plate;
+        
+        if (wasIncomplete && isNowComplete) {
+          // Complete vehicle details setup for previously incomplete vehicles
+          await completeVehicleDetails();
+        }
+        
         Alert.alert(
           'Vehicle Updated!',
           'Your vehicle details and documents have been updated successfully!',
@@ -382,8 +431,11 @@ const VehicleDetailsScreen = ({ navigation }: any) => {
               <TouchableOpacity
                 style={styles.documentUpload}
                 onPress={() => handleDocumentUpload('drivingLicense')}
+                disabled={isUploadingLicense}
               >
-                {drivingLicense ? (
+                {isUploadingLicense ? (
+                  <ActivityIndicator size="small" color={COLORS.secondary} />
+                ) : drivingLicense ? (
                   <Image source={{ uri: drivingLicense }} style={styles.documentImage} />
                 ) : (
                   <View style={styles.uploadPlaceholder}>
@@ -400,8 +452,11 @@ const VehicleDetailsScreen = ({ navigation }: any) => {
               <TouchableOpacity
                 style={styles.documentUpload}
                 onPress={() => handleDocumentUpload('vehicleReg')}
+                disabled={isUploadingRegistration}
               >
-                {vehicleRegistration ? (
+                {isUploadingRegistration ? (
+                  <ActivityIndicator size="small" color={COLORS.secondary} />
+                ) : vehicleRegistration ? (
                   <Image source={{ uri: vehicleRegistration }} style={styles.documentImage} />
                 ) : (
                   <View style={styles.uploadPlaceholder}>
@@ -422,8 +477,8 @@ const VehicleDetailsScreen = ({ navigation }: any) => {
           style={styles.saveButton}
           contentStyle={styles.buttonContent}
           labelStyle={styles.buttonLabel}
-          disabled={isLoadingData || isSaving}
-          loading={isSaving}
+          disabled={isLoadingData || isSaving || isUploadingLicense || isUploadingRegistration}
+          loading={isSaving || isUploadingLicense || isUploadingRegistration}
         >
           {existingVehicle 
             ? existingVehicle.name_make && existingVehicle.no_plate

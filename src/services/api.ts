@@ -25,7 +25,7 @@ const handleNetworkError = (error: any, endpoint: string) => {
   if (error.message?.includes('Network request failed')) {
     console.log('🔧 Network troubleshooting:');
     console.log('1. Check if backend server is running');
-    console.log('2. Verify IP address in src/config/env.ts');
+    console.log('2. Verify IP address in src/config/');
     console.log('3. Ensure port 8000 is accessible');
     console.log('4. Check firewall settings');
     console.log('5. Try restarting the app');
@@ -723,6 +723,82 @@ export const api = {
       return handleResponse(response);
     } catch (error) {
       console.error('Health check failed:', error);
+      throw error;
+    }
+  },
+
+  // File Upload APIs
+  uploadProfilePicture: async (formData: FormData) => {
+    try {
+      console.log('🌐 Making API call to:', `${BASE_URL}/upload/profile-picture`);
+      console.log('📋 FormData created successfully');
+      
+      // For file uploads, we need to exclude Content-Type header
+      // Browser will set it automatically with boundary
+      const authHeaders = await getAuthHeaders();
+      const headers = { ...authHeaders };
+      delete headers['Content-Type'];
+      
+      console.log('🔑 Auth headers:', headers);
+      
+      const response = await fetch(`${BASE_URL}/upload/profile-picture`, {
+        method: 'POST',
+        headers: headers,
+        body: formData,
+      });
+      
+      console.log('📡 Response status:', response.status);
+      console.log('📡 Response headers:', response.headers);
+      
+      return handleResponse(response);
+    } catch (error) {
+      console.error('🚨 API call failed:', error);
+      throw error;
+    }
+  },
+
+  uploadDrivingLicense: async (formData: FormData) => {
+    try {
+      const authHeaders = await getAuthHeaders();
+      const headers = { ...authHeaders };
+      delete headers['Content-Type'];
+      
+      const response = await fetch(`${BASE_URL}/upload/driving-license`, {
+        method: 'POST',
+        headers: headers,
+        body: formData,
+      });
+      return handleResponse(response);
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  uploadVehicleRegistration: async (formData: FormData) => {
+    try {
+      const authHeaders = await getAuthHeaders();
+      const headers = { ...authHeaders };
+      delete headers['Content-Type'];
+      
+      const response = await fetch(`${BASE_URL}/upload/vehicle-registration`, {
+        method: 'POST',
+        headers: headers,
+        body: formData,
+      });
+      return handleResponse(response);
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  deleteFile: async (fileId: string) => {
+    try {
+      const response = await fetch(`${BASE_URL}/upload/delete/${fileId}`, {
+        method: 'DELETE',
+        headers: await getAuthHeaders(),
+      });
+      return handleResponse(response);
+    } catch (error) {
       throw error;
     }
   },

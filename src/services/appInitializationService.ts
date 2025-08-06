@@ -1,7 +1,5 @@
 import { api } from './api';
 import { tokenManager } from './tokenManager';
-import { GoogleSignin } from '@react-native-google-signin/google-signin';
-import { GOOGLE_CONFIG } from '../config/googleConfig';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export interface InitializationProgress {
@@ -42,21 +40,18 @@ class AppInitializationService {
   }
 
   async initializeApp(): Promise<InitializationResult> {
-    const totalSteps = 8;
+    const totalSteps = 7;
     let currentStep = 0;
 
     try {
-      // Step 1: Configure Google Sign-In
-      currentStep++;
-      this.updateProgress('Google Config', currentStep, totalSteps, 'Configuring Google Sign-In...');
-      await this.configureGoogleSignIn();
-
-      // Step 2: Initialize token manager
+      // Note: Google Sign-In is configured automatically by googleSignInService
+      
+      // Step 1: Initialize token manager
       currentStep++;
       this.updateProgress('Token Manager', currentStep, totalSteps, 'Initializing token manager...');
       await this.initializeTokenManager();
 
-      // Step 3: Check authentication status
+      // Step 2: Check authentication status
       currentStep++;
       this.updateProgress('Auth Check', currentStep, totalSteps, 'Checking authentication status...');
       const authStatus = await this.checkAuthenticationStatus();
@@ -121,21 +116,7 @@ class AppInitializationService {
     }
   }
 
-  private async configureGoogleSignIn(): Promise<void> {
-    try {
-      GoogleSignin.configure({
-        webClientId: GOOGLE_CONFIG.webClientId,
-        offlineAccess: false,
-        hostedDomain: '',
-        forceCodeForRefreshToken: false,
-        scopes: ['email'],
-      });
-      console.log('✅ Google Sign-In configured successfully');
-    } catch (error) {
-      console.error('❌ Failed to configure Google Sign-In:', error);
-      throw error;
-    }
-  }
+
 
   private async initializeTokenManager(): Promise<void> {
     try {
@@ -170,12 +151,63 @@ class AppInitializationService {
       // Try to get current user to validate token
       const userData = await api.getCurrentUser();
       
-      // Get user preferences from AsyncStorage
-      const roleSelected = await AsyncStorage.getItem('roleSelected') === 'true';
-      const profileSetupComplete = await AsyncStorage.getItem('profileSetupComplete') === 'true';
-      const vehicleDetailsComplete = await AsyncStorage.getItem('vehicleDetailsComplete') === 'true';
-      const currentRoleRaw = await AsyncStorage.getItem('currentRole');
-      const currentRole = (currentRoleRaw === 'driver' || currentRoleRaw === 'passenger') ? currentRoleRaw : undefined;
+      // Get user data from AsyncStorage (same as AuthContext)
+      const userString = await AsyncStorage.getItem('user');
+      
+      if (!userString) {
+        return {
+          isAuthenticated: false,
+          roleSelected: false,
+          profileSetupComplete: false,
+          vehicleDetailsComplete: false
+        };
+      }
+
+      const user = JSON.parse(userString);
+      const currentRole = user.user_type?.toLowerCase() as 'driver' | 'passenger';
+      
+      // Check if role is selected (user has a valid role)
+      const roleSelected = !!currentRole && (currentRole === 'driver' || currentRole === 'passenger');
+      
+      // Profile is complete if user has bio OR profile picture (same logic as AuthContext)
+      const hasBio = !!(user.bio && user.bio.trim());
+      const hasProfilePicture = !!(user.profile_picture && user.profile_picture.trim());
+      const profileSetupComplete = hasBio || hasProfilePicture;
+
+      // Check vehicle details completion (same logic as AuthContext)
+      let vehicleDetailsComplete = true; // Default to true for non-drivers
+      if (currentRole === 'driver') {
+        // Check if user has driving license
+        const hasDrivingLicense = !!(user.driving_license && user.driving_license.trim());
+        
+        // Check if user has vehicles with essential details
+        let hasCompleteVehicle = false;
+        try {
+          const vehicles = await api.getMyVehicles();
+          if (vehicles && vehicles.length > 0) {
+            const vehicle = vehicles[0]; // Check the first vehicle
+            const hasMake = !!(vehicle.name_make && vehicle.name_make.trim());
+            const hasPlate = !!(vehicle.no_plate && vehicle.no_plate.trim());
+            hasCompleteVehicle = hasMake && hasPlate;
+          }
+        } catch (error) {
+          console.log('Could not fetch vehicles, assuming incomplete:', error);
+        }
+
+        vehicleDetailsComplete = hasDrivingLicense && hasCompleteVehicle;
+      }
+
+      console.log('🔍 Auth status check:', {
+        isAuthenticated: true,
+        roleSelected,
+        profileSetupComplete,
+        vehicleDetailsComplete,
+        currentRole,
+        hasBio,
+        hasProfilePicture,
+        hasDrivingLicense: currentRole === 'driver' ? !!(user.driving_license && user.driving_license.trim()) : 'N/A',
+        hasCompleteVehicle: currentRole === 'driver' ? 'checked' : 'N/A'
+      });
 
       return {
         isAuthenticated: true,
@@ -184,9 +216,8 @@ class AppInitializationService {
         vehicleDetailsComplete,
         currentRole
       };
-
     } catch (error) {
-      console.log('Token validation failed, user not authenticated');
+      console.error('❌ Failed to check authentication status:', error);
       return {
         isAuthenticated: false,
         roleSelected: false,

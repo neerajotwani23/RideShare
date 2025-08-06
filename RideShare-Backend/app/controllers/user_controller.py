@@ -179,3 +179,6 @@ class UserController:
         """Search users by name or email (for rating purposes)"""
         user_service = UserService(db)
         return user_service.search_users(name=name, email=email) 
+
+# Create router instance
+user_controller = UserController()

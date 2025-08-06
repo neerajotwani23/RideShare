@@ -57,3 +57,6 @@ class TransactionController:
         transaction_service = TransactionService(db)
         transaction.user_id = current_user.id
         return transaction_service.create_stripe_transaction(transaction)
+
+# Create router instance
+transaction_controller = TransactionController()

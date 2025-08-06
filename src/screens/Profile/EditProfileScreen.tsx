@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, Alert, Image, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, ScrollView, Alert, Image, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Text, TextInput, Button, Card, IconButton, ActivityIndicator, Avatar } from 'react-native-paper';
+import { Text, TextInput, Button, Card, IconButton, Avatar } from 'react-native-paper';
 import { COLORS } from '../../constants/colors';
 import Icon from '../../components/Icon';
 import { PhoneNumberInput } from '../../components';
 import { useApp } from '../../context/AppContext';
+import { fileUploadService } from '../../services/fileUploadService';
 
 const EditProfileScreen = ({ navigation }: any) => {
   const [fullName, setFullName] = useState('');
@@ -16,6 +17,7 @@ const EditProfileScreen = ({ navigation }: any) => {
   const [about, setAbout] = useState('');
   const [profilePicture, setProfilePicture] = useState('');
   const [errors, setErrors] = useState<{[key: string]: string}>({});
+  const [isUploading, setIsUploading] = useState(false);
   
   const { userProfile, updateProfile, isLoading, isRefreshing } = useApp();
 
@@ -31,8 +33,6 @@ const EditProfileScreen = ({ navigation }: any) => {
       setProfilePicture(userProfile.profile_picture || '');
     }
   }, [userProfile]);
-
-
 
   const validateForm = () => {
     const newErrors: {[key: string]: string} = {};
@@ -67,13 +67,40 @@ const EditProfileScreen = ({ navigation }: any) => {
     navigation.navigate('ChangePassword');
   };
 
-  const handleChangeProfilePicture = () => {
-    // TODO: Implement image picker functionality
-    Alert.alert(
-      'Change Profile Picture',
-      'Profile picture change functionality will be implemented soon.',
-      [{ text: 'OK' }]
-    );
+  const handleChangeProfilePicture = async () => {
+    try {
+      setIsUploading(true);
+      
+      // Upload profile picture using the file upload service
+      const uploadResponse = await fileUploadService.uploadProfilePicture();
+      
+      // Set the profile picture URL
+      setProfilePicture(uploadResponse.file_url);
+      
+      // Update the profile in the app context
+      await updateProfile({ profile_picture: uploadResponse.file_url });
+      
+      Alert.alert('Success', 'Profile picture updated successfully!');
+    } catch (error: any) {
+      console.error('Profile picture upload error:', error);
+      
+      // Provide more specific error messages for common issues
+      let errorMessage = 'Failed to update profile picture. Please try again.';
+      
+      if (error.message?.includes('permission denied')) {
+        errorMessage = 'Storage permission denied. Please grant storage permission in your device settings and try again.';
+      } else if (error.message?.includes('camera')) {
+        errorMessage = 'Camera permission denied. Please grant camera permission in your device settings and try again.';
+      } else if (error.message?.includes('cancelled')) {
+        errorMessage = 'Image selection was cancelled.';
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      Alert.alert('Error', errorMessage);
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   const getGenderDisplay = (gender: string) => {
@@ -86,8 +113,6 @@ const EditProfileScreen = ({ navigation }: any) => {
     }
     return 'Not specified';
   };
-
-
 
   if (isRefreshing) {
     return (
@@ -121,8 +146,16 @@ const EditProfileScreen = ({ navigation }: any) => {
           <Card.Content style={styles.cardContent}>
             <Text style={styles.sectionTitle}>Profile Picture</Text>
             <View style={styles.profilePictureContainer}>
-              <TouchableOpacity onPress={() => handleChangeProfilePicture()}>
-                {profilePicture ? (
+              <TouchableOpacity 
+                onPress={() => handleChangeProfilePicture()} 
+                disabled={isUploading}
+              >
+                {isUploading ? (
+                  <View style={styles.uploadingContainer}>
+                    <ActivityIndicator size="large" color={COLORS.primary} />
+                    <Text style={styles.uploadingText}>Uploading...</Text>
+                  </View>
+                ) : profilePicture ? (
                   <Avatar.Image 
                     size={100} 
                     source={{ uri: profilePicture }} 
@@ -136,12 +169,14 @@ const EditProfileScreen = ({ navigation }: any) => {
                     color={COLORS.secondary}
                   />
                 )}
-                <View style={styles.changePictureOverlay}>
-                  <Icon name="camera" size={24} color={COLORS.primary} />
-                </View>
+                {!isUploading && (
+                  <View style={styles.changePictureOverlay}>
+                    <Icon name="camera" size={24} color={COLORS.primary} />
+                  </View>
+                )}
               </TouchableOpacity>
               <Text style={styles.profilePictureText}>
-                Tap to change profile picture
+                {isUploading ? 'Uploading...' : 'Tap to change profile picture'}
               </Text>
             </View>
           </Card.Content>
@@ -150,105 +185,122 @@ const EditProfileScreen = ({ navigation }: any) => {
         {/* Personal Information - Locked Fields */}
         <Card style={styles.card}>
           <Card.Content style={styles.cardContent}>
-            <Text style={styles.sectionTitle}>Personal Information (Locked)</Text>
+            <Text style={styles.sectionTitle}>Personal Information</Text>
             
-            <View style={styles.lockedFieldContainer}>
-              <Text style={styles.lockedFieldLabel}>Full Name</Text>
-              <View style={styles.lockedFieldValue}>
-                <Text style={styles.lockedFieldText}>{fullName || 'Not specified'}</Text>
-                <Icon name="lock" size={16} color={COLORS.textSecondary} />
-              </View>
+            {/* Full Name - Read Only */}
+            <View style={styles.inputContainer}>
+              <Text style={styles.inputLabel}>Full Name</Text>
+              <TextInput
+                value={fullName}
+                style={styles.lockedInput}
+                mode="outlined"
+                outlineColor={COLORS.border}
+                contentStyle={styles.lockedInputContent}
+                editable={false}
+              />
             </View>
 
-            <View style={styles.lockedFieldContainer}>
-              <Text style={styles.lockedFieldLabel}>Email Address</Text>
-              <View style={styles.lockedFieldValue}>
-                <Text style={styles.lockedFieldText}>{email || 'Not specified'}</Text>
-                <Icon name="lock" size={16} color={COLORS.textSecondary} />
-              </View>
+            {/* Email - Read Only */}
+            <View style={styles.inputContainer}>
+              <Text style={styles.inputLabel}>Email</Text>
+              <TextInput
+                value={email}
+                style={styles.lockedInput}
+                mode="outlined"
+                outlineColor={COLORS.border}
+                contentStyle={styles.lockedInputContent}
+                editable={false}
+              />
             </View>
 
-            <View style={styles.lockedFieldContainer}>
-              <Text style={styles.lockedFieldLabel}>CNIC</Text>
-              <View style={styles.lockedFieldValue}>
-                <Text style={styles.lockedFieldText}>{cnic || 'Not specified'}</Text>
-                <Icon name="lock" size={16} color={COLORS.textSecondary} />
-              </View>
+            {/* CNIC - Read Only */}
+            <View style={styles.inputContainer}>
+              <Text style={styles.inputLabel}>CNIC</Text>
+              <TextInput
+                value={cnic}
+                style={styles.lockedInput}
+                mode="outlined"
+                outlineColor={COLORS.border}
+                contentStyle={styles.lockedInputContent}
+                editable={false}
+              />
             </View>
 
-            <View style={styles.lockedFieldContainer}>
-              <Text style={styles.lockedFieldLabel}>Gender</Text>
-              <View style={styles.lockedFieldValue}>
-                <Text style={styles.lockedFieldText}>{getGenderDisplay(gender)}</Text>
-                <Icon name="lock" size={16} color={COLORS.textSecondary} />
-              </View>
+            {/* Gender - Read Only */}
+            <View style={styles.inputContainer}>
+              <Text style={styles.inputLabel}>Gender</Text>
+              <TextInput
+                value={getGenderDisplay(gender)}
+                style={styles.lockedInput}
+                mode="outlined"
+                outlineColor={COLORS.border}
+                contentStyle={styles.lockedInputContent}
+                editable={false}
+              />
             </View>
-
-
           </Card.Content>
         </Card>
 
         {/* Editable Information */}
         <Card style={styles.card}>
           <Card.Content style={styles.cardContent}>
-            <Text style={styles.sectionTitle}>Editable Information</Text>
+            <Text style={styles.sectionTitle}>Contact Information</Text>
             
-            <PhoneNumberInput
-              value={phone}
-              onChangeText={setPhone}
-              label="Phone Number"
-              outlineColor={COLORS.border}
-              activeOutlineColor={COLORS.accent}
-              theme={{ roundness: 12 }}
-              error={errors.phone}
-            />
+            {/* Phone Number */}
+            <View style={styles.inputContainer}>
+              <Text style={styles.inputLabel}>Phone Number</Text>
+              <PhoneNumberInput
+                value={phone}
+                onChangeText={setPhone}
+                label=""
+                contentStyle={styles.inputContent}
+              />
+            </View>
 
-            <TextInput
-              style={[styles.input, styles.textArea]}
-              mode="outlined"
-              label="About (Optional)"
-              value={about}
-              onChangeText={setAbout}
-              multiline
-              numberOfLines={4}
-              outlineColor={COLORS.border}
-              activeOutlineColor={COLORS.accent}
-              theme={{ roundness: 12 }}
-              placeholder="Tell us about yourself (optional)"
-            />
-
-
-
-            <Button
-              mode="contained"
-              onPress={handleSave}
-              style={styles.saveButton}
-              contentStyle={styles.buttonContent}
-              labelStyle={styles.buttonLabel}
-              disabled={isLoading}
-              loading={isLoading}
-            >
-              Save Changes
-            </Button>
+            {/* Bio */}
+            <View style={styles.inputContainer}>
+              <Text style={styles.inputLabel}>About</Text>
+              <TextInput
+                value={about}
+                onChangeText={setAbout}
+                multiline
+                numberOfLines={4}
+                style={styles.input}
+                mode="outlined"
+                outlineColor={COLORS.border}
+                activeOutlineColor={COLORS.secondary}
+                contentStyle={styles.inputContent}
+                placeholder="Tell others about yourself..."
+                placeholderTextColor={COLORS.textSecondary}
+              />
+            </View>
           </Card.Content>
         </Card>
 
-        {/* Security Section */}
-        <Card style={styles.card}>
-          <Card.Content style={styles.cardContent}>
-            <Text style={styles.sectionTitle}>Security</Text>
-            
-            <Button
-              mode="outlined"
-              onPress={handleChangePassword}
-              style={styles.changePasswordButton}
-              contentStyle={styles.buttonContent}
-              labelStyle={[styles.buttonLabel, { color: COLORS.accent }]}
-            >
-              Change Password
-            </Button>
-          </Card.Content>
-        </Card>
+        {/* Action Buttons */}
+        <View style={styles.buttonContainer}>
+          <Button
+            mode="outlined"
+            onPress={handleChangePassword}
+            style={styles.changePasswordButton}
+            contentStyle={styles.buttonContent}
+            labelStyle={styles.outlinedButtonLabel}
+          >
+            Change Password
+          </Button>
+          
+          <Button
+            mode="contained"
+            onPress={handleSave}
+            style={styles.saveButton}
+            contentStyle={styles.buttonContent}
+            labelStyle={styles.buttonLabel}
+            disabled={isLoading || isUploading}
+            loading={isLoading}
+          >
+            Save Changes
+          </Button>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -394,6 +446,55 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: 'Montserrat-Medium',
     color: COLORS.secondary,
+  },
+  uploadingContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    borderRadius: 100,
+  },
+  uploadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    fontFamily: 'Montserrat-Medium',
+    color: COLORS.primary,
+  },
+  inputContainer: {
+    marginBottom: 16,
+  },
+  inputLabel: {
+    fontSize: 14,
+    fontFamily: 'Montserrat-Medium',
+    color: COLORS.textSecondary,
+    marginBottom: 8,
+  },
+  inputContent: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  lockedInput: {
+    backgroundColor: COLORS.lightGray,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  lockedInputContent: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  outlinedButtonLabel: {
+    color: COLORS.accent,
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginTop: 16,
+    marginBottom: 16,
   },
 });
 

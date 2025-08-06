@@ -110,7 +110,7 @@ const HomeScreen = ({ navigation }: any) => {
             <View style={styles.walletHeader}>
               <Icon name="wallet-outline" size={24} color={COLORS.accent} />
               <Text style={styles.walletTitle}>Wallet Balance</Text>
-                  </View>
+            </View>
             <Text style={styles.walletBalance}>
               Rs. {walletBalance.toFixed(2)}
             </Text>
@@ -120,8 +120,8 @@ const HomeScreen = ({ navigation }: any) => {
             >
               <Text style={styles.addMoneyText}>Add Money</Text>
             </TouchableOpacity>
-              </Card.Content>
-            </Card>
+          </Card.Content>
+        </Card>
       </ScrollView>
     </SafeAreaView>
   );
@@ -269,95 +269,6 @@ const styles = StyleSheet.create({
     fontFamily: 'Montserrat-Bold',
     color: COLORS.secondary,
     marginBottom: 16,
-  },
-  actionGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-  },
-  actionCard: {
-    width: '48%',
-    backgroundColor: COLORS.primary,
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    elevation: 2,
-  },
-  actionIconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: COLORS.lightGray,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  actionIcon: {
-    // Icon styling handled by Icon component
-  },
-  actionText: {
-    fontSize: 14,
-    fontFamily: 'Montserrat-Medium',
-    color: COLORS.secondary,
-    textAlign: 'center',
-  },
-  suggestedRides: {
-    paddingHorizontal: 24,
-    marginBottom: 24,
-  },
-  rideCard: {
-    width: 200,
-    marginRight: 12,
-    borderRadius: 12,
-    backgroundColor: COLORS.primary,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-  },
-  rideCardContent: {
-    padding: 16,
-  },
-  rideHeader: {
-    marginBottom: 12,
-  },
-  locationContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 4,
-  },
-  rideFrom: {
-    fontSize: 14,
-    fontFamily: 'Montserrat-Medium',
-    color: COLORS.secondary,
-    marginLeft: 4,
-  },
-  rideTo: {
-    fontSize: 14,
-    fontFamily: 'Montserrat-Medium',
-    color: COLORS.secondary,
-    marginLeft: 4,
-  },
-  rideDetails: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  rideDetail: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  rideTime: {
-    fontSize: 12,
-    fontFamily: 'Montserrat-Regular',
-    color: COLORS.textSecondary,
-    marginLeft: 4,
-  },
-  ridePrice: {
-    fontSize: 12,
-    fontFamily: 'Montserrat-Medium',
-    color: COLORS.secondary,
-    marginLeft: 4,
   },
 });
 

@@ -200,17 +200,31 @@ class AuthController:
         try:
             user_service = UserService(db)
             
-
-            
-            # Extract Google user data
+            # Extract and validate Google user data
             email = google_data.get("email")
             google_id = google_data.get("google_id")
             access_token = google_data.get("access_token")
+            first_name = google_data.get("first_name", "")
+            last_name = google_data.get("last_name", "")
+            profile_picture = google_data.get("profile_picture", "")
+            
+            print(f"Google login attempt - Email: {email}, Google ID: {google_id}")
+            print(f"First name: {first_name}, Last name: {last_name}")
+            print(f"Profile picture: {profile_picture[:50] if profile_picture else 'None'}...")
             
             if not email or not google_id:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Missing required Google data"
+                    detail="Missing required Google data: email and google_id are required"
+                )
+            
+            # Validate email format
+            import re
+            email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+            if not re.match(email_pattern, email):
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Invalid email format"
                 )
             
             # Check if user exists by email
@@ -218,39 +232,42 @@ class AuthController:
             
             if user:
                 # User exists with this email
+                print(f"User found with email {email}")
+                
                 if user.google_id:
                     # User already has Google ID linked
                     if user.google_id != google_id:
+                        print(f"Google ID mismatch - stored: {user.google_id}, received: {google_id}")
                         raise HTTPException(
                             status_code=status.HTTP_401_UNAUTHORIZED,
                             detail="Google account mismatch. This email is linked to a different Google account."
                         )
                     # User exists and Google ID matches - proceed with login
+                    print(f"Google ID matches - proceeding with login")
                 else:
                     # User exists but no Google ID - link the Google account
+                    print(f"Linking Google account to existing user")
                     user.google_id = google_id
                     if user.auth_provider == "email":
                         user.auth_provider = "both"
+                    # Update profile picture if not already set
+                    if not user.profile_picture and profile_picture:
+                        user.profile_picture = profile_picture
                     db.commit()
                     db.refresh(user)
             else:
-                # Check if Google ID is already used by another user
-                existing_google_user = user_service.get_user_by_google_id(google_id)
-                if existing_google_user:
-                    raise HTTPException(
-                        status_code=status.HTTP_409_CONFLICT,
-                        detail="This Google account is already linked to another email address."
-                    )
-                
-                # Return Google data for signup completion instead of creating incomplete user
+                # For new users, we don't need to check if Google ID exists
+                # Google IDs can be reused if the previous user was deleted or never completed signup
+                # Return Google data for signup completion
+                print(f"New user - returning signup data")
                 return {
                     "requires_signup": True,
                     "google_data": {
                         "email": email,
                         "google_id": google_id,
-                        "first_name": google_data.get("first_name", ""),
-                        "last_name": google_data.get("last_name", ""),
-                        "profile_picture": google_data.get("profile_picture", ""),
+                        "first_name": first_name,
+                        "last_name": last_name,
+                        "profile_picture": profile_picture,
                         "auth_provider": "google"
                     }
                 }
@@ -266,6 +283,8 @@ class AuthController:
                 data={"sub": str(user.id)}, expires_delta=refresh_token_expires
             )
             
+            print(f"Google login successful for user {user.id}")
+            
             return {
                 "access_token": access_token,
                 "refresh_token": refresh_token,
@@ -274,9 +293,10 @@ class AuthController:
             }
             
         except HTTPException as e:
+            print(f"HTTP Exception in Google login: {e.detail}")
             raise e
         except Exception as e:
-            print(f"Google login error: {e}")
+            print(f"Unexpected error in Google login: {e}")
             print(f"Error type: {type(e)}")
             import traceback
             traceback.print_exc()
@@ -284,3 +304,6 @@ class AuthController:
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"An error occurred during Google authentication: {str(e)}"
             ) 
+
+# Create router instance
+auth_controller = AuthController()

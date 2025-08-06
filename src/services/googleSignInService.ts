@@ -7,6 +7,7 @@ console.log('🔧 Configuring Google Sign-In...');
 console.log('Web Client ID:', GOOGLE_CONFIG.webClientId);
 
 let isConfigured = false;
+let isSigningIn = false;
 
 const configureGoogleSignIn = () => {
   if (isConfigured) {
@@ -18,7 +19,7 @@ const configureGoogleSignIn = () => {
     // Check if webClientId is valid
     if (!GOOGLE_CONFIG.webClientId || GOOGLE_CONFIG.webClientId.includes('YOUR_')) {
       console.error('❌ Invalid Web Client ID:', GOOGLE_CONFIG.webClientId);
-      return;
+      throw new Error('Invalid Google Web Client ID configuration');
     }
     
     GoogleSignin.configure({
@@ -26,13 +27,13 @@ const configureGoogleSignIn = () => {
       offlineAccess: false,
       hostedDomain: '',
       forceCodeForRefreshToken: false,
-      scopes: ['email', 'profile'], // Add profile scope
+      scopes: ['email', 'profile'],
     });
     isConfigured = true;
     console.log('✅ Google Sign-In configured successfully');
   } catch (error) {
     console.error('❌ Failed to configure Google Sign-In:', error);
-    // Don't throw error, just log it
+    throw error;
   }
 };
 
@@ -77,16 +78,7 @@ export class GoogleSignInService {
       const userInfo = await GoogleSignin.getCurrentUser();
       if (userInfo) {
         console.log('Current Google user:', userInfo);
-        
-        const user = userInfo as any;
-        return {
-          id: user.user?.id || user.id || '',
-          name: user.user?.name || user.name || '',
-          email: user.user?.email || user.email || '',
-          photo: user.user?.photo || user.photo || undefined,
-          familyName: user.user?.familyName || user.familyName || undefined,
-          givenName: user.user?.givenName || user.givenName || undefined,
-        };
+        return this.extractUserData(userInfo);
       }
       return null;
     } catch (error) {
@@ -96,65 +88,105 @@ export class GoogleSignInService {
   }
 
   /**
-   * Sign in with Google
+   * Extract user data from Google Sign-In response
+   */
+  private static extractUserData(userInfo: any): GoogleUser {
+    const user = userInfo as any;
+    
+    // Extract email (required)
+    const email = user.user?.email || user.email || '';
+    if (!email) {
+      throw new Error('Email is required for Google Sign-In');
+    }
+    
+    // Extract Google ID (use sub if available, otherwise use email as fallback)
+    const googleId = user.user?.id || user.id || user.user?.sub || user.sub || email;
+    
+    // Extract name with fallbacks
+    const name = user.user?.name || user.name || email.split('@')[0] || 'User';
+    
+    const googleUser = {
+      id: googleId,
+      name: name,
+      email: email,
+      photo: user.user?.photo || user.photo || undefined,
+      familyName: user.user?.familyName || user.familyName || undefined,
+      givenName: user.user?.givenName || user.givenName || undefined,
+    };
+    
+    console.log('Extracted Google user data:', googleUser);
+    return googleUser;
+  }
+
+
+
+  /**
+   * Sign in with Google - handles account selection intelligently
    */
   static async signIn(): Promise<GoogleUser> {
+    if (isSigningIn) {
+      throw new Error('Sign in is already in progress');
+    }
+    
+    isSigningIn = true;
+    
     try {
-      await GoogleSignin.hasPlayServices();
+      console.log('🔍 Checking Google Play Services...');
+      await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
       
-      // Sign out first to ensure account selection dialog appears
-      await GoogleSignin.signOut();
-      
-      const userInfo = await GoogleSignin.signIn();
-      
-      console.log('Google Sign-In response:', JSON.stringify(userInfo, null, 2));
-      
-      // The actual structure from @react-native-google-signin/google-signin
-      const user = userInfo as any;
-      
-      // Simplified user data extraction with fallbacks
-      const email = user.user?.email || user.email || '';
-      if (!email) {
-        throw new Error('Email is required for Google Sign-In');
+      // Try to get current user first
+      let shouldForceAccountSelection = false;
+      try {
+        const currentUser = await GoogleSignin.getCurrentUser();
+        if (currentUser) {
+          console.log('🔄 Previous user detected. Will sign out to allow account selection.');
+          shouldForceAccountSelection = true;
+        }
+      } catch (error) {
+        console.log('ℹ️ No previous user detected');
       }
       
-      // Use email as ID if no Google ID is available
-      const googleId = user.user?.id || user.id || user.user?.sub || user.sub || email;
+      // If there's a previous user, sign them out first (but ONLY once)
+      if (shouldForceAccountSelection) {
+        try {
+          await GoogleSignin.signOut();
+          console.log('✅ Previous user signed out');
+        } catch (signOutError) {
+          console.log('ℹ️ Sign out error (continuing anyway):', signOutError);
+        }
+      }
       
-      const googleUser = {
-        id: googleId,
-        name: user.user?.name || user.name || email.split('@')[0] || 'User', // Use email prefix as fallback name
-        email: email,
-        photo: user.user?.photo || user.photo || undefined,
-        familyName: user.user?.familyName || user.familyName || undefined,
-        givenName: user.user?.givenName || user.givenName || undefined,
-      };
+      console.log('🚀 Starting Google Sign-In...');
+      const userInfo = await GoogleSignin.signIn();
       
-      console.log('Processed Google user data:', googleUser);
-      return googleUser;
+      console.log('✅ Google Sign-In successful!');
+      console.log('Raw response:', JSON.stringify(userInfo, null, 2));
+      
+      return this.extractUserData(userInfo);
       
     } catch (error: any) {
-      console.error('Google Sign-In error:', error);
+      console.error('❌ Google Sign-In error:', error);
       console.error('Error code:', error.code);
       console.error('Error message:', error.message);
-      console.error('Full error object:', JSON.stringify(error, null, 2));
       
       if (error.code === statusCodes.SIGN_IN_CANCELLED) {
-        throw new Error('Sign in was cancelled');
+        throw new Error('Sign in was cancelled by user');
       } else if (error.code === statusCodes.IN_PROGRESS) {
         throw new Error('Sign in is already in progress');
       } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
-        throw new Error('Play services not available');
+        throw new Error('Google Play Services not available. Please update Google Play Services.');
       } else if (error.code === 'DEVELOPER_ERROR') {
         console.error('🔧 DEVELOPER_ERROR Solutions:');
         console.error('1. Check OAuth consent screen in Google Cloud Console');
         console.error('2. Add your email as test user if app is external');
         console.error('3. Verify Web Client ID is correct');
         console.error('4. Check if Google+ API is enabled');
-        throw new Error('DEVELOPER_ERROR: Check OAuth configuration in Google Cloud Console');
+        throw new Error('Google Sign-In configuration error. Please contact support.');
       } else {
-        throw new Error('Sign in failed: ' + error.message);
+        throw new Error(`Google Sign-In failed: ${error.message}`);
       }
+    } finally {
+      isSigningIn = false;
     }
   }
 
@@ -164,6 +196,7 @@ export class GoogleSignInService {
   static async signOut(): Promise<void> {
     try {
       await GoogleSignin.signOut();
+      console.log('✅ Google Sign-Out successful');
     } catch (error) {
       console.error('Error signing out:', error);
       throw error;
@@ -176,6 +209,7 @@ export class GoogleSignInService {
   static async getAccessToken(): Promise<string | null> {
     try {
       const tokens = await GoogleSignin.getTokens();
+      console.log('✅ Google access token obtained');
       return tokens.accessToken;
     } catch (error) {
       console.error('Error getting access token:', error);
@@ -188,8 +222,12 @@ export class GoogleSignInService {
    */
   static async signUpWithGoogle(role: 'driver' | 'passenger'): Promise<any> {
     try {
+      console.log('🚀 Starting Google signup process...');
+      
       const googleUser = await this.signIn();
       const accessToken = await this.getAccessToken();
+      
+      console.log('📤 Sending signup data to backend...');
       
       // Call your backend API to create user account
       const signupData = {
@@ -203,10 +241,13 @@ export class GoogleSignInService {
         access_token: accessToken,
       };
 
+      console.log('Signup data:', signupData);
       const response = await api.register(signupData);
+      
+      console.log('✅ Google signup successful:', response);
       return response;
     } catch (error) {
-      console.error('Google signup error:', error);
+      console.error('❌ Google signup error:', error);
       throw error;
     }
   }
@@ -216,7 +257,7 @@ export class GoogleSignInService {
    */
   static async loginWithGoogle(): Promise<any> {
     try {
-      console.log('🔍 Starting Google login...');
+      console.log('🔍 Starting Google login process...');
       
       const googleUser = await this.signIn();
       console.log('✅ Google user data obtained:', googleUser);
@@ -230,6 +271,9 @@ export class GoogleSignInService {
         google_id: googleUser.id,
         access_token: accessToken,
         auth_provider: 'google',
+        first_name: googleUser.givenName || '',
+        last_name: googleUser.familyName || '',
+        profile_picture: googleUser.photo,
       };
 
       console.log('📤 Sending login data to backend:', loginData);
@@ -239,7 +283,7 @@ export class GoogleSignInService {
       
       // Check if backend requires signup completion
       if (response.requires_signup) {
-        console.log('ℹ️ New user requires signup completion (this is normal for new users)');
+        console.log('ℹ️ New user requires signup completion');
         throw new Error('USER_REQUIRES_SIGNUP');
       }
       
@@ -249,6 +293,24 @@ export class GoogleSignInService {
       console.error('❌ Google login error:', error);
       throw error;
     }
+  }
+
+  /**
+   * Validate Google configuration
+   */
+  static validateConfiguration(): boolean {
+    if (!isConfigured) {
+      console.error('❌ Google Sign-In not configured');
+      return false;
+    }
+    
+    if (!GOOGLE_CONFIG.webClientId || GOOGLE_CONFIG.webClientId.includes('YOUR_')) {
+      console.error('❌ Invalid Web Client ID');
+      return false;
+    }
+    
+    console.log('✅ Google Sign-In configuration is valid');
+    return true;
   }
 }
 

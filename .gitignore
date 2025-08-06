@@ -87,6 +87,7 @@ src/config/env.ts
 src/config/env.ts.example
 
 # Firebase configuration files
+credentials.json
 android/app/google-services.json
 ios/RideShare/GoogleService-Info.plist
 
