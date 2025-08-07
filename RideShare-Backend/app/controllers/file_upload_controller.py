@@ -11,7 +11,7 @@ from ..controllers.auth_controller import AuthController
 from ..models.user import User
 from ..models.vehicle import Vehicle
 from .. import schemas
-from ..core.google_drive_config import google_drive_service
+from ..core.cloudinary_config import cloudinary_service
 
 # Database dependency
 def get_db():
@@ -70,39 +70,35 @@ class FileUploadController:
             print(f"Filename: {filename}")
             print(f"File size: {len(file_content)} bytes")
             print(f"Content type: {file.content_type}")
-            print(f"Google Drive service available: {google_drive_service.service is not None}")
-            print(f"Google Drive folder ID: {google_drive_service.folder_id}")
             
-            # Upload to Google Drive
-            file_id = google_drive_service.upload_file(
+            # Upload to Cloudinary
+            file_url = cloudinary_service.upload_file(
                 file_content, 
                 filename, 
-                file.content_type
+                "profile_pictures"
             )
-            
-            if not file_id:
-                raise HTTPException(
-                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    detail="Failed to upload file to Google Drive"
-                )
-            
-            # Get public URL
-            file_url = google_drive_service.get_file_url(file_id)
             
             if not file_url:
                 raise HTTPException(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    detail="Failed to generate file URL"
+                    detail="Failed to upload file to Cloudinary"
+                )
+            
+            # Get the user from the current database session to avoid session issues
+            user = db.query(User).filter(User.id == current_user.id).first()
+            if not user:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="User not found"
                 )
             
             # Update user profile in database
-            current_user.profile_picture = file_url
+            user.profile_picture = file_url
             db.commit()
-            db.refresh(current_user)
+            db.refresh(user)
             
             return {
                 "message": "Profile picture uploaded successfully",
-                "file_id": file_id,
                 "file_url": file_url,
                 "filename": filename
             }
@@ -141,38 +137,36 @@ class FileUploadController:
             
             # Generate unique filename
             file_extension = file.filename.split('.')[-1] if '.' in file.filename else 'pdf'
-            filename = f"driving_licenses/{current_user.id}_{uuid.uuid4()}.{file_extension}"
+            filename = f"{current_user.id}_{uuid.uuid4()}.{file_extension}"
             
-            # Upload to Google Drive
-            file_id = google_drive_service.upload_file(
+            # Upload to Cloudinary
+            file_url = cloudinary_service.upload_file(
                 file_content, 
                 filename, 
-                file.content_type
+                "driving_licenses"
             )
-            
-            if not file_id:
-                raise HTTPException(
-                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    detail="Failed to upload file to Google Drive"
-                )
-            
-            # Get public URL
-            file_url = google_drive_service.get_file_url(file_id)
             
             if not file_url:
                 raise HTTPException(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    detail="Failed to generate file URL"
+                    detail="Failed to upload file to Cloudinary"
+                )
+            
+            # Get the user from the current database session to avoid session issues
+            user = db.query(User).filter(User.id == current_user.id).first()
+            if not user:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="User not found"
                 )
             
             # Update user driving license in database
-            current_user.driving_license = file_url
+            user.driving_license = file_url
             db.commit()
-            db.refresh(current_user)
+            db.refresh(user)
             
             return {
                 "message": "Driving license uploaded successfully",
-                "file_id": file_id,
                 "file_url": file_url,
                 "filename": filename
             }
@@ -211,28 +205,19 @@ class FileUploadController:
             
             # Generate unique filename
             file_extension = file.filename.split('.')[-1] if '.' in file.filename else 'pdf'
-            filename = f"vehicle_registrations/{current_user.id}_{uuid.uuid4()}.{file_extension}"
+            filename = f"{current_user.id}_{uuid.uuid4()}.{file_extension}"
             
-            # Upload to Google Drive
-            file_id = google_drive_service.upload_file(
+            # Upload to Cloudinary
+            file_url = cloudinary_service.upload_file(
                 file_content, 
                 filename, 
-                file.content_type
+                "vehicle_registrations"
             )
-            
-            if not file_id:
-                raise HTTPException(
-                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    detail="Failed to upload file to Google Drive"
-                )
-            
-            # Get public URL
-            file_url = google_drive_service.get_file_url(file_id)
             
             if not file_url:
                 raise HTTPException(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    detail="Failed to generate file URL"
+                    detail="Failed to upload file to Cloudinary"
                 )
             
             # Find user's vehicle and update registration
@@ -254,7 +239,6 @@ class FileUploadController:
             
             return {
                 "message": "Vehicle registration uploaded successfully",
-                "file_id": file_id,
                 "file_url": file_url,
                 "filename": filename,
                 "vehicle_id": vehicle.id
@@ -270,17 +254,17 @@ class FileUploadController:
     
     async def delete_file(
         self,
-        file_id: str,
+        public_id: str,
         current_user: User = Depends(AuthController.get_current_user)
     ):
-        """Delete a file from Google Drive"""
+        """Delete a file from Cloudinary"""
         try:
-            success = google_drive_service.delete_file(file_id)
+            success = cloudinary_service.delete_file(public_id)
             
             if not success:
                 raise HTTPException(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    detail="Failed to delete file from Google Drive"
+                    detail="Failed to delete file from Cloudinary"
                 )
             
             return {"message": "File deleted successfully"}
@@ -290,7 +274,7 @@ class FileUploadController:
         except Exception as e:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Failed to delete file: {str(e)}"
+                detail=f"Failed to delete file from Cloudinary: {str(e)}"
             )
 
 # Create router instance

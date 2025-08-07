@@ -16,11 +16,10 @@ from .controllers.file_upload_controller import file_upload_controller
 # Create database tables
 models.Base.metadata.create_all(bind=engine)
 
-# Initialize Google Drive service and log status
-from .core.google_drive_config import google_drive_service
+# Initialize Cloudinary service and log status
+from .core.cloudinary_config import cloudinary_service
 print("=== BACKEND STARTUP DEBUG ===")
-print(f"Google Drive service available: {google_drive_service.service is not None}")
-print(f"Google Drive folder ID: {google_drive_service.folder_id}")
+print("Cloudinary service initialized")
 print("=== END BACKEND STARTUP DEBUG ===")
 
 app = FastAPI(title="RideShare API", version="1.0.0")
