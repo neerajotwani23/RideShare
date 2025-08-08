@@ -1,0 +1,690 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { View, StyleSheet, ScrollView, Platform, TouchableOpacity, Alert, Dimensions } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Text, TextInput, Button, Switch, HelperText, Card } from 'react-native-paper';
+import Icon from '../../components/Icon';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import { COLORS } from '../../constants/colors';
+import { useApp } from '../../context/AppContext';
+import { useMap } from '../../context/MapContext';
+import { useOptimizedNavigationSync } from '../../hooks/useOptimizedNavigationSync';
+import MapView, { Marker } from 'react-native-maps';
+import { useFocusEffect } from '@react-navigation/native';
+
+import axios from 'axios';
+import FontAwesome6 from 'react-native-vector-icons/FontAwesome6';
+
+import { GOOGLE_API_KEY_EXPORT as GOOGLE_API_KEY } from '../../config/env';
+import { s } from 'react-native-size-matters';
+
+const { height: screenHeight } = Dimensions.get('window');
+
+const PostRideScreen = ({ navigation, route }: any) => {
+  // Navigation sync hook
+  useOptimizedNavigationSync();
+  console.log("API Key", GOOGLE_API_KEY)
+
+  const [source, setSource] = useState('');
+  const [destination, setDestination] = useState('');
+  const [rideType, setRideType] = useState('now'); // 'now' or 'schedule'
+  const [date, setDate] = useState(new Date());
+  const [time, setTime] = useState(new Date());
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showTimePicker, setShowTimePicker] = useState(false);
+  const [seats, setSeats] = useState('');
+  const [fare, setFare] = useState('');
+  const [ac, setAc] = useState(false);
+  const [music, setMusic] = useState(false);
+  const [smoking, setSmoking] = useState(false);
+  const [error, setError] = useState('');
+
+  const { createRide, isLoading } = useApp();
+  const { mapState, initializeMap } = useMap();
+  const mapRef = useRef<MapView>(null);
+
+  // Handle parameters passed from chatbot
+  useEffect(() => {
+    if (route?.params) {
+      const { source: paramSource, destination: paramDestination, fare: paramFare, seats: paramSeats, preferences } = route.params;
+
+      if (paramSource) setSource(paramSource);
+      if (paramDestination) setDestination(paramDestination);
+      if (paramFare) setFare(paramFare.toString());
+      if (paramSeats) setSeats(paramSeats.toString());
+
+      if (preferences) {
+        if (preferences.ac !== undefined) setAc(preferences.ac);
+        if (preferences.music !== undefined) setMusic(preferences.music);
+        if (preferences.smoking !== undefined) setSmoking(preferences.smoking);
+      }
+    }
+  }, [route?.params]);
+
+  const handlePost = async () => {
+    if (!source || !destination || !seats || !fare) {
+      setError('All fields are required.');
+      return;
+    }
+    setError('');
+
+    // Create timing datetime based on ride type
+    let timing: Date;
+    if (rideType === 'now') {
+      timing = new Date(); // Current time
+    } else {
+      // Combine date and time for scheduled rides
+      const combinedDateTime = new Date(date);
+      combinedDateTime.setHours(time.getHours());
+      combinedDateTime.setMinutes(time.getMinutes());
+      combinedDateTime.setSeconds(0);
+      combinedDateTime.setMilliseconds(0);
+      timing = combinedDateTime;
+    }
+
+    const rideData = {
+      timing: timing.toISOString(),
+      source,
+      destination,
+      seats_offered: parseInt(seats),
+      fare: parseFloat(fare),
+      ac,
+      music,
+      smoking: smoking, // Backend expects smoking boolean directly
+      gender_preference: 'any' // Default to any gender preference
+    };
+
+    try {
+      await createRide(rideData);
+      Alert.alert(
+        'Success',
+        'Your ride has been posted successfully!',
+        [{ text: 'OK', onPress: () => navigation.navigate('SuggestedRides') }]
+      );
+    } catch (error: any) {
+      console.error('Post ride error:', error);
+      const errorMessage = error?.message || error?.toString() || 'Failed to post ride. Please try again.';
+      setError(errorMessage);
+    }
+  };
+
+  const onDateChange = (event: any, selectedDate?: Date) => {
+    setShowDatePicker(Platform.OS === 'ios');
+    if (selectedDate) {
+      setDate(selectedDate);
+    }
+  };
+
+  const onTimeChange = (event: any, selectedTime?: Date) => {
+    setShowTimePicker(Platform.OS === 'ios');
+    if (selectedTime) {
+      setTime(selectedTime);
+    }
+  };
+
+  const formatDate = (date: Date) => {
+    return date.toLocaleDateString('en-GB');
+  };
+
+  const formatTime = (time: Date) => {
+    return time.toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    });
+  };
+
+  // Initialize map when screen focuses
+  useFocusEffect(
+    React.useCallback(() => {
+      console.log('📍 PostRideScreen focused');
+      if (!mapState.location) {
+        console.log('�� No location found, initializing map');
+        initializeMap();
+      } else {
+        console.log('📍 Location already available:', mapState.location);
+      }
+    }, [mapState.location, initializeMap])
+  );
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <ScrollView 
+        style={styles.scrollContainer}
+        showsVerticalScrollIndicator={false}
+        bounces={false}
+        overScrollMode="never"
+      >
+        {/* Map Section - 40% */}
+        <View style={styles.mapSection}>
+          {mapState.location ? (
+            <MapView
+              ref={mapRef}
+              style={styles.map}
+              region={mapState.location}
+              showsUserLocation={false}
+              mapType="standard"
+              userInterfaceStyle="light"
+              onMapReady={() => {
+                console.log('📍 Map is ready');
+              }}
+            >
+              <Marker coordinate={mapState.location}>
+                <View style={styles.blueDot} />
+              </Marker>
+            </MapView>
+          ) : (
+            <View style={styles.mapLoading}>
+              <Text style={styles.mapLoadingText}>Loading map...</Text>
+            </View>
+          )}
+        </View>
+
+        {/* Menu Section - 60% */}
+        <View style={styles.menuSection}>
+          <View style={styles.dragHandle} />
+          <View style={styles.form}>
+              <View style={styles.inputContainer}>
+                <Icon name="map-marker" size={20} color={COLORS.accent} style={styles.inputIcon} />
+                <TouchableOpacity
+                  style={styles.locationInput}
+                  onPress={() => navigation.navigate('LocationSelection', {
+                    onLocationSelect: (selectedLocation: string) => {
+                      setSource(selectedLocation);
+                    },
+                    title: 'Select Pickup Location',
+                    placeholder: 'Search for pickup location...'
+                  })}
+                >
+                  <Text style={source ? styles.locationText : styles.placeholderText}>
+                    {source || 'From (Pickup Location)'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.inputContainer}>
+                <Icon name="map-marker-check" size={20} color={COLORS.success} style={styles.inputIcon} />
+                <TouchableOpacity
+                  style={styles.locationInput}
+                  onPress={() => navigation.navigate('LocationSelection', {
+                    onLocationSelect: (selectedLocation: string) => {
+                      setDestination(selectedLocation);
+                    },
+                    title: 'Select Drop-off Location',
+                    placeholder: 'Search for drop-off location...'
+                  })}
+                >
+                  <Text style={destination ? styles.locationText : styles.placeholderText}>
+                    {destination || 'To (Drop-off Location)'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              <Text style={styles.sectionTitle}>When do you want to travel?</Text>
+
+              <View style={styles.toggleRow}>
+                <TouchableOpacity
+                  style={[styles.toggleButton, rideType === 'now' && styles.toggleButtonActive]}
+                  onPress={() => setRideType('now')}
+                >
+                  <Text style={[styles.toggleText, rideType === 'now' && styles.toggleTextActive]}>Leave Now</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.toggleButton, rideType === 'schedule' && styles.toggleButtonActive]}
+                  onPress={() => setRideType('schedule')}
+                >
+                  <Text style={[styles.toggleText, rideType === 'schedule' && styles.toggleTextActive]}>Schedule</Text>
+                </TouchableOpacity>
+              </View>
+
+              {rideType === 'now' && (
+                <Card style={styles.nowCard}>
+                  <Card.Content>
+                    <View style={styles.nowContent}>
+                      <Icon name="clock-fast" size={32} color="#248CFE" style={styles.nowIcon} />
+                      <Text style={styles.nowTitle}>Leaving Now</Text>
+                      <Text style={styles.nowSubtitle}>
+                        Your ride will be available immediately for passengers to book
+                      </Text>
+                      <View style={styles.currentTimeContainer}>
+                        <Icon name="clock-outline" size={16} color={COLORS.textSecondary} />
+                        <Text style={styles.currentTime}>
+                          Current time: {formatTime(new Date())}
+                        </Text>
+                      </View>
+                    </View>
+                  </Card.Content>
+                </Card>
+              )}
+
+              {rideType === 'schedule' && (
+                <Card style={styles.scheduleCard}>
+                  <Card.Content>
+                    <Text style={styles.scheduleTitle}>Select Date & Time</Text>
+
+                    <View style={styles.timeRow}>
+                      <TouchableOpacity
+                        style={[styles.dateTimeButton, styles.halfInput]}
+                        onPress={() => setShowDatePicker(true)}
+                      >
+                        <View style={styles.dateTimeContent}>
+                          <Icon name="calendar" size={20} color="#248CFE" />
+                          <Text style={styles.dateTimeLabel}>Date</Text>
+                          <Text style={styles.dateTimeValue}>{formatDate(date)}</Text>
+                        </View>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        style={[styles.dateTimeButton, styles.halfInput]}
+                        onPress={() => setShowTimePicker(true)}
+                      >
+                        <View style={styles.dateTimeContent}>
+                          <Icon name="clock-outline" size={20} color="#248CFE" />
+                          <Text style={styles.dateTimeLabel}>Time</Text>
+                          <Text style={styles.dateTimeValue}>{formatTime(time)}</Text>
+                        </View>
+                      </TouchableOpacity>
+                    </View>
+                  </Card.Content>
+                </Card>
+              )}
+
+              <Card style={styles.detailsCard}>
+                <Card.Content>
+                  <Text style={styles.cardTitle}>Ride Details</Text>
+
+                  <View style={styles.timeRow}>
+                    <View style={[styles.inputContainer, styles.halfInput]}>
+                      <Icon name="account-multiple" size={20} color="#248CFE" style={styles.inputIcon} />
+                      <TextInput
+                        label="Available Seats"
+                        value={seats}
+                        onChangeText={setSeats}
+                        keyboardType="numeric"
+                        style={styles.input}
+                        mode="outlined"
+                        outlineColor={COLORS.border}
+                        activeOutlineColor={COLORS.secondary}
+                      />
+                    </View>
+                    <View style={[styles.inputContainer, styles.halfInput]}>
+                      <Icon name="cash" size={20} color="#248CFE" style={styles.inputIcon} />
+                      <TextInput
+                        label="Fare per Seat"
+                        value={fare}
+                        onChangeText={setFare}
+                        keyboardType="numeric"
+                        style={styles.input}
+                        mode="outlined"
+                        outlineColor={COLORS.border}
+                        activeOutlineColor={COLORS.secondary}
+                      />
+                    </View>
+                  </View>
+                </Card.Content>
+              </Card>
+
+              <Card style={styles.preferencesCard}>
+                <Card.Content>
+                  <Text style={styles.cardTitle}>Ride Preferences</Text>
+
+                  <View style={styles.preferenceItem}>
+                    <View style={styles.preferenceContent}>
+                      <Icon name="snowflake" size={20} color="#248CFE" />
+                      <Text style={styles.preferenceText}>Air Conditioning</Text>
+                    </View>
+                    <Switch
+                      value={ac}
+                      onValueChange={setAc}
+                      trackColor={{ false: COLORS.border, true: '#248CFE' }}
+                      thumbColor={COLORS.primary}
+                    />
+                  </View>
+
+                  <View style={styles.preferenceItem}>
+                    <View style={styles.preferenceContent}>
+                      <Icon name="music" size={20} color="#FF9500" />
+                      <Text style={styles.preferenceText}>Music Allowed</Text>
+                    </View>
+                    <Switch
+                      value={music}
+                      onValueChange={setMusic}
+                      trackColor={{ false: COLORS.border, true: '#248CFE' }}
+                      thumbColor={COLORS.primary}
+                    />
+                  </View>
+
+                  <View style={styles.preferenceItem}>
+                    <View style={styles.preferenceContent}>
+                      <Icon name="smoking-off" size={20} color="#248CFE" />
+                      <Text style={styles.preferenceText}>No Smoking</Text>
+                    </View>
+                    <Switch
+                      value={!smoking}
+                      onValueChange={(value) => setSmoking(!value)}
+                      trackColor={{ false: COLORS.border, true: '#248CFE' }}
+                      thumbColor={COLORS.primary}
+                    />
+                  </View>
+                </Card.Content>
+              </Card>
+
+              {error ? (
+                <HelperText type="error" visible={!!error} style={styles.errorText}>
+                  {error}
+                </HelperText>
+              ) : null}
+
+              <Button
+                mode="contained"
+                onPress={handlePost}
+                style={styles.postButton}
+                contentStyle={styles.buttonContent}
+                buttonColor={COLORS.secondary}
+                textColor={COLORS.primary}
+                disabled={isLoading}
+                loading={isLoading}
+              >
+                Post Ride
+              </Button>
+            </View>
+          </View>
+        </ScrollView>
+        
+        {/* Date and Time Pickers */}
+        {showDatePicker && (
+          <DateTimePicker
+            value={date}
+            mode="date"
+            display="default"
+            onChange={onDateChange}
+            minimumDate={new Date()}
+          />
+        )}
+        {showTimePicker && (
+          <DateTimePicker
+            value={time}
+            mode="time"
+            display="default"
+            onChange={onTimeChange}
+          />
+        )}
+      </SafeAreaView>
+   );
+ };
+
+ const styles = StyleSheet.create({
+   container: {
+     flex: 1,
+     backgroundColor: COLORS.primary,
+   },
+   scrollContainer: {
+     flex: 1,
+   },
+   mapSection: {
+     height: screenHeight * 0.4, // 40% of screen height
+     backgroundColor: COLORS.lightGray,
+   },
+   map: {
+     flex: 1,
+   },
+   menuSection: {
+     backgroundColor: COLORS.primary,
+     paddingHorizontal: 24,
+     paddingBottom: 24,
+   },
+   dragHandle: {
+     width: 40,
+     height: 4,
+     backgroundColor: COLORS.border,
+     borderRadius: 2,
+     alignSelf: 'center',
+     marginVertical: 12,
+   },
+   scrollContent: {
+     paddingBottom: 16,
+   },
+   header: {
+     alignItems: 'center',
+     marginBottom: 20,
+   },
+   title: {
+     fontSize: 24,
+     fontFamily: 'Montserrat-Bold',
+     color: COLORS.secondary,
+     marginBottom: 4,
+   },
+   subtitle: {
+     fontSize: 16,
+     fontFamily: 'Montserrat-Regular',
+     color: COLORS.textSecondary,
+   },
+   form: {
+     width: '100%',
+   },
+   inputContainer: {
+     flexDirection: 'row',
+     alignItems: 'center',
+     marginBottom: 16,
+   },
+   inputIcon: {
+     marginRight: 8,
+   },
+   input: {
+     flex: 1,
+     backgroundColor: COLORS.primary,
+     borderRadius: 16,
+   },
+   sectionTitle: {
+     fontSize: 18,
+     fontFamily: 'Montserrat-SemiBold',
+     color: COLORS.secondary,
+     marginBottom: 12,
+     marginTop: 8,
+   },
+   toggleRow: {
+     flexDirection: 'row',
+     backgroundColor: COLORS.lightGray,
+     borderRadius: 12,
+     padding: 4,
+     marginBottom: 16,
+   },
+   toggleButton: {
+     flex: 1,
+     paddingVertical: 12,
+     paddingHorizontal: 16,
+     borderRadius: 8,
+     alignItems: 'center',
+   },
+   toggleButtonActive: {
+     backgroundColor: COLORS.secondary,
+     shadowColor: COLORS.secondary,
+     shadowOffset: { width: 0, height: 2 },
+     shadowOpacity: 0.1,
+     shadowRadius: 4,
+     elevation: 3,
+   },
+   toggleText: {
+     fontSize: 16,
+     fontFamily: 'Montserrat-Medium',
+     color: COLORS.textSecondary,
+   },
+   toggleTextActive: {
+     color: COLORS.primary,
+     fontFamily: 'Montserrat-Bold',
+   },
+   nowCard: {
+     marginBottom: 16,
+     borderRadius: 12,
+     backgroundColor: COLORS.primary,
+     borderWidth: 1,
+     borderColor: COLORS.border,
+   },
+   nowContent: {
+     alignItems: 'center',
+     padding: 8,
+   },
+   nowIcon: {
+     marginBottom: 8,
+   },
+   nowTitle: {
+     fontSize: 16,
+     fontFamily: 'Montserrat-SemiBold',
+     color: '#248CFE',
+     marginBottom: 4,
+   },
+   nowSubtitle: {
+     fontSize: 14,
+     fontFamily: 'Montserrat-Regular',
+     color: COLORS.textSecondary,
+     textAlign: 'center',
+     marginBottom: 8,
+   },
+   currentTimeContainer: {
+     flexDirection: 'row',
+     alignItems: 'center',
+   },
+   currentTime: {
+     fontSize: 14,
+     fontFamily: 'Montserrat-Medium',
+     color: '#248CFE',
+     marginLeft: 4,
+   },
+   scheduleCard: {
+     marginBottom: 16,
+     borderRadius: 12,
+     backgroundColor: COLORS.primary,
+     borderWidth: 1,
+     borderColor: COLORS.border,
+   },
+   scheduleTitle: {
+     fontSize: 16,
+     fontFamily: 'Montserrat-SemiBold',
+     color: COLORS.secondary,
+     marginBottom: 12,
+   },
+   detailsCard: {
+     marginBottom: 16,
+     borderRadius: 12,
+     backgroundColor: COLORS.primary,
+     borderWidth: 1,
+     borderColor: COLORS.border,
+   },
+   preferencesCard: {
+     marginBottom: 16,
+     borderRadius: 12,
+     backgroundColor: COLORS.primary,
+     borderWidth: 1,
+     borderColor: COLORS.border,
+   },
+   cardTitle: {
+     fontSize: 16,
+     fontFamily: 'Montserrat-SemiBold',
+     color: COLORS.secondary,
+     marginBottom: 12,
+   },
+   timeRow: {
+     flexDirection: 'row',
+     justifyContent: 'space-between',
+     marginBottom: 16,
+   },
+   halfInput: {
+     width: '48%',
+   },
+   dateTimeButton: {
+     borderWidth: 1,
+     borderColor: COLORS.border,
+     borderRadius: 16,
+     padding: 16,
+     backgroundColor: COLORS.primary,
+     justifyContent: 'center',
+   },
+   dateTimeContent: {
+     alignItems: 'flex-start',
+   },
+   dateTimeLabel: {
+     fontSize: 12,
+     fontFamily: 'Montserrat-Regular',
+     color: COLORS.textSecondary,
+     marginBottom: 4,
+   },
+   dateTimeValue: {
+     fontSize: 16,
+     fontFamily: 'Montserrat-Regular',
+     color: COLORS.secondary,
+   },
+   preferenceItem: {
+     flexDirection: 'row',
+     justifyContent: 'space-between',
+     alignItems: 'center',
+     marginBottom: 12,
+     paddingHorizontal: 4,
+   },
+   preferenceContent: {
+     flexDirection: 'row',
+     alignItems: 'center',
+   },
+   preferenceText: {
+     fontSize: 16,
+     fontFamily: 'Montserrat-Regular',
+     color: COLORS.secondary,
+     marginLeft: 8,
+   },
+   errorText: {
+     color: COLORS.error,
+     marginTop: 8,
+   },
+   postButton: {
+     marginTop: 24,
+     borderRadius: 12,
+   },
+   buttonContent: {
+     paddingVertical: 12,
+   },
+   blueDot: {
+     width: 20,
+     height: 20,
+     borderRadius: 10,
+     backgroundColor: '#248CFE',
+     borderWidth: 3,
+     borderColor: '#ffffff',
+     shadowColor: '#000',
+     shadowOffset: { width: 0, height: 2 },
+     shadowOpacity: 0.25,
+     shadowRadius: 4,
+     elevation: 5,
+   },
+   locationInput: {
+     flex: 1,
+     backgroundColor: COLORS.primary,
+     borderRadius: 16,
+     borderWidth: 1,
+     borderColor: COLORS.border,
+     paddingHorizontal: 16,
+     paddingVertical: 16,
+     justifyContent: 'center',
+   },
+   locationText: {
+     fontSize: 16,
+     fontFamily: 'Montserrat-Regular',
+     color: COLORS.secondary,
+   },
+   placeholderText: {
+     fontSize: 16,
+     fontFamily: 'Montserrat-Regular',
+     color: COLORS.textSecondary,
+   },
+   mapLoading: {
+     flex: 1,
+     justifyContent: 'center',
+     alignItems: 'center',
+     backgroundColor: COLORS.lightGray,
+   },
+   mapLoadingText: {
+     fontSize: 16,
+     fontFamily: 'Montserrat-Medium',
+     color: COLORS.textSecondary,
+   },
+
+ });
+
+ export default PostRideScreen;
